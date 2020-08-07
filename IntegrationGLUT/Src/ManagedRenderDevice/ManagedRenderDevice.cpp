@@ -6,7 +6,7 @@ using namespace Noesis;
 
 typedef void(*DrawBatch)(const Noesis::Batch& batch);
 
-DrawBatch drawBatchCallback;
+DrawBatch drawBatchCallback = 0;
 
 #define DLL_FUNC __declspec(dllexport)
 extern "C"
@@ -157,5 +157,8 @@ void ManagedRenderDevice::UnmapIndices()
 
 void ManagedRenderDevice::DrawBatch(const Noesis::Batch& batch)
 {
-
+	if (drawBatchCallback)
+	{
+		drawBatchCallback(batch);
+	}
 }

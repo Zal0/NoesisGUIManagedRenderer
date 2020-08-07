@@ -23,6 +23,9 @@ class ManagedRenderTest
         string NoesisPath = Environment.GetEnvironmentVariable("NOESIS_SDK_PATH");
         LoadLibrary(NoesisPath + @"\Bin\windows_x86_64\Noesis.dll");
         LoadLibrary(NoesisPath + @"\Bin\windows_x86_64\NoesisApp.dll");
+        LoadLibrary(LIB_NOESIS);
+
+        ManagedRenderDevice.SetMamanagedRenderDevice(new GLUTRenderer());
 
         string[] args = Environment.GetCommandLineArgs();
         int argc = args.Length;
