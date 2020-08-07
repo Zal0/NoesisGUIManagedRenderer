@@ -48,6 +48,9 @@
 
 static Noesis::IView* _view;
 
+#define DLL_FUNC __declspec(dllexport)
+extern "C"
+{
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 static void NoesisInit()
@@ -158,7 +161,7 @@ static void MouseFunc(int button, int state, int x, int y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-int main(int argc, char **argv)
+DLL_FUNC int main(int argc, char **argv)
 {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_STENCIL);
@@ -181,4 +184,6 @@ int main(int argc, char **argv)
 
     glutMainLoop();
     return 0;
+}
+
 }
