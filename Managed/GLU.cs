@@ -2,7 +2,7 @@
 
 public static class GLU
 {
-    private const string LIB_GLU = "../../libs/glu32.dll"; // "/usr/lib64/libGLU.so"
+    private const string LIB_GLU = "../../../libs/glu32.dll"; // "/usr/lib64/libGLU.so"
 
     [DllImport(LIB_GLU, EntryPoint = "gluOrtho2D", CallingConvention = CallingConvention.Winapi)]
     [System.Security.SuppressUnmanagedCodeSecurity()]

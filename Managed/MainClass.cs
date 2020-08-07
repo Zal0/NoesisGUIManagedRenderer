@@ -6,38 +6,19 @@ using System.Runtime.InteropServices;
 /// </summary>
 class MainClass
 {
-    private const string LIB_NOESIS = "../../../../IntegrationGLUT/Projects/windows_x86_64/x64/Debug/IntegrationGLUT.dll";
-
-    [DllImport(LIB_NOESIS, EntryPoint = "main", CallingConvention = CallingConvention.Winapi)]
-    [System.Security.SuppressUnmanagedCodeSecurity()]
-    private static extern void main(int argcp, string[] argv);
-
-    [DllImport("kernel32.dll")]
-    private static extern IntPtr LoadLibrary(string filename);
-
-    /// <summary>The X11 native window handle, used by GLUT.</summary>
     private int _windowHandle;
 
     /// <summary>
     /// The entry point of the program, where the program control starts and ends.
     /// </summary>
     /// <param name="args">The command-line arguments.</param>
-    public static void Main(string[] _args)
+    /*public static void Main(string[] args)
     {
-        //MainClass instance = new MainClass();
-        //instance.Run(args);
+        MainClass instance = new MainClass();
+        instance.Run(args);
+    }*/
 
-        //Manually load lib dependencies before calling any function
-        string NoesisPath = Environment.GetEnvironmentVariable("NOESIS_SDK_PATH");
-        LoadLibrary(NoesisPath + @"\Bin\windows_x86_64\Noesis.dll");
-        LoadLibrary(NoesisPath + @"\Bin\windows_x86_64\NoesisApp.dll");
-
-        string[] args = Environment.GetCommandLineArgs();
-        int argc = args.Length;
-        main(argc, args);
-    }
-
-    /*/// <summary>
+    /// <summary>
     /// Run the program instance with the specified command-line args.
     /// </summary>
     /// <param name="args">The command-line arguments.</param>
@@ -119,5 +100,5 @@ class MainClass
         {
             ;
         }
-    }*/
+    }
 }
