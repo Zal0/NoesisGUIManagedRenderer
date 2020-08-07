@@ -45,6 +45,7 @@
 #include <NsGui/IView.h>
 #include <NsGui/Grid.h>
 
+#include "ManagedRenderDevice/ManagedRenderDevice.h"
 
 static Noesis::IView* _view;
 
@@ -103,7 +104,7 @@ static void NoesisInit()
     _view->SetFlags(Noesis::RenderFlags_PPAA | Noesis::RenderFlags_LCD);
 
     // Renderer initialization with an OpenGL device
-    _view->GetRenderer()->Init(NoesisApp::GLFactory::CreateDevice());
+    _view->GetRenderer()->Init(/*NoesisApp::GLFactory::CreateDevice()*/new ManagedRenderDevice());
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

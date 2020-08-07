@@ -7,6 +7,9 @@
     <Filter Include="Resources">
       <UniqueIdentifier>{3a4b4b32-2179-46c0-a44a-0e1558523a37}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Src\ManagedRenderDevice">
+      <UniqueIdentifier>{0a0e4402-a50c-4a95-9b54-6dc72f57474c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Src\glut.h">
@@ -21,5 +24,13 @@
     <None Include="Noesis.ico">
       <Filter>Resources</Filter>
     </None>
+    <ClInclude Include="..\..\Src\ManagedRenderDevice\ManagedRenderDevice.h">
+      <Filter>Src\ManagedRenderDevice</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\Src\ManagedRenderDevice\ManagedRenderDevice.cpp">
+      <Filter>Src\ManagedRenderDevice</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
