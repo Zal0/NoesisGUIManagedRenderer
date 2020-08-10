@@ -98,15 +98,15 @@ public unsafe struct Shader
 public unsafe struct Batch
 {
     // Render state
-    [FieldOffset(0)] byte shader;
-    [FieldOffset(1)] byte renderState;
-    [FieldOffset(2)] byte stencilRef;
+    [FieldOffset(0)] public byte shader;
+    [FieldOffset(1)] public byte renderState;
+    [FieldOffset(2)] public byte stencilRef;
 
     // Draw parameters
-    [FieldOffset(4)] UInt32 vertexOffset;
-    [FieldOffset(8)] UInt32 numVertices;
-    [FieldOffset(12)] UInt32 startIndex;
-    [FieldOffset(16)] UInt32 numIndices;
+    [FieldOffset(4)] public UInt32 vertexOffset;
+    [FieldOffset(8)] public UInt32 numVertices;
+    [FieldOffset(12)] public UInt32 startIndex;
+    [FieldOffset(16)] public UInt32 numIndices;
 
     // Textures (Unused textures are set to null)
     /*Texture pattern;
@@ -149,16 +149,42 @@ public abstract class ManagedRenderDevice
     private const string LIB_NOESIS = "../../../../IntegrationGLUT/Projects/windows_x86_64/x64/Debug/IntegrationGLUT.dll";
 
     public delegate void SetDrawBatchCallbackDelegate(ref Batch batch);
+    public delegate IntPtr SetMapVerticesCallbackDelegate(UInt32 size);
+    public delegate void SetUnmapVerticesCallbackDelegate();
 
     [DllImport(LIB_NOESIS, EntryPoint = "SetDrawBatchCallback", CallingConvention = CallingConvention.Winapi)]
     [System.Security.SuppressUnmanagedCodeSecurity()]
     private static extern void SetDrawBatchCallback(SetDrawBatchCallbackDelegate callback);
 
+    [DllImport(LIB_NOESIS, EntryPoint = "SetMapVerticesCallback", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    private static extern void SetMapVerticesCallback(SetMapVerticesCallbackDelegate callback);
+
+    [DllImport(LIB_NOESIS, EntryPoint = "SetUnmapVerticesCallback", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    private static extern void SetUnmapVerticesCallback(SetUnmapVerticesCallbackDelegate callback);
+
+    [DllImport(LIB_NOESIS, EntryPoint = "SetMapIndicesCallback", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    private static extern void SetMapIndicesCallback(SetMapVerticesCallbackDelegate callback);
+
+    [DllImport(LIB_NOESIS, EntryPoint = "SetUnmapIndicesCallback", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    private static extern void SetUnmapIndicesCallback(SetUnmapVerticesCallbackDelegate callback);
+
     public static void SetMamanagedRenderDevice(ManagedRenderDevice renderDevice)
     {
         SetDrawBatchCallback(renderDevice.DrawBatch);
+        SetMapVerticesCallback(renderDevice.MapVertices);
+        SetUnmapVerticesCallback(renderDevice.UnmapVertices);
+        SetMapIndicesCallback(renderDevice.MapIndices);
+        SetUnmapIndicesCallback(renderDevice.UnmapIndices);
     }
 
     public abstract void DrawBatch(ref Batch batch);
+    public abstract IntPtr MapVertices(UInt32 size);
+    public abstract void UnmapVertices();
+    public abstract IntPtr MapIndices(UInt32 size);
+    public abstract void UnmapIndices();
 }
 

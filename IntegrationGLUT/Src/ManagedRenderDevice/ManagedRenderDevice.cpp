@@ -2,16 +2,30 @@
 
 #include <NsRender/Texture.h>
 
+#pragma warning(disable : 4100)
+
 using namespace Noesis;
 
 typedef void(*DrawBatch)(const Noesis::Batch& batch);
+typedef void*(*MapVertices)(uint32_t bytes);
+typedef void(*UnmapVertices)();
+typedef void* (*MapIndices)(uint32_t bytes);
+typedef void(*UnmapIndices)();
 
 DrawBatch drawBatchCallback = 0;
+MapVertices mapVerticesCallback = 0;
+UnmapVertices unmapVerticesCallback = 0;
+MapIndices mapIndicesCallback = 0;
+UnmapIndices unmapIndicesCallback = 0;
 
 #define DLL_FUNC __declspec(dllexport)
 extern "C"
 {
-	DLL_FUNC void SetDrawBatchCallback(DrawBatch func) { drawBatchCallback = func;}
+	DLL_FUNC void SetDrawBatchCallback(DrawBatch func)         { drawBatchCallback = func;}
+	DLL_FUNC void SetMapVerticesCallback(MapVertices func)     { mapVerticesCallback = func; }
+	DLL_FUNC void SetUnmapVerticesCallback(UnmapVertices func) { unmapVerticesCallback = func; }
+	DLL_FUNC void SetMapIndicesCallback(MapVertices func)      { mapIndicesCallback = func; }
+	DLL_FUNC void SetUnmapIndicesCallback(UnmapVertices func)  { unmapIndicesCallback = func; }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -119,46 +133,34 @@ void ManagedRenderDevice::EndRender()
 
 }
 
-uint32_t* vertices = 0;
 void* ManagedRenderDevice::MapVertices(uint32_t bytes)
 {
-	if (vertices)
-	{
-		delete[] vertices;
-	}
-
-	vertices = new uint32_t[bytes];
-	return vertices;
+	if (mapVerticesCallback)
+		return mapVerticesCallback(bytes);
+	return 0;
 }
 
 void ManagedRenderDevice::UnmapVertices()
 {
-	delete[] vertices;
-	vertices = 0;
+	if (unmapVerticesCallback)
+		unmapVerticesCallback();
 }
 
-uint32_t* indices = 0;
 void* ManagedRenderDevice::MapIndices(uint32_t bytes)
 {
-	if (indices)
-	{
-		delete[] indices;
-	}
-
-	indices = new uint32_t[bytes];
-	return indices;
+	if (mapIndicesCallback)
+		return mapIndicesCallback(bytes);
+	return 0;
 }
 
 void ManagedRenderDevice::UnmapIndices()
 {
-	delete[] indices;
-	indices = 0;
+	if (unmapIndicesCallback)
+		unmapIndicesCallback();
 }
 
 void ManagedRenderDevice::DrawBatch(const Noesis::Batch& batch)
 {
 	if (drawBatchCallback)
-	{
 		drawBatchCallback(batch);
-	}
 }
