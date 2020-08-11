@@ -90,6 +90,8 @@ public unsafe struct Shader
         Count
     };
 
+    
+
     byte v;
 }
 
@@ -151,26 +153,23 @@ public abstract class ManagedRenderDevice
     public delegate void SetDrawBatchCallbackDelegate(ref Batch batch);
     public delegate IntPtr SetMapVerticesCallbackDelegate(UInt32 size);
     public delegate void SetUnmapVerticesCallbackDelegate();
+    public delegate IntPtr SetMapIndicesCallbackDelegate(UInt32 size);
+    public delegate void SetUnmapIndicesCallbackDelegate();
 
-    [DllImport(LIB_NOESIS, EntryPoint = "SetDrawBatchCallback", CallingConvention = CallingConvention.Winapi)]
-    [System.Security.SuppressUnmanagedCodeSecurity()]
+    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Winapi)]
     private static extern void SetDrawBatchCallback(SetDrawBatchCallbackDelegate callback);
 
-    [DllImport(LIB_NOESIS, EntryPoint = "SetMapVerticesCallback", CallingConvention = CallingConvention.Winapi)]
-    [System.Security.SuppressUnmanagedCodeSecurity()]
+    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Winapi)]
     private static extern void SetMapVerticesCallback(SetMapVerticesCallbackDelegate callback);
 
-    [DllImport(LIB_NOESIS, EntryPoint = "SetUnmapVerticesCallback", CallingConvention = CallingConvention.Winapi)]
-    [System.Security.SuppressUnmanagedCodeSecurity()]
+    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Winapi)]
     private static extern void SetUnmapVerticesCallback(SetUnmapVerticesCallbackDelegate callback);
 
-    [DllImport(LIB_NOESIS, EntryPoint = "SetMapIndicesCallback", CallingConvention = CallingConvention.Winapi)]
-    [System.Security.SuppressUnmanagedCodeSecurity()]
-    private static extern void SetMapIndicesCallback(SetMapVerticesCallbackDelegate callback);
+    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Winapi)]
+    private static extern void SetMapIndicesCallback(SetMapIndicesCallbackDelegate callback);
 
-    [DllImport(LIB_NOESIS, EntryPoint = "SetUnmapIndicesCallback", CallingConvention = CallingConvention.Winapi)]
-    [System.Security.SuppressUnmanagedCodeSecurity()]
-    private static extern void SetUnmapIndicesCallback(SetUnmapVerticesCallbackDelegate callback);
+    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Winapi)]
+    private static extern void SetUnmapIndicesCallback(SetUnmapIndicesCallbackDelegate callback);
 
     public static void SetMamanagedRenderDevice(ManagedRenderDevice renderDevice)
     {

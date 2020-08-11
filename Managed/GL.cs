@@ -39,6 +39,10 @@ public static class GL
     [System.Security.SuppressUnmanagedCodeSecurity()]
     public static extern void Vertex2i(int x, int y);
 
+    [DllImport(LIB_GL, EntryPoint = "glVertex2f", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    public static extern void Vertex2f(float x, float y);
+
     [DllImport(LIB_GL, EntryPoint = "glEnd", CallingConvention = CallingConvention.Winapi)]
     [System.Security.SuppressUnmanagedCodeSecurity()]
     public static extern void End();
