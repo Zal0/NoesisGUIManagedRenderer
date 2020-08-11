@@ -54,7 +54,7 @@ extern "C"
 {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-static void NoesisInit()
+DLL_FUNC void NoesisInit()
 {
     Noesis::SetLogHandler([](const char*, uint32_t, uint32_t level, const char*, const char* msg)
     {
@@ -104,7 +104,8 @@ static void NoesisInit()
     _view->SetFlags(Noesis::RenderFlags_PPAA | Noesis::RenderFlags_LCD);
 
     // Renderer initialization with an OpenGL device
-    _view->GetRenderer()->Init(/*NoesisApp::GLFactory::CreateDevice()*/new ManagedRenderDevice());
+    //_view->GetRenderer()->Init(NoesisApp::GLFactory::CreateDevice());
+    _view->GetRenderer()->Init(new ManagedRenderDevice());
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -125,6 +126,8 @@ static void DisplayFunc(void)
     glClearColor(0.0f, 0.0f, 0.25f, 0.0f);
     glClearStencil(0);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // Rendering is done in the active framebuffer
     _view->GetRenderer()->Render();
@@ -137,6 +140,11 @@ static void DisplayFunc(void)
 static void ReshapeFunc(int width, int height)
 {
     _view->SetSize(width, height);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0f, width, 0, height, 0.0f, 1.0f);
+    glMatrixMode(GL_MODELVIEW);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
