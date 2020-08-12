@@ -23,6 +23,10 @@ public static class GLUT
     public const int GLUT_ACTIVE_CTRL = 2;
     public const int GLUT_ACTIVE_ALT = 4;
 
+    public const int GLUT_ELAPSED_TIME = 700;
+    public const int GLUT_WINDOW_WIDTH = 102;
+    public const int GLUT_WINDOW_HEIGHT = 103;
+
     #region Initialization and cleanup
 
     [DllImport(LIB_GLUT, EntryPoint = "glutInit", CallingConvention = CallingConvention.Winapi)]
@@ -159,4 +163,8 @@ public static class GLUT
     [DllImport(LIB_GLUT, EntryPoint = "glutPostRedisplay", CallingConvention = CallingConvention.Winapi)]
     [System.Security.SuppressUnmanagedCodeSecurity()]
     public static extern int PostRedisplay();
+
+    [DllImport(LIB_GLUT, EntryPoint = "glutGet", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    public static extern int Get(int state);
 }

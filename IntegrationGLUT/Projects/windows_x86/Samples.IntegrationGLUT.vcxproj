@@ -97,7 +97,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Src\ManagedRenderDevice\ManagedRenderDevice.cpp" />
-    <ClInclude Include="..\..\Src\glut.h" />
     <ClCompile Include="..\..\Src\Main.cpp">
     </ClCompile>
     <ClInclude Include="..\..\Src\ManagedRenderDevice\ManagedRenderDevice.h" />

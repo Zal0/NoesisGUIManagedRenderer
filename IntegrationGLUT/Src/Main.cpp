@@ -9,27 +9,6 @@
 // multiplatform integration sample with step by step comments can be found at 'Samples/Integration'
 
 
-#ifdef _WIN32
-#include "glut.h"
-#pragma comment(linker,"/SUBSYSTEM:CONSOLE")
-#endif
-
-#ifdef __APPLE__
-#include <GLUT/glut.h>
-#endif
-
-#ifdef __EMSCRIPTEN__
-#include <GL/glut.h>
-#include <GLES3/gl32.h>
-#include <emscripten/html5.h>
-#endif
-
-#ifdef __linux__
-#define GL_GLEXT_PROTOTYPES
-#include <GL/gl.h>
-#include <GL/glut.h>
-#endif
-
 #ifdef _MSC_VER
 #define UNUSED_ARGS(...) (void)(true ? (void)0 : ((void)(__VA_ARGS__)))
 #else
@@ -108,10 +87,10 @@ DLL_FUNC void NoesisInit()
     _view->GetRenderer()->Init(new ManagedRenderDevice());
 }
 
-DLL_FUNC void UpdateView()
+DLL_FUNC void UpdateView(float t)
 {
     // Update view (layout, animations, ...)
-    _view->Update(glutGet(GLUT_ELAPSED_TIME) / 1000.0);
+    _view->Update(t);
 
     // Offscreen rendering phase populates textures needed by the on-screen rendering
     _view->GetRenderer()->UpdateRenderTree();

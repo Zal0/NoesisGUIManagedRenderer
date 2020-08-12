@@ -12,9 +12,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Src\glut.h">
-      <Filter>Src</Filter>
-    </ClInclude>
     <ClCompile Include="..\..\Src\Main.cpp">
       <Filter>Src</Filter>
     </ClCompile>

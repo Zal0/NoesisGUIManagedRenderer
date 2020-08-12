@@ -17,9 +17,9 @@ class ManagedRenderTest
     [System.Security.SuppressUnmanagedCodeSecurity()]
     private static extern void NoesisInit();
 
-    [DllImport(LIB_NOESIS)]
+    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
     [System.Security.SuppressUnmanagedCodeSecurity()]
-    private static extern void UpdateView();
+    private static extern void UpdateView(float t);
 
     [DllImport(LIB_NOESIS)]
     [System.Security.SuppressUnmanagedCodeSecurity()]
@@ -42,7 +42,6 @@ class ManagedRenderTest
     private static extern void ViewMouseButtonUp(int x, int y);
 
     private int _windowHandle;
-    private int w, h;
 
     public static void Main(string[] args)
     {
@@ -63,9 +62,7 @@ class ManagedRenderTest
 
         GLUT.Init();
         GLUT.InitDisplayMode(GLUT.GLUT_RGB | GLUT.GLUT_DOUBLE | GLUT.GLUT_STENCIL);
-        w = 1000;
-        h = 600;
-        GLUT.InitWindowSize(w, h);
+        GLUT.InitWindowSize(1000, 600);
         _windowHandle = GLUT.CreateWindow("NoesisGUI - Managed Renderer");
 
         NoesisInit();
@@ -80,10 +77,10 @@ class ManagedRenderTest
 
     private void DisplayFunc()
     {
-        UpdateView();
+        UpdateView(GLUT.Get(GLUT.GLUT_ELAPSED_TIME) / 1000.0f);
 
         //GL.BindFramebuffer(GL.GL_FRAMEBUFFER, 0);
-        GL.Viewport(0, 0, w, h);//todo: get w and h
+        GL.Viewport(0, 0, GLUT.Get(GLUT.GLUT_WINDOW_WIDTH), GLUT.Get(GLUT.GLUT_WINDOW_HEIGHT));
 
         GL.ClearColor(0.0f, 0.0f, 0.25f, 0.0f);
         GL.ClearStencil(0);
@@ -99,8 +96,6 @@ class ManagedRenderTest
 
     private void ReshapeFunc(int w, int h)
     {
-        this.w = w;
-        this.h = h;
         SetViewSize(w, h);
 
         GL.MatrixMode(GL.GL_PROJECTION);
