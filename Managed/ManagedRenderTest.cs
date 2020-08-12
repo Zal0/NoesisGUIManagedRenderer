@@ -86,7 +86,7 @@ class ManagedRenderTest
         GL.ClearStencil(0);
         GL.Clear(GL.GL_COLOR_BUFFER_BIT | GL.GL_STENCIL_BUFFER_BIT);
 
-        GL.PolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE);
+        //GL.PolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE);
 
         RenderView();
 

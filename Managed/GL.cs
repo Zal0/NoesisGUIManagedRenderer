@@ -91,4 +91,8 @@ public static class GL
     [DllImport(LIB_GL, EntryPoint = "glPolygonMode", CallingConvention = CallingConvention.Winapi)]
     [System.Security.SuppressUnmanagedCodeSecurity()]
     public static extern void PolygonMode(int face, int mode);
+
+    [DllImport(LIB_GL, EntryPoint = "glColor4ub", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    public static extern void Color4ub(byte r, byte g, byte b, byte a);
 }

@@ -8,96 +8,142 @@ using System.Threading.Tasks;
 
 public unsafe class GLUTRenderer : ManagedRenderDevice
 {
-    int[] stride =
+    // List of shaders to be implemented by the device with expected vertex format
+    //
+    //  Name       Format                   Size (bytes)      Semantic
+    //  ---------------------------------------------------------------------------------
+    //  Pos        R32G32_FLOAT             8                 Position (x,y)
+    //  Color      R8G8B8A8_UNORM           4                 Color (rgba)
+    //  Tex0       R32G32_FLOAT             8                 Texture (u,v)
+    //  Tex1       R32G32_FLOAT             8                 Texture (u,v)
+    //  Tex2       R16G16B16A16_UNORM       8                 Rect (x0,y0, x1,y1)
+    //  Coverage   R32_FLOAT                4                 Coverage (x)
+
+    const int Pos      = 1 << 0;
+    const int Color    = 1 << 1;
+    const int Tex0     = 1 << 2;
+    const int Tex1     = 1 << 3;
+    const int Tex2     = 1 << 4;
+    const int Coverage = 1 << 5;
+
+    int[] formats =
     {
-        8, //RGBA,                       // Pos
-        8, //Mask,                       // Pos
+        Pos,                                 //RGBA,                      
+        Pos,                                 //Mask,                      
 
-        12, //Path_Solid,                 // Pos | Color
-        16, //Path_Linear,                // Pos | Tex0
-        16, //Path_Radial,                // Pos | Tex0
-        16, //Path_Pattern,               // Pos | Tex0
+        Pos | Color,                         //Path_Solid,                
+        Pos | Tex0,                          //Path_Linear,               
+        Pos | Tex0,                          //Path_Radial,               
+        Pos | Tex0,                          //Path_Pattern,              
 
-        16, //PathAA_Solid,               // Pos | Color | Coverage
-        20, //PathAA_Linear,              // Pos | Tex0  | Coverage
-        20, //PathAA_Radial,              // Pos | Tex0  | Coverage
-        20, //PathAA_Pattern,             // Pos | Tex0  | Coverage
+        Pos | Color | Coverage,              //PathAA_Solid,              
+        Pos | Tex0  | Coverage,              //PathAA_Linear,             
+        Pos | Tex0  | Coverage,              //PathAA_Radial,             
+        Pos | Tex0  | Coverage,              //PathAA_Pattern,            
 
-        20, //SDF_Solid,                  // Pos | Color | Tex1
-        24, //SDF_Linear,                 // Pos | Tex0  | Tex1
-        24, //SDF_Radial,                 // Pos | Tex0  | Tex1
-        24, //SDF_Pattern,                // Pos | Tex0  | Tex1
+        Pos | Color | Tex1,                  //SDF_Solid,                 
+        Pos | Tex0  | Tex1,                  //SDF_Linear,                
+        Pos | Tex0  | Tex1,                  //SDF_Radial,                
+        Pos | Tex0  | Tex1,                  //SDF_Pattern,               
 
-        20, //SDF_LCD_Solid,              // Pos | Color | Tex1
-        24, //SDF_LCD_Linear,             // Pos | Tex0  | Tex1
-        24, //SDF_LCD_Radial,             // Pos | Tex0  | Tex1
-        24, //SDF_LCD_Pattern,            // Pos | Tex0  | Tex1
+        Pos | Color | Tex1,                  //SDF_LCD_Solid,             
+        Pos | Tex0  | Tex1,                  //SDF_LCD_Linear,            
+        Pos | Tex0  | Tex1,                  //SDF_LCD_Radial,            
+        Pos | Tex0  | Tex1,                  //SDF_LCD_Pattern,           
 
-        20, //Image_Opacity_Solid,        // Pos | Color | Tex1
-        24, //Image_Opacity_Linear,       // Pos | Tex0  | Tex1
-        24, //Image_Opacity_Radial,       // Pos | Tex0  | Tex1
-        24, //Image_Opacity_Pattern,      // Pos | Tex0  | Tex1
+        Pos | Color | Tex1,                  //Image_Opacity_Solid,       
+        Pos | Tex0  | Tex1,                  //Image_Opacity_Linear,      
+        Pos | Tex0  | Tex1,                  //Image_Opacity_Radial,      
+        Pos | Tex0  | Tex1,                  //Image_Opacity_Pattern,     
 
-        28, //Image_Shadow35V,            // Pos | Color | Tex1 | Tex2
-        28, //Image_Shadow63V,            // Pos | Color | Tex1 | Tex2
-        28, //Image_Shadow127V,           // Pos | Color | Tex1 | Tex2
+        Pos | Color | Tex1 | Tex2,           //Image_Shadow35V,           
+        Pos | Color | Tex1 | Tex2,           //Image_Shadow63V,           
+        Pos | Color | Tex1 | Tex2,           //Image_Shadow127V,          
 
-        28, //Image_Shadow35H_Solid,      // Pos | Color | Tex1 | Tex2
-        32, //Image_Shadow35H_Linear,     // Pos | Tex0  | Tex1 | Tex2
-        32, //Image_Shadow35H_Radial,     // Pos | Tex0  | Tex1 | Tex2
-        32, //Image_Shadow35H_Pattern,    // Pos | Tex0  | Tex1 | Tex2
+        Pos | Color | Tex1 | Tex2,           //Image_Shadow35H_Solid,     
+        Pos | Tex0  | Tex1 | Tex2,           //Image_Shadow35H_Linear,    
+        Pos | Tex0  | Tex1 | Tex2,           //Image_Shadow35H_Radial,    
+        Pos | Tex0  | Tex1 | Tex2,           //Image_Shadow35H_Pattern,   
 
-        28, //Image_Shadow63H_Solid,      // Pos | Color | Tex1 | Tex2
-        32, //Image_Shadow63H_Linear,     // Pos | Tex0  | Tex1 | Tex2
-        32, //Image_Shadow63H_Radial,     // Pos | Tex0  | Tex1 | Tex2
-        32, //Image_Shadow63H_Pattern,    // Pos | Tex0  | Tex1 | Tex2
+        Pos | Color | Tex1 | Tex2,           //Image_Shadow63H_Solid,     
+        Pos | Tex0  | Tex1 | Tex2,           //Image_Shadow63H_Linear,    
+        Pos | Tex0  | Tex1 | Tex2,           //Image_Shadow63H_Radial,    
+        Pos | Tex0  | Tex1 | Tex2,           //Image_Shadow63H_Pattern,   
 
-        28, //Image_Shadow127H_Solid,     // Pos | Color | Tex1 | Tex2
-        32, //Image_Shadow127H_Linear,    // Pos | Tex0  | Tex1 | Tex2
-        32, //Image_Shadow127H_Radial,    // Pos | Tex0  | Tex1 | Tex2
-        32, //Image_Shadow127H_Pattern,   // Pos | Tex0  | Tex1 | Tex2
+        Pos | Color | Tex1 | Tex2,           //Image_Shadow127H_Solid,    
+        Pos | Tex0  | Tex1 | Tex2,           //Image_Shadow127H_Linear,   
+        Pos | Tex0  | Tex1 | Tex2,           //Image_Shadow127H_Radial,   
+        Pos | Tex0  | Tex1 | Tex2,           //Image_Shadow127H_Pattern,  
 
-        28, //Image_Blur35V,              // Pos | Color | Tex1 | Tex2
-        28, //Image_Blur63V,              // Pos | Color | Tex1 | Tex2
-        28, //Image_Blur127V,             // Pos | Color | Tex1 | Tex2
+        Pos | Color | Tex1 | Tex2,           //Image_Blur35V,             
+        Pos | Color | Tex1 | Tex2,           //Image_Blur63V,             
+        Pos | Color | Tex1 | Tex2,           //Image_Blur127V,            
 
-        28, //Image_Blur35H_Solid,        // Pos | Color | Tex1 | Tex2
-        32, //Image_Blur35H_Linear,       // Pos | Tex0  | Tex1 | Tex2
-        32, //Image_Blur35H_Radial,       // Pos | Tex0  | Tex1 | Tex2
-        32, //Image_Blur35H_Pattern,      // Pos | Tex0  | Tex1 | Tex2
+        Pos | Color | Tex1 | Tex2,           //Image_Blur35H_Solid,       
+        Pos | Tex0  | Tex1 | Tex2,           //Image_Blur35H_Linear,      
+        Pos | Tex0  | Tex1 | Tex2,           //Image_Blur35H_Radial,      
+        Pos | Tex0  | Tex1 | Tex2,           //Image_Blur35H_Pattern,     
 
-        28, //Image_Blur63H_Solid,        // Pos | Color | Tex1 | Tex2
-        32, //Image_Blur63H_Linear,       // Pos | Tex0  | Tex1 | Tex2
-        32, //Image_Blur63H_Radial,       // Pos | Tex0  | Tex1 | Tex2
-        32, //Image_Blur63H_Pattern,      // Pos | Tex0  | Tex1 | Tex2
+        Pos | Color | Tex1 | Tex2,           //Image_Blur63H_Solid,       
+        Pos | Tex0  | Tex1 | Tex2,           //Image_Blur63H_Linear,      
+        Pos | Tex0  | Tex1 | Tex2,           //Image_Blur63H_Radial,      
+        Pos | Tex0  | Tex1 | Tex2,           //Image_Blur63H_Pattern,     
 
-        28, //Image_Blur127H_Solid,       // Pos | Color | Tex1 | Tex2
-        32, //Image_Blur127H_Linear,      // Pos | Tex0  | Tex1 | Tex2
-        32, //Image_Blur127H_Radial,      // Pos | Tex0  | Tex1 | Tex2
-        32, //Image_Blur127H_Pattern,     // Pos | Tex0  | Tex1 | Tex2
+        Pos | Color | Tex1 | Tex2,           //Image_Blur127H_Solid,      
+        Pos | Tex0  | Tex1 | Tex2,           //Image_Blur127H_Linear,     
+        Pos | Tex0  | Tex1 | Tex2,           //Image_Blur127H_Radial,     
+        Pos | Tex0  | Tex1 | Tex2,           //Image_Blur127H_Pattern,    
     };
 
     private byte[] vertices;
     private UInt16[] indices;
 
-
     int GetStride(ref Batch batch)
     {
-        return stride[batch.shader];
+        int format = formats[batch.shader];
+        int ret = 0;
+
+        if ((format & Pos) != 0)
+            ret += 8;
+        if ((format & Color) != 0)
+            ret += 4;
+        if ((format & Tex0) != 0)
+            ret += 8;
+        if ((format & Tex1) != 0)
+            ret += 8;
+        if ((format & Tex2) != 0)
+            ret += 8;
+        if ((format & Coverage) != 0)
+            ret += 4;
+
+        return ret;
     }
 
     public override void DrawBatch(ref Batch batch)
     {
         int stride = GetStride(ref batch);
 
+        int format = formats[batch.shader];
+        bool hasColor = (format & Color) != 0;
+        if(!hasColor)
+            GL.Color4ub(255, 255, 255, 255);
+
         GL.Begin(GL.GL_TRIANGLES);
         for (int i = 0; i < batch.numIndices; ++i)
         {
             int idx = indices[(int)(batch.startIndex) + i];
-            
+
+            if (hasColor)
+            {
+                byte r = vertices[(int)batch.vertexOffset + idx * stride + 8];
+                byte g = vertices[(int)batch.vertexOffset + idx * stride + 9];
+                byte b = vertices[(int)batch.vertexOffset + idx * stride + 10];
+                byte a = vertices[(int)batch.vertexOffset + idx * stride + 11];
+                GL.Color4ub(r, g, b, a);
+            }
+
             float x = BitConverter.ToSingle(vertices, (int)batch.vertexOffset + idx * stride);
             float y = BitConverter.ToSingle(vertices, (int)batch.vertexOffset + idx * stride + 4);
-
             GL.Vertex2f(x, y);
         }
         GL.End();
