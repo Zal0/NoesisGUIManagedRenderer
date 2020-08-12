@@ -7,7 +7,10 @@ public static class GLUT
     private const string LIB_GLUT = "../../../libs/glut32.dll"; // "/usr/lib64/libglut.so.3"
 
     public const int GLUT_RGB = 0;
+    public const int GLUT_DOUBLE = 2;
+    public const int GLUT_STENCIL = 32;
     public const int GLUT_RGBA = GLUT_RGB;
+    
 
     public const int GLUT_LEFT_BUTTON = 0;
     public const int GLUT_MIDDLE_BUTTON = 1;
@@ -106,9 +109,18 @@ public static class GLUT
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
     public delegate void DisplayProcDelegate();
 
+    //void glutReshapeFunc(void (*func)(int width, int height))
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+    public delegate void ReshapeFuncDelegate(int w, int h);
+
+
     [DllImport(LIB_GLUT, EntryPoint = "glutDisplayFunc", CallingConvention = CallingConvention.Winapi)]
     [System.Security.SuppressUnmanagedCodeSecurity()]
     public static extern void DisplayFunc(DisplayProcDelegate displayProc);
+
+    [DllImport(LIB_GLUT, EntryPoint = "glutReshapeFunc", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    public static extern void ReshapeFunc(ReshapeFuncDelegate reshapeFunc);
 
     // void glutMouseFunc(void (* callback)(int button, int state, int x, int y));
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
@@ -139,4 +151,12 @@ public static class GLUT
     [DllImport(LIB_GLUT, EntryPoint = "glutGetModifiers", CallingConvention = CallingConvention.Winapi)]
     [System.Security.SuppressUnmanagedCodeSecurity()]
     public static extern int GetModifiers();
+
+    [DllImport(LIB_GLUT, EntryPoint = "glutSwapBuffers", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    public static extern int SwapBuffers();
+
+    [DllImport(LIB_GLUT, EntryPoint = "glutPostRedisplay", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    public static extern int PostRedisplay();
 }

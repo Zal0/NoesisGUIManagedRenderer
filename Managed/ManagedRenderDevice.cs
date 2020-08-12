@@ -148,7 +148,7 @@ public unsafe struct Batch
 
 public abstract class ManagedRenderDevice
 {
-    private const string LIB_NOESIS = "../../../../IntegrationGLUT/Projects/windows_x86_64/x64/Debug/IntegrationGLUT.dll";
+    private const string LIB_NOESIS = "../../../../IntegrationGLUT/Projects/windows_x86/Win32/Debug/IntegrationGLUT.dll";
 
     public delegate void SetDrawBatchCallbackDelegate(ref Batch batch);
     public delegate IntPtr SetMapVerticesCallbackDelegate(UInt32 size);
@@ -156,19 +156,19 @@ public abstract class ManagedRenderDevice
     public delegate IntPtr SetMapIndicesCallbackDelegate(UInt32 size);
     public delegate void SetUnmapIndicesCallbackDelegate();
 
-    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Winapi)]
+    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
     private static extern void SetDrawBatchCallback(SetDrawBatchCallbackDelegate callback);
 
-    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Winapi)]
+    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
     private static extern void SetMapVerticesCallback(SetMapVerticesCallbackDelegate callback);
 
-    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Winapi)]
+    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
     private static extern void SetUnmapVerticesCallback(SetUnmapVerticesCallbackDelegate callback);
 
-    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Winapi)]
+    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
     private static extern void SetMapIndicesCallback(SetMapIndicesCallbackDelegate callback);
 
-    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Winapi)]
+    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
     private static extern void SetUnmapIndicesCallback(SetUnmapIndicesCallbackDelegate callback);
 
     public static void SetMamanagedRenderDevice(ManagedRenderDevice renderDevice)

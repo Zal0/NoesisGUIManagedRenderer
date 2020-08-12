@@ -1,6 +1,7 @@
 #include "ManagedRenderDevice.h"
 
 #include <NsRender/Texture.h>
+#include <NsRender/RenderTarget.h>
 
 #pragma warning(disable : 4100)
 

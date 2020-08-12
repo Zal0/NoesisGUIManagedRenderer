@@ -104,12 +104,11 @@ DLL_FUNC void NoesisInit()
     _view->SetFlags(Noesis::RenderFlags_PPAA | Noesis::RenderFlags_LCD);
 
     // Renderer initialization with an OpenGL device
-    //_view->GetRenderer()->Init(NoesisApp::GLFactory::CreateDevice());
+    //_view->GetRenderer()->Init(NoesisApp::GLFactory::CreateDevice(false));
     _view->GetRenderer()->Init(new ManagedRenderDevice());
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-static void DisplayFunc(void)
+DLL_FUNC void UpdateView()
 {
     // Update view (layout, animations, ...)
     _view->Update(glutGet(GLUT_ELAPSED_TIME) / 1000.0);
@@ -117,82 +116,31 @@ static void DisplayFunc(void)
     // Offscreen rendering phase populates textures needed by the on-screen rendering
     _view->GetRenderer()->UpdateRenderTree();
     _view->GetRenderer()->RenderOffscreen();
-
-    // If you are going to render here with your own engine you need to restore the GPU state
-    // because noesis changes it. In this case only framebuffer and viewport need to be restored
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT));
-
-    glClearColor(0.0f, 0.0f, 0.25f, 0.0f);
-    glClearStencil(0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-    // Rendering is done in the active framebuffer
-    _view->GetRenderer()->Render();
-
-    glutSwapBuffers();
-    glutPostRedisplay();
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-static void ReshapeFunc(int width, int height)
+DLL_FUNC void RenderView()
 {
-    _view->SetSize(width, height);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0.0f, width, 0, height, 0.0f, 1.0f);
-    glMatrixMode(GL_MODELVIEW);
+    _view->GetRenderer()->Render();
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-static void MouseMoveFunc(int x, int y)
+DLL_FUNC void SetViewSize(int w, int h)
+{
+    _view->SetSize(w, h);
+}
+
+DLL_FUNC void ViewMouseMove(int x, int y)
 {
     _view->MouseMove(x, y);
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-static void MouseFunc(int button, int state, int x, int y)
+DLL_FUNC void ViewMouseButtonDown(int x, int y)
 {
-    if (button == GLUT_LEFT_BUTTON)
-    {
-        if (state == GLUT_DOWN)
-        {
-            _view->MouseButtonDown(x, y, Noesis::MouseButton_Left);
-        }
-        else
-        {
-            _view->MouseButtonUp(x, y, Noesis::MouseButton_Left);
-        }
-    }
+    _view->MouseButtonDown(x, y, Noesis::MouseButton_Left);
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-DLL_FUNC int main(int argc, char **argv)
+DLL_FUNC void ViewMouseButtonUp(int x, int y)
 {
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_STENCIL);
-    glutInitWindowSize(1000, 600);
-
-#ifdef __EMSCRIPTEN__
-    double width, height;
-    emscripten_get_element_css_size("#canvas", &width, &height);
-    emscripten_set_canvas_element_size("#canvas", (uint32_t)width, (uint32_t)height);
-    glutInitWindowSize((uint32_t)width, (uint32_t)height);
-#endif
-
-    glutCreateWindow("NoesisGUI - GLUT integration");
-    NoesisInit();
-
-    glutDisplayFunc(&DisplayFunc);
-    glutReshapeFunc(&ReshapeFunc);
-    glutPassiveMotionFunc(&MouseMoveFunc);
-    glutMouseFunc(&MouseFunc);
-
-    glutMainLoop();
-    return 0;
+    _view->MouseButtonUp(x, y, Noesis::MouseButton_Left);
 }
 
 }
