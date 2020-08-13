@@ -22,11 +22,32 @@ UnmapIndices unmapIndicesCallback = 0;
 #define DLL_FUNC __declspec(dllexport)
 extern "C"
 {
-	DLL_FUNC void SetDrawBatchCallback(DrawBatch func)         { drawBatchCallback = func;}
-	DLL_FUNC void SetMapVerticesCallback(MapVertices func)     { mapVerticesCallback = func; }
+	DLL_FUNC void SetDrawBatchCallback    (DrawBatch func)     { drawBatchCallback = func;}
+	DLL_FUNC void SetMapVerticesCallback  (MapVertices func)   { mapVerticesCallback = func; }
 	DLL_FUNC void SetUnmapVerticesCallback(UnmapVertices func) { unmapVerticesCallback = func; }
-	DLL_FUNC void SetMapIndicesCallback(MapVertices func)      { mapIndicesCallback = func; }
-	DLL_FUNC void SetUnmapIndicesCallback(UnmapVertices func)  { unmapIndicesCallback = func; }
+	DLL_FUNC void SetMapIndicesCallback   (MapVertices func)   { mapIndicesCallback = func; }
+	DLL_FUNC void SetUnmapIndicesCallback (UnmapVertices func) { unmapIndicesCallback = func; }
+}
+
+typedef int(*CreateTexture)(uint32_t width, uint32_t height, uint32_t numLevels, Noesis::TextureFormat::Enum format, const void** data);
+typedef int(*GetWidth)(int id);
+typedef int(*GetHeight)(int id);
+typedef bool(*HasMipMaps)(int id);
+typedef bool(*IsInverted)(int id);
+
+CreateTexture createTextureCallbak = 0;
+GetWidth getWidth = 0;
+GetHeight getHeight = 0;
+HasMipMaps hasMipMaps = 0;
+IsInverted isInverted = 0;
+
+extern "C"
+{
+	DLL_FUNC void SetCreateTextureCallback(CreateTexture func) { createTextureCallbak = func; }
+	DLL_FUNC void SetGetWidthCallback     (GetWidth func)      { getWidth = func; }
+	DLL_FUNC void SetGetHeightCallback    (GetHeight func)     { getHeight = func; }
+	DLL_FUNC void SetHasMipMapsCallback   (HasMipMaps func)    { hasMipMaps = func; }
+	DLL_FUNC void SetIsInvertedCallback   (IsInverted func)    { isInverted = func; }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -36,42 +57,52 @@ extern "C"
 class ManagedTexture : public Texture
 {
 private:
-	int width;
-	int height;
-	int numLevels;
-	bool isInverted;
+	int id;
 
 public:
-	ManagedTexture(int width, int height, int numLevels, bool isInverted) :
-		width(width), height(height), numLevels(numLevels), isInverted(isInverted)
+	ManagedTexture(const char* label, uint32_t width, uint32_t height, uint32_t numLevels, Noesis::TextureFormat::Enum format, const void** data)
 	{
+		id = createTextureCallbak(width, height, numLevels, format, data);
 	}
 
 	/// Returns the width of the texture
 	virtual uint32_t GetWidth() const
 	{
-		return width;
+		return getWidth(id);
 	}
 
 	/// Returns the height of the texture
 	virtual uint32_t GetHeight() const
 	{
-		return height;
+		return getHeight(id);
 	}
 
 	/// True if the texture has mipmaps
 	virtual bool HasMipMaps() const
 	{
-		return numLevels > 1;
+		return hasMipMaps(id);
 	}
 
 	/// True is the texture must be vertically inverted when mapped. This is true for render targets
 	/// on platforms (OpenGL) where texture V coordinate is zero at the "bottom of the texture"
 	virtual bool IsInverted() const
 	{
-		return isInverted;
+		return isInverted(id);
+	}
+
+	int GetId()
+	{
+		return id;
 	}
 };
+
+extern "C"
+{
+	DLL_FUNC int GetTextureId(ManagedTexture* texture)
+	{
+		return texture->GetId();
+	}
+}
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -95,7 +126,7 @@ Noesis::Ptr<Noesis::RenderTarget> ManagedRenderDevice::CloneRenderTarget(const c
 
 Noesis::Ptr<Noesis::Texture> ManagedRenderDevice::CreateTexture(const char* label, uint32_t width, uint32_t height, uint32_t numLevels, Noesis::TextureFormat::Enum format, const void** data)
 {
-	Ptr<ManagedTexture> texture = *new ManagedTexture(width, height, numLevels, false);
+	Ptr<ManagedTexture> texture = *new ManagedTexture(label, width, height, numLevels, format, data);
 	return texture;
 }
 

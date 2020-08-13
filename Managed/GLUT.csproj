@@ -66,9 +66,10 @@
     <Compile Include="GLU.cs" />
     <Compile Include="GLUT.cs" />
     <Compile Include="GLUTRenderer.cs" />
-    <Compile Include="MainClass.cs" />
+    <Compile Include="GLUTTexture.cs" />
     <Compile Include="ManagedRenderDevice.cs" />
     <Compile Include="ManagedRenderTest.cs" />
+    <Compile Include="ManagedTexture.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

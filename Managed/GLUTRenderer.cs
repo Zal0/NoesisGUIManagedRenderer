@@ -128,6 +128,11 @@ public unsafe class GLUTRenderer : ManagedRenderDevice
         if(!hasColor)
             GL.Color4ub(255, 255, 255, 255);
 
+        if((format & Tex0) != 0)
+        {
+            ManagedTexture texture = ManagedTexture.textures[ManagedTexture.GetTextureId(batch.ramps)];
+        }
+
         GL.Begin(GL.GL_TRIANGLES);
         for (int i = 0; i < batch.numIndices; ++i)
         {

@@ -111,23 +111,23 @@ public unsafe struct Batch
     [FieldOffset(16)] public UInt32 numIndices;
 
     // Textures (Unused textures are set to null)
-    /*Texture pattern;
-    byte patternSampler;
+    [FieldOffset(20)] public IntPtr pattern;
+    [FieldOffset(24)] public byte patternSampler;
 
-    Texture ramps;
-    byte rampsSampler;
+    [FieldOffset(28)] public IntPtr ramps;
+    [FieldOffset(32)] public byte rampsSampler;
 
-    Texture image;
-    byte imageSampler;
+    [FieldOffset(36)] public IntPtr image;
+    [FieldOffset(40)] public byte imageSampler;
 
-    Texture glyphs;
-    byte glyphsSampler;
+    [FieldOffset(44)] public IntPtr glyphs;
+    [FieldOffset(48)] public byte glyphsSampler;
 
-    Texture shadow;
-    byte shadowSampler;
+    [FieldOffset(52)] public IntPtr shadow;
+    [FieldOffset(56)] public byte shadowSampler;
 
     // Effect parameters
-    IntPtr effectParams;
+    /*IntPtr effectParams;
     UInt32 effectParamsSize;
     UInt32 effectParamsHash;
 
@@ -148,7 +148,7 @@ public unsafe struct Batch
 
 public abstract class ManagedRenderDevice
 {
-    private const string LIB_NOESIS = "../../../../IntegrationGLUT/Projects/windows_x86/Win32/Debug/IntegrationGLUT.dll";
+    public const string LIB_NOESIS = "../../../../IntegrationGLUT/Projects/windows_x86/Win32/Debug/IntegrationGLUT.dll";
 
     public delegate void SetDrawBatchCallbackDelegate(ref Batch batch);
     public delegate IntPtr SetMapVerticesCallbackDelegate(UInt32 size);

@@ -11,33 +11,31 @@ class ManagedRenderTest
     [DllImport("kernel32.dll")]
     private static extern IntPtr LoadLibrary(string filename);
 
-    private const string LIB_NOESIS = "../../../../IntegrationGLUT/Projects/windows_x86/Win32/Debug/IntegrationGLUT.dll";
-
-    [DllImport(LIB_NOESIS)]
+    [DllImport(ManagedRenderDevice.LIB_NOESIS)]
     [System.Security.SuppressUnmanagedCodeSecurity()]
     private static extern void NoesisInit();
 
-    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
     [System.Security.SuppressUnmanagedCodeSecurity()]
     private static extern void UpdateView(float t);
 
-    [DllImport(LIB_NOESIS)]
+    [DllImport(ManagedRenderDevice.LIB_NOESIS)]
     [System.Security.SuppressUnmanagedCodeSecurity()]
     private static extern void RenderView();
 
-    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
     [System.Security.SuppressUnmanagedCodeSecurity()]
     private static extern void SetViewSize(int w, int h);
 
-    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
     [System.Security.SuppressUnmanagedCodeSecurity()]
     private static extern void ViewMouseMove(int x, int y);
 
-    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
     [System.Security.SuppressUnmanagedCodeSecurity()]
     private static extern void ViewMouseButtonDown(int x, int y);
 
-    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
     [System.Security.SuppressUnmanagedCodeSecurity()]
     private static extern void ViewMouseButtonUp(int x, int y);
 
@@ -56,9 +54,10 @@ class ManagedRenderTest
         string NoesisPath = Environment.GetEnvironmentVariable("NOESIS_SDK_PATH");
         error = LoadLibrary(NoesisPath + @"\Bin\windows_x86\Noesis.dll");
         error = LoadLibrary(NoesisPath + @"\Bin\windows_x86\NoesisApp.dll");
-        error = LoadLibrary(LIB_NOESIS);
+        error = LoadLibrary(ManagedRenderDevice.LIB_NOESIS);
 
         ManagedRenderDevice.SetMamanagedRenderDevice(new GLUTRenderer());
+        ManagedTexture.SetMamanagedTexture<GLUTTexture>();
 
         GLUT.Init();
         GLUT.InitDisplayMode(GLUT.GLUT_RGB | GLUT.GLUT_DOUBLE | GLUT.GLUT_STENCIL);
