@@ -292,5 +292,10 @@ public unsafe class GLUTRenderer : ManagedRenderDevice
     {
         //indices = null;
     }
+
+    public override void SetManagedTexture()
+    {
+        ManagedTexture.SetMamanagedTexture<GLUTTexture>();
+    }
 }
 

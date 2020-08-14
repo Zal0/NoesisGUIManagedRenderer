@@ -7,6 +7,7 @@
 
 using namespace Noesis;
 
+//Render device callbacks
 typedef void(*DrawBatch)(const Noesis::Batch& batch);
 typedef void*(*MapVertices)(uint32_t bytes);
 typedef void(*UnmapVertices)();
@@ -29,6 +30,7 @@ extern "C"
 	DLL_FUNC void SetUnmapIndicesCallback (UnmapVertices func) { unmapIndicesCallback = func; }
 }
 
+//Texture callbacks
 typedef int(*CreateTexture)(uint32_t width, uint32_t height, uint32_t numLevels, Noesis::TextureFormat::Enum format, const void** data);
 typedef int(*GetWidth)(int id);
 typedef int(*GetHeight)(int id);

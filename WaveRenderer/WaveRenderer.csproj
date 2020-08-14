@@ -3,6 +3,17 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Platforms>AnyCPU;x86</Platforms>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,6 +21,10 @@
     <PackageReference Include="WaveEngine.DirectX11" Version="3.0.0.5175-preview3" />
     <PackageReference Include="WaveEngine.Forms" Version="3.0.0.5175-preview3" />
     <PackageReference Include="WaveEngine.Mathematics" Version="3.0.0.5175-preview3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NoesisManagedRenderer\NoesisManagedRenderer.csproj" />
   </ItemGroup>
 
 </Project>

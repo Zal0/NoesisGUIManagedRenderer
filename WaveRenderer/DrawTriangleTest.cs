@@ -87,6 +87,8 @@ namespace VisualTests.LowLevel.Tests
             this.vertexBuffers[0] = vertexBuffer;
 
             this.MarkAsLoaded();
+
+            ManagedRenderDevice.Init(new WaveRenderer.WaveRenderer());
         }
 
         protected override void InternalDrawCallback(TimeSpan gameTime)
