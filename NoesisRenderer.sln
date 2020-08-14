@@ -3,12 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30320.27
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GLUT", "Managed\GLUT.csproj", "{32F5C455-7755-47C2-83CC-F3A9559CDE8D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManagedRenderer", "Managed\ManagedRenderer.csproj", "{32F5C455-7755-47C2-83CC-F3A9559CDE8D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{BBE504D0-51C9-3E5B-8E79-5EEF41D6BF37} = {BBE504D0-51C9-3E5B-8E79-5EEF41D6BF37}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IntegrationGLUT", "IntegrationGLUT\Projects\windows_x86\Samples.IntegrationGLUT.vcxproj", "{BBE504D0-51C9-3E5B-8E79-5EEF41D6BF37}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ManagedRendererNative", "ManagedRendererNative\Projects\windows_x86\Samples.IntegrationGLUT.vcxproj", "{BBE504D0-51C9-3E5B-8E79-5EEF41D6BF37}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

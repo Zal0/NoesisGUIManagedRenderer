@@ -17,7 +17,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{BBE504D0-51C9-3E5B-8E79-5EEF41D6BF37}</ProjectGuid>
     <DefaultLanguage>en-US</DefaultLanguage>
-    <ProjectName>IntegrationGLUT</ProjectName>
+    <ProjectName>ManagedRendererNative</ProjectName>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

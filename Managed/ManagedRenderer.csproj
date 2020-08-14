@@ -62,13 +62,13 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GL.cs" />
-    <Compile Include="GLU.cs" />
-    <Compile Include="GLUT.cs" />
-    <Compile Include="GLUTRenderer.cs" />
-    <Compile Include="GLUTTexture.cs" />
+    <Compile Include="GL\GL.cs" />
+    <Compile Include="GL\GLU.cs" />
+    <Compile Include="GL\GLUT.cs" />
+    <Compile Include="GLUT\GLUTRenderer.cs" />
+    <Compile Include="GLUT\GLUTTexture.cs" />
     <Compile Include="ManagedRenderDevice.cs" />
-    <Compile Include="ManagedRenderTest.cs" />
+    <Compile Include="GLUTMain.cs" />
     <Compile Include="ManagedTexture.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

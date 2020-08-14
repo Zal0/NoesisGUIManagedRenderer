@@ -148,7 +148,7 @@ public unsafe struct Batch
 
 public abstract class ManagedRenderDevice
 {
-    public const string LIB_NOESIS = "../../../../IntegrationGLUT/Projects/windows_x86/Win32/Debug/IntegrationGLUT.dll";
+    public const string LIB_NOESIS = "../../../../ManagedRendererNative/Projects/windows_x86/Win32/Debug/ManagedRendererNative.dll";
 
     public delegate void SetDrawBatchCallbackDelegate(ref Batch batch);
     public delegate IntPtr SetMapVerticesCallbackDelegate(UInt32 size);

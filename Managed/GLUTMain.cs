@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-class ManagedRenderTest
+class GLUTMain
 {
     [DllImport("kernel32.dll")]
     private static extern IntPtr LoadLibrary(string filename);
@@ -43,7 +43,7 @@ class ManagedRenderTest
 
     public static void Main(string[] args)
     {
-        ManagedRenderTest instance = new ManagedRenderTest();
+        GLUTMain instance = new GLUTMain();
         instance.Run(args);
     }
 
