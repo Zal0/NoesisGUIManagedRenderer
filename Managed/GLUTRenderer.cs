@@ -124,27 +124,53 @@ public unsafe class GLUTRenderer : ManagedRenderDevice
         int stride = GetStride(ref batch);
 
         int format = formats[batch.shader];
+        
         bool hasColor = (format & Color) != 0;
-        if(!hasColor)
-            GL.Color4ub(255, 255, 255, 255);
-
-        if((format & Tex0) != 0)
+        if (hasColor)
         {
-            ManagedTexture texture = ManagedTexture.textures[ManagedTexture.GetTextureId(batch.ramps)];
+            // Nothing special
+        }
+        else
+        {
+            GL.Color4ub(255, 255, 255, 255);
+        }
+
+        bool hasTexture = (format & Tex0) != 0;
+        if (hasTexture)
+        {
+            GLUTTexture texture = (GLUTTexture)ManagedTexture.textures[ManagedTexture.GetTextureId(batch.ramps)];
+            GL.Enable(GL.GL_TEXTURE_2D);
+            GL.BindTexture(GL.GL_TEXTURE_2D, texture.gl_id);
+        }
+        else 
+        {
+            GL.Disable(GL.GL_TEXTURE_2D);
         }
 
         GL.Begin(GL.GL_TRIANGLES);
         for (int i = 0; i < batch.numIndices; ++i)
         {
             int idx = indices[(int)(batch.startIndex) + i];
+            int offset = 8;
 
             if (hasColor)
             {
-                byte r = vertices[(int)batch.vertexOffset + idx * stride + 8];
-                byte g = vertices[(int)batch.vertexOffset + idx * stride + 9];
-                byte b = vertices[(int)batch.vertexOffset + idx * stride + 10];
-                byte a = vertices[(int)batch.vertexOffset + idx * stride + 11];
+                byte r = vertices[(int)batch.vertexOffset + idx * stride + offset];
+                byte g = vertices[(int)batch.vertexOffset + idx * stride + offset + 1];
+                byte b = vertices[(int)batch.vertexOffset + idx * stride + offset + 2];
+                byte a = vertices[(int)batch.vertexOffset + idx * stride + offset + 3];
                 GL.Color4ub(r, g, b, a);
+                
+                offset += 4;
+            }
+
+            if(hasTexture)
+            {
+                float u = BitConverter.ToSingle(vertices, (int)batch.vertexOffset + idx * stride + offset);
+                float v = BitConverter.ToSingle(vertices, (int)batch.vertexOffset + idx * stride + offset + 4);
+                GL.TexCoord2f(u, v);
+
+                offset += 8;
             }
 
             float x = BitConverter.ToSingle(vertices, (int)batch.vertexOffset + idx * stride);

@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 public static class GL
 {
@@ -31,6 +32,41 @@ public static class GL
     public const int GL_POINT = 0x1B00;
     public const int GL_LINE = 0x1B01;
     public const int GL_FILL = 0x1B02;
+
+    public const int GL_TEXTURE_2D = 0x0DE1;
+
+    public const int GL_ALPHA = 0x1906;
+    public const int GL_RGB = 0x1907;
+    public const int GL_RGBA = 0x1908;
+    
+    public const int GL_R8 = 0x8229;
+    public const int GL_RED = 0x1903;
+
+    public const int GL_BYTE = 0x1400;
+    public const int GL_UNSIGNED_BYTE = 0x1401;
+    public const int GL_SHORT = 0x1402;
+    public const int GL_UNSIGNED_SHORT = 0x1403;
+    public const int GL_FLOAT = 0x1406;
+    public const int GL_FIXED = 0x140C;
+
+    public const int GL_TEXTURE_ENV = 0x2300;
+    public const int GL_TEXTURE_ENV_MODE = 0x2200;
+
+    public const int GL_MODULATE = 0x2100;
+    public const int GL_DECAL = 0x2101;
+    public const int GL_REPLACE = 0x1E01;
+
+    public const int GL_TEXTURE_MAG_FILTER = 0x2800;
+    public const int GL_TEXTURE_MIN_FILTER = 0x2801;
+    public const int GL_TEXTURE_WRAP_S = 0x2802;
+    public const int GL_TEXTURE_WRAP_T = 0x2803;
+    
+    public const int GL_REPEAT = 0x2901;
+    public const int GL_CLAMP_TO_EDGE = 0x812F;
+    
+    public const int GL_NEAREST = 0x2600;
+    public const int GL_LINEAR = 0x2601;
+
 
     [DllImport(LIB_GL, EntryPoint = "glClearColor", CallingConvention = CallingConvention.Winapi)]
     [System.Security.SuppressUnmanagedCodeSecurity()]
@@ -95,4 +131,40 @@ public static class GL
     [DllImport(LIB_GL, EntryPoint = "glColor4ub", CallingConvention = CallingConvention.Winapi)]
     [System.Security.SuppressUnmanagedCodeSecurity()]
     public static extern void Color4ub(byte r, byte g, byte b, byte a);
+
+    [DllImport(LIB_GL, EntryPoint = "glTexCoord2f", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    public static extern void TexCoord2f(float u, float v);
+
+    [DllImport(LIB_GL, EntryPoint = "glGenTextures", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    public static extern void GenTextures(int n, IntPtr ids);
+
+    [DllImport(LIB_GL, EntryPoint = "glBindTexture", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    public static extern void BindTexture(int target, int texture);
+
+    [DllImport(LIB_GL, EntryPoint = "glTexImage2D", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    public static extern void TexImage2D(int target, int level, int internalformat, int width, int height, int border, int format, int type, IntPtr pixels);
+
+    [DllImport(LIB_GL, EntryPoint = "glTexSubImage2D", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    public static extern void TexSubImage2D(int target, int level, int x, int y, int width, int height, int format, int type, IntPtr pixels);
+
+    [DllImport(LIB_GL, EntryPoint = "glEnable", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    public static extern void Enable(int cap);
+
+    [DllImport(LIB_GL, EntryPoint = "glDisable", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    public static extern void Disable(int cap);
+
+    [DllImport(LIB_GL, EntryPoint = "glTexEnvi", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    public static extern void TexEnvi(int target, int pname, int param);
+
+    [DllImport(LIB_GL, EntryPoint = "glTexParameteri", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    public static extern void TexParameteri(int target, int pname, int param);
 }

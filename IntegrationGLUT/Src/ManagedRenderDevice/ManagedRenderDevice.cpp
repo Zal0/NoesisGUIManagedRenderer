@@ -34,12 +34,14 @@ typedef int(*GetWidth)(int id);
 typedef int(*GetHeight)(int id);
 typedef bool(*HasMipMaps)(int id);
 typedef bool(*IsInverted)(int id);
+typedef void(*UpdateTexture)(Noesis::Texture* texture, uint32_t level, uint32_t x, uint32_t y, uint32_t width, uint32_t height, const void* data);
 
 CreateTexture createTextureCallbak = 0;
 GetWidth getWidth = 0;
 GetHeight getHeight = 0;
 HasMipMaps hasMipMaps = 0;
 IsInverted isInverted = 0;
+UpdateTexture updateTexture = 0;
 
 extern "C"
 {
@@ -48,6 +50,7 @@ extern "C"
 	DLL_FUNC void SetGetHeightCallback    (GetHeight func)     { getHeight = func; }
 	DLL_FUNC void SetHasMipMapsCallback   (HasMipMaps func)    { hasMipMaps = func; }
 	DLL_FUNC void SetIsInvertedCallback   (IsInverted func)    { isInverted = func; }
+	DLL_FUNC void SetUpdateTextureCallback(UpdateTexture func) { updateTexture = func; }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -132,7 +135,7 @@ Noesis::Ptr<Noesis::Texture> ManagedRenderDevice::CreateTexture(const char* labe
 
 void ManagedRenderDevice::UpdateTexture(Noesis::Texture* texture, uint32_t level, uint32_t x, uint32_t y, uint32_t width, uint32_t height, const void* data)
 {
-
+	updateTexture(texture, level, x, y, width, height, data);
 }
 
 void ManagedRenderDevice::BeginRender(bool offscreen)
