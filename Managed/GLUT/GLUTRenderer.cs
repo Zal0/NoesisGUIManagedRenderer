@@ -26,6 +26,75 @@ public unsafe class GLUTRenderer : ManagedRenderDevice
     const int Tex2     = 1 << 4;
     const int Coverage = 1 << 5;
 
+    enum ShaderName
+    {
+        RGBA,
+        Mask,
+
+        Path_Solid,
+        Path_Linear,
+        Path_Radial,
+        Path_Pattern,
+
+        PathAA_Solid,
+        PathAA_Linear,
+        PathAA_Radial,
+        PathAA_Pattern,
+
+        SDF_Solid,
+        SDF_Linear,
+        SDF_Radial,
+        SDF_Pattern,
+
+        SDF_LCD_Solid,
+        SDF_LCD_Linear,
+        SDF_LCD_Radial,
+        SDF_LCD_Pattern,
+
+        Image_Opacity_Solid,
+        Image_Opacity_Linear,
+        Image_Opacity_Radial,
+        Image_Opacity_Pattern,
+
+        Image_Shadow35V,
+        Image_Shadow63V,
+        Image_Shadow127V,
+
+        Image_Shadow35H_Solid,
+        Image_Shadow35H_Linear,
+        Image_Shadow35H_Radial,
+        Image_Shadow35H_Pattern,
+
+        Image_Shadow63H_Solid,
+        Image_Shadow63H_Linear,
+        Image_Shadow63H_Radial,
+        Image_Shadow63H_Pattern,
+
+        Image_Shadow127H_Solid,
+        Image_Shadow127H_Linear,
+        Image_Shadow127H_Radial,
+        Image_Shadow127H_Pattern,
+
+        Image_Blur35V,
+        Image_Blur63V,
+        Image_Blur127V,
+
+        Image_Blur35H_Solid,
+        Image_Blur35H_Linear,
+        Image_Blur35H_Radial,
+        Image_Blur35H_Pattern,
+
+        Image_Blur63H_Solid,
+        Image_Blur63H_Linear,
+        Image_Blur63H_Radial,
+        Image_Blur63H_Pattern,
+
+        Image_Blur127H_Solid,
+        Image_Blur127H_Linear,
+        Image_Blur127H_Radial,
+        Image_Blur127H_Pattern,
+    }
+
     int[] formats =
     {
         Pos,                                 //RGBA,                      
@@ -121,6 +190,7 @@ public unsafe class GLUTRenderer : ManagedRenderDevice
 
     public override void DrawBatch(ref Batch batch)
     {
+        ShaderName shader = (ShaderName)batch.shader;
         int stride = GetStride(ref batch);
 
         int format = formats[batch.shader];
@@ -135,10 +205,13 @@ public unsafe class GLUTRenderer : ManagedRenderDevice
             GL.Color4ub(255, 255, 255, 255);
         }
 
-        bool hasTexture = (format & Tex0) != 0;
+        bool hasTexture = ((format & Tex0) | (format & Tex1) | (format & Tex2)) != 0;
         if (hasTexture)
         {
-            GLUTTexture texture = (GLUTTexture)ManagedTexture.textures[ManagedTexture.GetTextureId(batch.ramps)];
+            IntPtr txtPtr = batch.ramps;
+            if (batch.ramps == IntPtr.Zero) 
+                txtPtr = batch.glyphs;
+            GLUTTexture texture = (GLUTTexture)ManagedTexture.textures[ManagedTexture.GetTextureId(txtPtr)];
             GL.Enable(GL.GL_TEXTURE_2D);
             GL.BindTexture(GL.GL_TEXTURE_2D, texture.gl_id);
         }
@@ -146,12 +219,15 @@ public unsafe class GLUTRenderer : ManagedRenderDevice
         {
             GL.Disable(GL.GL_TEXTURE_2D);
         }
+        
+        GL.Enable(GL.GL_BLEND);
+        GL.BlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 
         GL.Begin(GL.GL_TRIANGLES);
         for (int i = 0; i < batch.numIndices; ++i)
         {
             int idx = indices[(int)(batch.startIndex) + i];
-            int offset = 8;
+            int offset = 8; //8 first bytes are pos x and pos y
 
             if (hasColor)
             {

@@ -10,7 +10,7 @@ public class GLUTTexture : ManagedTexture
     int width;
     int height;
     int numLevels;
-    int format;
+    public int format;
 
     public int gl_id;
 
@@ -19,7 +19,7 @@ public class GLUTTexture : ManagedTexture
         this.width = (int)width;
         this.height = (int)height;
         this.numLevels = (int)numLevels;
-        this.format = ((Format)format == Format.RGBA8) ? GL.GL_RGBA : GL.GL_R8;
+        this.format = ((Format)format == Format.RGBA8) ? GL.GL_RGBA : GL.GL_ALPHA;
 
         fixed (int* f_id = &gl_id)
         {
@@ -29,13 +29,13 @@ public class GLUTTexture : ManagedTexture
 
         GL.BindTexture(GL.GL_TEXTURE_2D, gl_id);
 
-        
         GL.TexImage2D(GL.GL_TEXTURE_2D, 0, this.format, this.width, this.height, 0, this.format, GL.GL_UNSIGNED_BYTE, data == null ? new IntPtr() : data[0]);
-            
+
         GL.TexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT);
         GL.TexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT);
         GL.TexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR);
         GL.TexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR);
+        GL.PixelStorei(GL.GL_UNPACK_ALIGNMENT, 1);
     }
 
     public override void UpdateTexture(UInt32 level, UInt32 x, UInt32 y, UInt32 width, UInt32 height, IntPtr data)

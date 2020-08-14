@@ -67,6 +67,23 @@ public static class GL
     public const int GL_NEAREST = 0x2600;
     public const int GL_LINEAR = 0x2601;
 
+    public const int GL_BLEND = 0x0BE2;
+
+    public const int GL_ZERO                = 0;
+    public const int GL_ONE                 = 1;
+    public const int GL_SRC_COLOR           = 0x0300;
+    public const int GL_ONE_MINUS_SRC_COLOR = 0x0301;
+    public const int GL_SRC_ALPHA           = 0x0302;
+    public const int GL_ONE_MINUS_SRC_ALPHA = 0x0303;
+    public const int GL_DST_ALPHA           = 0x0304;
+    public const int GL_ONE_MINUS_DST_ALPHA = 0x0305;
+    public const int GL_DST_COLOR           = 0x0306;
+    public const int GL_ONE_MINUS_DST_COLOR = 0x0307;
+    public const int GL_SRC_ALPHA_SATURATE  = 0x0308;
+
+    public const int GL_UNPACK_ALIGNMENT = 0x0CF5;
+    public const int GL_PACK_ALIGNMENT = 0x0D05;
+
 
     [DllImport(LIB_GL, EntryPoint = "glClearColor", CallingConvention = CallingConvention.Winapi)]
     [System.Security.SuppressUnmanagedCodeSecurity()]
@@ -167,4 +184,13 @@ public static class GL
     [DllImport(LIB_GL, EntryPoint = "glTexParameteri", CallingConvention = CallingConvention.Winapi)]
     [System.Security.SuppressUnmanagedCodeSecurity()]
     public static extern void TexParameteri(int target, int pname, int param);
+
+    [DllImport(LIB_GL, EntryPoint = "glBlendFunc", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    public static extern void BlendFunc(int sfactor, int dfactor);
+
+
+    [DllImport(LIB_GL, EntryPoint = "glPixelStorei", CallingConvention = CallingConvention.Winapi)]
+    [System.Security.SuppressUnmanagedCodeSecurity()]
+    public static extern void PixelStorei(int pname, int param);
 }
