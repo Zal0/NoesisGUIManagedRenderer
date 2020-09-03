@@ -10,7 +10,7 @@ namespace WaveRenderer
         {
             object nativeSurface = null;
 
-            DesktopUtils.Execute<DrawTriangleTest>(args, surfaceObject: nativeSurface);                       // || Vulkan || Metal  || DX11  | DX12  | Vulkan  | OpenGL || WebGL
+            DesktopUtils.Execute<WaveMain>(args, surfaceObject: nativeSurface);                       // || Vulkan || Metal  || DX11  | DX12  | Vulkan  | OpenGL || WebGL
         }
     }
 }

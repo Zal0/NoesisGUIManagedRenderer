@@ -9,7 +9,7 @@ using Buffer = WaveEngine.Common.Graphics.Buffer;
 
 namespace VisualTests.LowLevel.Tests
 {
-    public class DrawTriangleTest : VisualTestDefinition
+    public class WaveMain : VisualTestDefinition
     {
         private Vector4[] vertexData = new Vector4[]
         {
@@ -25,7 +25,7 @@ namespace VisualTests.LowLevel.Tests
         private GraphicsPipelineState pipelineState;
         private Buffer[] vertexBuffers;
 
-        public DrawTriangleTest()
+        public WaveMain()
             : base("DrawTriangle")
         {
         }
@@ -33,6 +33,7 @@ namespace VisualTests.LowLevel.Tests
         protected override void OnResized(uint width, uint height)
         {
             this.viewports[0] = new Viewport(0, 0, width, height);
+            ManagedRenderDevice.SetViewSize((int)width, (int)height);
         }
 
         protected override async void InternalLoad()
@@ -89,10 +90,13 @@ namespace VisualTests.LowLevel.Tests
             this.MarkAsLoaded();
 
             ManagedRenderDevice.Init(new WaveRenderer.WaveRenderer());
+            ManagedRenderDevice.SetViewSize((int)width, (int)height);
         }
 
         protected override void InternalDrawCallback(TimeSpan gameTime)
         {
+            ManagedRenderDevice.UpdateView((float)gameTime.TotalMilliseconds);
+
             var commandBuffer = this.commandQueue.CommandBuffer();
 
             commandBuffer.Begin();
@@ -106,6 +110,8 @@ namespace VisualTests.LowLevel.Tests
             commandBuffer.SetVertexBuffers(this.vertexBuffers);
 
             commandBuffer.Draw((uint)this.vertexData.Length / 2);
+
+            ManagedRenderDevice.RenderView();
 
             commandBuffer.EndRenderPass();
             commandBuffer.End();
