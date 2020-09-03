@@ -180,6 +180,8 @@ public abstract class ManagedRenderDevice
     public delegate void SetUnmapVerticesCallbackDelegate();
     public delegate IntPtr SetMapIndicesCallbackDelegate(UInt32 size);
     public delegate void SetUnmapIndicesCallbackDelegate();
+    public delegate void SetBeginRenderCallbackDelegate();
+    public delegate void SetEndRenderCallbackDelegate();
 
     [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
     private static extern void SetDrawBatchCallback(SetDrawBatchCallbackDelegate callback);
@@ -196,6 +198,12 @@ public abstract class ManagedRenderDevice
     [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
     private static extern void SetUnmapIndicesCallback(SetUnmapIndicesCallbackDelegate callback);
 
+    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void SetBeginRenderCallback(SetBeginRenderCallbackDelegate callback);
+
+    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void SetEndRenderCallback(SetEndRenderCallbackDelegate callback);
+
     public static void SetMamanagedRenderDevice(ManagedRenderDevice renderDevice)
     {
         SetDrawBatchCallback(renderDevice.DrawBatch);
@@ -203,6 +211,8 @@ public abstract class ManagedRenderDevice
         SetUnmapVerticesCallback(renderDevice.UnmapVertices);
         SetMapIndicesCallback(renderDevice.MapIndices);
         SetUnmapIndicesCallback(renderDevice.UnmapIndices);
+        SetBeginRenderCallback(renderDevice.BeginRender);
+        SetEndRenderCallback(renderDevice.EndRender);
     }
 
     public abstract void SetManagedTexture();
@@ -211,6 +221,8 @@ public abstract class ManagedRenderDevice
     public abstract void UnmapVertices();
     public abstract IntPtr MapIndices(UInt32 size);
     public abstract void UnmapIndices();
+    public abstract void BeginRender();
+    public abstract void EndRender();
 
     [DllImport("kernel32.dll")]
     private static extern IntPtr LoadLibrary(string filename);

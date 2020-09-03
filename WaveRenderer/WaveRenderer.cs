@@ -52,5 +52,15 @@ namespace WaveRenderer
         {
             ManagedTexture.SetMamanagedTexture<WaveTexture>();
         }
+
+        public override void BeginRender()
+        {
+
+        }
+
+        public override void EndRender()
+        {
+
+        }
     }
 }

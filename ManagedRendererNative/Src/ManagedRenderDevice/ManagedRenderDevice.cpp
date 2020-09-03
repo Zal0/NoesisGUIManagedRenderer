@@ -13,12 +13,16 @@ typedef void*(*MapVertices)(uint32_t bytes);
 typedef void(*UnmapVertices)();
 typedef void* (*MapIndices)(uint32_t bytes);
 typedef void(*UnmapIndices)();
+typedef void(*BeginRender)();
+typedef void(*EndRender)();
 
 DrawBatch drawBatchCallback = 0;
 MapVertices mapVerticesCallback = 0;
 UnmapVertices unmapVerticesCallback = 0;
 MapIndices mapIndicesCallback = 0;
 UnmapIndices unmapIndicesCallback = 0;
+BeginRender beginRenderCallback = 0;
+EndRender endRenderCallback = 0;
 
 #define DLL_FUNC __declspec(dllexport)
 extern "C"
@@ -28,6 +32,8 @@ extern "C"
 	DLL_FUNC void SetUnmapVerticesCallback(UnmapVertices func) { unmapVerticesCallback = func; }
 	DLL_FUNC void SetMapIndicesCallback   (MapVertices func)   { mapIndicesCallback = func; }
 	DLL_FUNC void SetUnmapIndicesCallback (UnmapVertices func) { unmapIndicesCallback = func; }
+	DLL_FUNC void SetBeginRenderCallback  (BeginRender func)   { beginRenderCallback = func; }
+	DLL_FUNC void SetEndRenderCallback    (EndRender func)     { endRenderCallback = func; }
 }
 
 //Texture callbacks
@@ -142,7 +148,8 @@ void ManagedRenderDevice::UpdateTexture(Noesis::Texture* texture, uint32_t level
 
 void ManagedRenderDevice::BeginRender(bool offscreen)
 {
-
+	if (beginRenderCallback)
+		beginRenderCallback();
 }
 
 void ManagedRenderDevice::SetRenderTarget(Noesis::RenderTarget* surface)
@@ -167,7 +174,8 @@ void ManagedRenderDevice::ResolveRenderTarget(Noesis::RenderTarget* surface, con
 
 void ManagedRenderDevice::EndRender()
 {
-
+	if (endRenderCallback)
+		endRenderCallback();
 }
 
 void* ManagedRenderDevice::MapVertices(uint32_t bytes)
