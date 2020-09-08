@@ -17,6 +17,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Content\DrawTriangle\Shaders\HLSL\HLSL.fx" />
+    <None Remove="Content\DrawTriangle\Shaders\HLSL\HLSLVertex.fx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Content\DrawTriangle\Shaders\HLSL\HLSL.fx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\DrawTriangle\Shaders\HLSL\HLSLVertex.fx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="WaveEngine.Common" Version="3.0.0.5175-preview3" />
     <PackageReference Include="WaveEngine.DirectX11" Version="3.0.0.5175-preview3" />
     <PackageReference Include="WaveEngine.Forms" Version="3.0.0.5175-preview3" />

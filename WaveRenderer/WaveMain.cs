@@ -25,6 +25,8 @@ namespace VisualTests.LowLevel.Tests
         private GraphicsPipelineState pipelineState;
         private Buffer[] vertexBuffers;
 
+        private WaveRenderer.WaveRenderer waveRenderer;
+
         public WaveMain()
             : base("DrawTriangle")
         {
@@ -39,8 +41,8 @@ namespace VisualTests.LowLevel.Tests
         protected override async void InternalLoad()
         {
             // Compile Vertex and Pixel shaders
-            var vertexShaderDescription = await this.assetsDirectory.ReadAndCompileShader(this.graphicsContext, "HLSL", "VertexShader", ShaderStages.Vertex, "VS");
-            var pixelShaderDescription = await this.assetsDirectory.ReadAndCompileShader(this.graphicsContext, "HLSL", "FragmentShader", ShaderStages.Pixel, "PS");
+            var vertexShaderDescription = await this.assetsDirectory.ReadAndCompileShader(this.graphicsContext, "HLSLVertex", "VertexShader", ShaderStages.Vertex, "VS");
+            var pixelShaderDescription = await this.assetsDirectory.ReadAndCompileShader(this.graphicsContext, "HLSLVertex", "FragmentShader", ShaderStages.Pixel, "PS");
 
             var vertexShader = this.graphicsContext.Factory.CreateShader(ref vertexShaderDescription);
             var pixelShader = this.graphicsContext.Factory.CreateShader(ref pixelShaderDescription);
@@ -89,7 +91,8 @@ namespace VisualTests.LowLevel.Tests
 
             this.MarkAsLoaded();
 
-            ManagedRenderDevice.Init(new WaveRenderer.WaveRenderer());
+            waveRenderer = new WaveRenderer.WaveRenderer(graphicsContext, vertexShader, pixelShader, frameBuffer);
+            ManagedRenderDevice.Init(waveRenderer);
             ManagedRenderDevice.SetViewSize((int)width, (int)height);
         }
 
@@ -98,6 +101,7 @@ namespace VisualTests.LowLevel.Tests
             ManagedRenderDevice.UpdateView((float)gameTime.TotalMilliseconds);
 
             var commandBuffer = this.commandQueue.CommandBuffer();
+            waveRenderer.commandBuffer = commandBuffer;
 
             commandBuffer.Begin();
 
