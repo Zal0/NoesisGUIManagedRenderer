@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using WaveEngine.Common.Graphics;
 using WaveEngine.Mathematics;
+using WaveEngine.Platform;
+using VisualTests.Runners.Common;
 using Buffer = WaveEngine.Common.Graphics.Buffer;
 
 namespace WaveRenderer
@@ -166,57 +168,69 @@ namespace WaveRenderer
             Pos | Tex0  | Tex1 | Tex2,           //Image_Blur127H_Pattern,    
         };
 
-        InputLayouts GetInputLayout(ref Batch batch)
-        {
-            InputLayouts ret = new InputLayouts();
-            LayoutDescription layoutDescription = new LayoutDescription();
-            ret.Add(layoutDescription);
+        GraphicsPipelineState[] graphicPipelineStates = new GraphicsPipelineState[Enum.GetNames(typeof(ShaderName)).Length];
 
-            int format = formats[batch.shader];
+        async void InitGraphicsPipelineState(int shader)
+        {
+            InputLayouts vertexLayouts = new InputLayouts();
+            LayoutDescription layoutDescription = new LayoutDescription();
+            vertexLayouts.Add(layoutDescription);
+
+            int format = formats[shader];
 
             uint colorSemanticIndex = 0;
             uint texCoordSemanticIndex = 0;
 
+            string vertexShaderPath = "";
+
             if ((format & Pos) != 0)
+            {
                 layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.Position));
+                vertexShaderPath += "Pos";
+            }
             if ((format & Color) != 0)
-                layoutDescription.Add(new ElementDescription(ElementFormat.UInt, ElementSemanticType.Color, colorSemanticIndex ++));
+            {
+                layoutDescription.Add(new ElementDescription(ElementFormat.UInt, ElementSemanticType.Color, colorSemanticIndex++));
+                vertexShaderPath += "Color";
+            }
             if ((format & Tex0) != 0)
-                layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.TexCoord, texCoordSemanticIndex ++));
+            {
+                layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.TexCoord, texCoordSemanticIndex++));
+                vertexShaderPath += "Tex0";
+            }
             if ((format & Tex1) != 0)
-                layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.TexCoord, texCoordSemanticIndex ++));
+            {
+                layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.TexCoord, texCoordSemanticIndex++));
+                vertexShaderPath += "Tex1";
+            }
             if ((format & Tex2) != 0)
-                layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.TexCoord, texCoordSemanticIndex ++));
+            {
+                layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.TexCoord, texCoordSemanticIndex++));
+                vertexShaderPath += "Tex2";
+            }
             if ((format & Coverage) != 0)
-                layoutDescription.Add(new ElementDescription(ElementFormat.UInt, ElementSemanticType.Color, colorSemanticIndex ++));
+            {
+                layoutDescription.Add(new ElementDescription(ElementFormat.UInt, ElementSemanticType.Color, colorSemanticIndex++));
+                vertexShaderPath += "Coverage";
+            }
+            vertexShaderPath += "_VS";
 
-            return ret;
-        }
+            string pixelShaderPath = ((ShaderName)shader).ToString() + "_FS";
+            string vsEntryPoint = "main";
+            string psEntryPoint = "main";
+            //if (shader != 7)
+            {
+                vertexShaderPath = "HLSLVertex";
+                pixelShaderPath = "HLSLVertex";
+                vsEntryPoint = "VS";
+                psEntryPoint = "PS";
+            }
 
-        private byte[] vertices;
-        private UInt16[] indices;
-        public CommandBuffer commandBuffer;
-        GraphicsContext graphicsContext;
-        WaveEngine.Common.Graphics.Shader vertexShader;
-        WaveEngine.Common.Graphics.Shader pixelShader;
-        FrameBuffer frameBuffer;
+            var vertexShaderDescription = await this.assetsDirectory.ReadAndCompileShader(this.graphicsContext, vertexShaderPath, "VertexShader", ShaderStages.Vertex, vsEntryPoint);
+            var pixelShaderDescription = await this.assetsDirectory.ReadAndCompileShader(this.graphicsContext, pixelShaderPath, "FragmentShader", ShaderStages.Pixel, psEntryPoint);
+            var vertexShader = this.graphicsContext.Factory.CreateShader(ref vertexShaderDescription);
+            var pixelShader = this.graphicsContext.Factory.CreateShader(ref pixelShaderDescription);
 
-        Buffer[] vertexBuffers;
-        Buffer indexBuffer;
-
-
-        public WaveRenderer(GraphicsContext graphicsContext, WaveEngine.Common.Graphics.Shader vertexShader, WaveEngine.Common.Graphics.Shader pixelShader, FrameBuffer frameBuffer)
-        {
-            this.graphicsContext = graphicsContext;
-            this.vertexShader = vertexShader;
-            this.pixelShader = pixelShader;
-            this.frameBuffer = frameBuffer;
-        }
-
-        public override void DrawBatch(ref Batch batch)
-        {
-            //Set Material
-            var vertexLayouts = GetInputLayout(ref batch);
             var pipelineDescription = new GraphicsPipelineDescription()
             {
                 PrimitiveTopology = PrimitiveTopology.TriangleList,
@@ -234,31 +248,52 @@ namespace WaveRenderer
                 },
                 Outputs = this.frameBuffer.OutputDescription,
             };
-            var pipelineState = this.graphicsContext.Factory.CreateGraphicsPipeline(ref pipelineDescription);
-            commandBuffer.SetGraphicsPipelineState(pipelineState);
+
+            graphicPipelineStates[shader] = this.graphicsContext.Factory.CreateGraphicsPipeline(ref pipelineDescription);
+        }
+
+        private byte[] vertices;
+        private ushort[] indices;
+        public CommandBuffer commandBuffer;
+        GraphicsContext graphicsContext;
+        AssetsDirectory assetsDirectory;
+        FrameBuffer frameBuffer;
+
+        Buffer[] vertexBuffers;
+        Buffer indexBuffer;
+
+        MappedResource vertexBufferWritableResource;
+        MappedResource indexBufferWritableResource;
+
+
+        public WaveRenderer(GraphicsContext graphicsContext, AssetsDirectory assetsDirectory, FrameBuffer frameBuffer)
+        {
+            this.graphicsContext = graphicsContext;
+            this.assetsDirectory = assetsDirectory;
+            this.frameBuffer = frameBuffer;
+
+            for(int i = 0; i < formats.Length; ++i)
+            {
+                InitGraphicsPipelineState(i);
+            }
+        }
+
+        public override void DrawBatch(ref Batch batch)
+        {
+            //Set graphics pipeline
+            commandBuffer.SetGraphicsPipelineState(graphicPipelineStates[batch.shader]);
 
             //Set Vertex Buffer
-            if(vertexBuffers == null)
-            {
-                var vertexBufferDescription = new BufferDescription((uint)Unsafe.SizeOf<Vector4>() * (uint)vertices.Length, BufferFlags.VertexBuffer, ResourceUsage.Default);
-                var vertexBuffer = graphicsContext.Factory.CreateBuffer(vertices, ref vertexBufferDescription);
-                vertexBuffers = new Buffer[]{ vertexBuffer };
-            }
             int[] offsets = { (int)batch.vertexOffset };
             commandBuffer.SetVertexBuffers(vertexBuffers, offsets);
 
             //Set Index Buffer
-            if (indexBuffer == null)
-            {
-                var indexBufferDescription = new BufferDescription(sizeof(ushort) * (uint)indices.Length, BufferFlags.IndexBuffer, ResourceUsage.Default);
-                indexBuffer = this.graphicsContext.Factory.CreateBuffer(indices, ref indexBufferDescription);
-            }
             commandBuffer.SetIndexBuffer(indexBuffer);
 
             //Draw
             commandBuffer.DrawIndexed(batch.numIndices, batch.startIndex);
         }
-
+        
         unsafe public override IntPtr MapVertices(UInt32 bytes)
         {
             UInt32 size = bytes;
@@ -272,7 +307,18 @@ namespace WaveRenderer
                         b.Dispose();
                 }
                 vertexBuffers = null;
+
+                var vertexBufferDescription = new BufferDescription(
+                    (uint)vertices.Length,
+                    BufferFlags.VertexBuffer,
+                    ResourceUsage.Dynamic,
+                    ResourceCpuAccess.Write);
+
+                var vertexBuffer = graphicsContext.Factory.CreateBuffer(ref vertexBufferDescription);
+                vertexBuffers = new Buffer[] { vertexBuffer };    
             }
+
+            vertexBufferWritableResource = graphicsContext.MapMemory(vertexBuffers[0], MapMode.Write);
 
             fixed (byte* pRetUpper = vertices)
             {
@@ -280,9 +326,16 @@ namespace WaveRenderer
             }
         }
 
-        public override void UnmapVertices()
+        unsafe public override void UnmapVertices()
         {
-            //vertices = null;
+            byte* pointer = (byte*)vertexBufferWritableResource.Data;
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                *pointer = vertices[i];
+                pointer++;
+            }
+
+            graphicsContext.UnmapMemory(vertexBuffers[0]);
         }
 
         unsafe public override IntPtr MapIndices(uint bytes)
@@ -290,22 +343,39 @@ namespace WaveRenderer
             UInt32 size = bytes / sizeof(UInt16);
             if (indices == null || size > indices.Length)
             {
-                indices = new UInt16[size];
+                indices = new ushort[size];
 
                 if (indexBuffer != null)
                     indexBuffer.Dispose();
                 indexBuffer = null;
+
+                var indexBufferDescription = new BufferDescription(
+                    bytes,
+                    BufferFlags.VertexBuffer,
+                    ResourceUsage.Dynamic,
+                    ResourceCpuAccess.Write);
+
+                indexBuffer = graphicsContext.Factory.CreateBuffer(ref indexBufferDescription);
             }
 
-            fixed (UInt16* pRetUpper = indices)
+            indexBufferWritableResource = graphicsContext.MapMemory(indexBuffer, MapMode.Write);
+
+            fixed (ushort* pRetUpper = indices)
             {
                 return new IntPtr(pRetUpper);
             }
         }
 
-        public override void UnmapIndices()
+        unsafe public override void UnmapIndices()
         {
-            //indices = null;
+            ushort* pointer = (ushort*)indexBufferWritableResource.Data;
+            for (int i = 0; i < indices.Length; i++)
+            {
+                *pointer = indices[i];
+                pointer++;
+            }
+
+            graphicsContext.UnmapMemory(indexBuffer);
         }
 
         public override void SetManagedTexture()

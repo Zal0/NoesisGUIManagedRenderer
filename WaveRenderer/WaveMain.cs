@@ -41,8 +41,8 @@ namespace VisualTests.LowLevel.Tests
         protected override async void InternalLoad()
         {
             // Compile Vertex and Pixel shaders
-            var vertexShaderDescription = await this.assetsDirectory.ReadAndCompileShader(this.graphicsContext, "HLSLVertex", "VertexShader", ShaderStages.Vertex, "VS");
-            var pixelShaderDescription = await this.assetsDirectory.ReadAndCompileShader(this.graphicsContext, "HLSLVertex", "FragmentShader", ShaderStages.Pixel, "PS");
+            var vertexShaderDescription = await this.assetsDirectory.ReadAndCompileShader(this.graphicsContext, "HLSL", "VertexShader", ShaderStages.Vertex, "VS");
+            var pixelShaderDescription = await this.assetsDirectory.ReadAndCompileShader(this.graphicsContext, "HLSL", "FragmentShader", ShaderStages.Pixel, "PS");
 
             var vertexShader = this.graphicsContext.Factory.CreateShader(ref vertexShaderDescription);
             var pixelShader = this.graphicsContext.Factory.CreateShader(ref pixelShaderDescription);
@@ -89,9 +89,10 @@ namespace VisualTests.LowLevel.Tests
             this.vertexBuffers = new Buffer[1];
             this.vertexBuffers[0] = vertexBuffer;
 
+
             this.MarkAsLoaded();
 
-            waveRenderer = new WaveRenderer.WaveRenderer(graphicsContext, vertexShader, pixelShader, frameBuffer);
+            waveRenderer = new WaveRenderer.WaveRenderer(this.graphicsContext, assetsDirectory, frameBuffer);
             ManagedRenderDevice.Init(waveRenderer);
             ManagedRenderDevice.SetViewSize((int)width, (int)height);
         }
