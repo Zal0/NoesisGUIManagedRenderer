@@ -178,9 +178,6 @@ namespace WaveRenderer
 
             int format = formats[shader];
 
-            uint colorSemanticIndex = 0;
-            uint texCoordSemanticIndex = 0;
-
             string vertexShaderPath = "";
 
             if ((format & Pos) != 0)
@@ -190,27 +187,27 @@ namespace WaveRenderer
             }
             if ((format & Color) != 0)
             {
-                layoutDescription.Add(new ElementDescription(ElementFormat.UInt, ElementSemanticType.Color, colorSemanticIndex++));
+                layoutDescription.Add(new ElementDescription(ElementFormat.UInt, ElementSemanticType.Color));
                 vertexShaderPath += "Color";
             }
             if ((format & Tex0) != 0)
             {
-                layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.TexCoord, texCoordSemanticIndex++));
+                layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.TexCoord, 0));
                 vertexShaderPath += "Tex0";
             }
             if ((format & Tex1) != 0)
             {
-                layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.TexCoord, texCoordSemanticIndex++));
+                layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.TexCoord, 1));
                 vertexShaderPath += "Tex1";
             }
             if ((format & Tex2) != 0)
             {
-                layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.TexCoord, texCoordSemanticIndex++));
+                layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.TexCoord, 2));
                 vertexShaderPath += "Tex2";
             }
             if ((format & Coverage) != 0)
             {
-                layoutDescription.Add(new ElementDescription(ElementFormat.UInt, ElementSemanticType.Color, colorSemanticIndex++));
+                layoutDescription.Add(new ElementDescription(ElementFormat.UInt, ElementSemanticType.TexCoord, 3));
                 vertexShaderPath += "Coverage";
             }
             vertexShaderPath += "_VS";
