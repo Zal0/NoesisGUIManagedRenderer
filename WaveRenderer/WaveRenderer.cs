@@ -249,8 +249,6 @@ namespace WaveRenderer
             graphicPipelineStates[shader] = this.graphicsContext.Factory.CreateGraphicsPipeline(ref pipelineDescription);
         }
 
-        private byte[] vertices;
-        private ushort[] indices;
         public CommandBuffer commandBuffer;
         GraphicsContext graphicsContext;
         AssetsDirectory assetsDirectory;
@@ -261,7 +259,6 @@ namespace WaveRenderer
 
         MappedResource vertexBufferWritableResource;
         MappedResource indexBufferWritableResource;
-
 
         public WaveRenderer(GraphicsContext graphicsContext, AssetsDirectory assetsDirectory, FrameBuffer frameBuffer)
         {
@@ -293,11 +290,8 @@ namespace WaveRenderer
         
         unsafe public override IntPtr MapVertices(UInt32 bytes)
         {
-            UInt32 size = bytes;
-            if (vertices == null || size > vertices.Length)
+            if (vertexBuffers == null || bytes > vertexBuffers[0].Description.SizeInBytes)
             {
-                vertices = new byte[size];
-
                 if (vertexBuffers != null)
                 {
                     foreach(Buffer b in vertexBuffers)
@@ -306,7 +300,7 @@ namespace WaveRenderer
                 vertexBuffers = null;
 
                 var vertexBufferDescription = new BufferDescription(
-                    (uint)vertices.Length,
+                    bytes,
                     BufferFlags.VertexBuffer,
                     ResourceUsage.Dynamic,
                     ResourceCpuAccess.Write);
@@ -316,32 +310,19 @@ namespace WaveRenderer
             }
 
             vertexBufferWritableResource = graphicsContext.MapMemory(vertexBuffers[0], MapMode.Write);
-
-            fixed (byte* pRetUpper = vertices)
-            {
-                return new IntPtr(pRetUpper);
-            }
+            return vertexBufferWritableResource.Data;
         }
 
         unsafe public override void UnmapVertices()
         {
-            byte* pointer = (byte*)vertexBufferWritableResource.Data;
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                *pointer = vertices[i];
-                pointer++;
-            }
-
             graphicsContext.UnmapMemory(vertexBuffers[0]);
         }
 
         unsafe public override IntPtr MapIndices(uint bytes)
         {
             UInt32 size = bytes / sizeof(UInt16);
-            if (indices == null || size > indices.Length)
+            if (indexBuffer == null || size > indexBuffer.Description.SizeInBytes)
             {
-                indices = new ushort[size];
-
                 if (indexBuffer != null)
                     indexBuffer.Dispose();
                 indexBuffer = null;
@@ -356,22 +337,11 @@ namespace WaveRenderer
             }
 
             indexBufferWritableResource = graphicsContext.MapMemory(indexBuffer, MapMode.Write);
-
-            fixed (ushort* pRetUpper = indices)
-            {
-                return new IntPtr(pRetUpper);
-            }
+            return indexBufferWritableResource.Data;
         }
 
         unsafe public override void UnmapIndices()
         {
-            ushort* pointer = (ushort*)indexBufferWritableResource.Data;
-            for (int i = 0; i < indices.Length; i++)
-            {
-                *pointer = indices[i];
-                pointer++;
-            }
-
             graphicsContext.UnmapMemory(indexBuffer);
         }
 
