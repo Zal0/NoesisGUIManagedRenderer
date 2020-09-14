@@ -14,7 +14,7 @@ public class GLUTTexture : ManagedTexture
 
     public int gl_id;
 
-    unsafe public override void Init(UInt32 width, UInt32 height, UInt32 numLevels, byte format, IntPtr[] data)
+    unsafe public override void Init(ManagedRenderDevice managedRenderDevice, UInt32 width, UInt32 height, UInt32 numLevels, byte format, IntPtr[] data)
     {
         this.width = (int)width;
         this.height = (int)height;

@@ -204,6 +204,89 @@ public abstract class ManagedRenderDevice
     [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
     private static extern void SetEndRenderCallback(SetEndRenderCallbackDelegate callback);
 
+    public delegate int CreateTextureDelegate(UInt32 width, UInt32 height, UInt32 numLevels, byte format, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 0)][In, Out] IntPtr[] data);
+    public delegate int GetWidthDelegate(int id);
+    public delegate int GetHeightDelegate(int id);
+    public delegate bool HasMipMapsDelegate(int id);
+    public delegate bool IsInvertedDelegate(int id);
+    public delegate void UpdateTextureDelegate(IntPtr texture, UInt32 level, UInt32 x, UInt32 y, UInt32 width, UInt32 height, IntPtr data);
+
+    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void SetCreateTextureCallback(CreateTextureDelegate callback);
+
+    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void SetGetWidthCallback(GetWidthDelegate callback);
+
+    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void SetGetHeightCallback(GetHeightDelegate callback);
+
+    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void SetHasMipMapsCallback(HasMipMapsDelegate callback);
+
+    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void SetIsInvertedCallback(IsInvertedDelegate callback);
+
+    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void SetUpdateTextureCallback(UpdateTextureDelegate callback);
+
+    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+    public static extern int GetTextureId(IntPtr texture);
+
+    public abstract void DrawBatch(ref Batch batch);
+    public abstract IntPtr MapVertices(UInt32 size);
+    public abstract void UnmapVertices();
+    public abstract IntPtr MapIndices(UInt32 size);
+    public abstract void UnmapIndices();
+    public abstract void BeginRender();
+    public abstract void EndRender();
+
+    //Texture stuff
+    public static Dictionary<int, ManagedTexture> textures = new Dictionary<int, ManagedTexture>();
+    public static int nextId = 0;
+
+    protected int RegisterTexture(ManagedTexture texture)
+    {
+        int id = nextId++;
+        textures[id] = texture;
+        return id;
+    }
+
+    public int GetWidth(int id)
+    {
+        return textures[id].GetWidth();
+    }
+
+    public int GetHeight(int id)
+    {
+        return textures[id].GetHeight();
+    }
+
+    public bool HasMipMaps(int id)
+    {
+        return textures[id].HasMipMaps();
+    }
+
+    public bool IsInverted(int id)
+    {
+        return textures[id].IsInverted();
+    }
+
+    public void UpdateTexture(IntPtr texture, UInt32 level, UInt32 x, UInt32 y, UInt32 width, UInt32 height, IntPtr data)
+    {
+        ManagedTexture t = textures[GetTextureId(texture)];
+        t.UpdateTexture(level, x, y, width, height, data);
+    }
+
+    public int CreateTexture(UInt32 width, UInt32 height, UInt32 numLevels, byte format, IntPtr[] data)
+    {
+        ManagedTexture texture = CreateTexture();
+        int id = RegisterTexture(texture);
+        texture.Init(this, width, height, numLevels, format, data);
+
+        return id;
+    }
+    public abstract ManagedTexture CreateTexture();
+
     public static void SetMamanagedRenderDevice(ManagedRenderDevice renderDevice)
     {
         SetDrawBatchCallback(renderDevice.DrawBatch);
@@ -213,16 +296,14 @@ public abstract class ManagedRenderDevice
         SetUnmapIndicesCallback(renderDevice.UnmapIndices);
         SetBeginRenderCallback(renderDevice.BeginRender);
         SetEndRenderCallback(renderDevice.EndRender);
-    }
 
-    public abstract void SetManagedTexture();
-    public abstract void DrawBatch(ref Batch batch);
-    public abstract IntPtr MapVertices(UInt32 size);
-    public abstract void UnmapVertices();
-    public abstract IntPtr MapIndices(UInt32 size);
-    public abstract void UnmapIndices();
-    public abstract void BeginRender();
-    public abstract void EndRender();
+        SetCreateTextureCallback(renderDevice.CreateTexture);
+        SetGetWidthCallback(renderDevice.GetWidth);
+        SetGetHeightCallback(renderDevice.GetHeight);
+        SetHasMipMapsCallback(renderDevice.HasMipMaps);
+        SetIsInvertedCallback(renderDevice.IsInverted);
+        SetUpdateTextureCallback(renderDevice.UpdateTexture);
+    }
 
     [DllImport("kernel32.dll")]
     private static extern IntPtr LoadLibrary(string filename);
@@ -237,7 +318,6 @@ public abstract class ManagedRenderDevice
         error = LoadLibrary(ManagedRenderDevice.LIB_NOESIS);
 
         ManagedRenderDevice.SetMamanagedRenderDevice(renderer);
-        renderer.SetManagedTexture();
         ManagedRenderDevice.NoesisInit();
     }
 }

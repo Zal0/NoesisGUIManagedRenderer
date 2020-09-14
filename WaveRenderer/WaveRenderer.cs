@@ -372,11 +372,6 @@ namespace WaveRenderer
             graphicsContext.UnmapMemory(indexBuffer);
         }
 
-        public override void SetManagedTexture()
-        {
-            ManagedTexture.SetMamanagedTexture<WaveTexture>();
-        }
-
         public override void BeginRender()
         {
             Matrix4x4 prjMtx = Matrix4x4.CreateOrthographicOffCenter(0.0f, frameBuffer.Width, 0.0f, frameBuffer.Height, 0.0f, 1.0f);
@@ -392,6 +387,11 @@ namespace WaveRenderer
         public override void EndRender()
         {
             commandBuffer.EndRenderPass();
+        }
+
+        public override ManagedTexture CreateTexture()
+        {
+            return new WaveTexture();
         }
     }
 }

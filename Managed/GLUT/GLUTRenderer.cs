@@ -211,7 +211,7 @@ public unsafe class GLUTRenderer : ManagedRenderDevice
             IntPtr txtPtr = batch.ramps;
             if (batch.ramps == IntPtr.Zero) 
                 txtPtr = batch.glyphs;
-            GLUTTexture texture = (GLUTTexture)ManagedTexture.textures[ManagedTexture.GetTextureId(txtPtr)];
+            GLUTTexture texture = (GLUTTexture)textures[GetTextureId(txtPtr)];
             GL.Enable(GL.GL_TEXTURE_2D);
             GL.BindTexture(GL.GL_TEXTURE_2D, texture.gl_id);
             GL.TexEnvi(GL.GL_TEXTURE_ENV, GL.GL_TEXTURE_ENV_MODE, GL.GL_MODULATE);
@@ -293,9 +293,9 @@ public unsafe class GLUTRenderer : ManagedRenderDevice
         //indices = null;
     }
 
-    public override void SetManagedTexture()
+    public override ManagedTexture CreateTexture()
     {
-        ManagedTexture.SetMamanagedTexture<GLUTTexture>();
+        return new GLUTTexture();
     }
 
     public override void BeginRender()
