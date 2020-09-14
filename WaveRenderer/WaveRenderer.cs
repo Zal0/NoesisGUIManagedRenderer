@@ -297,7 +297,6 @@ namespace WaveRenderer
                     foreach(Buffer b in vertexBuffers)
                         b.Dispose();
                 }
-                vertexBuffers = null;
 
                 var vertexBufferDescription = new BufferDescription(
                     bytes,
@@ -324,8 +323,9 @@ namespace WaveRenderer
             if (indexBuffer == null || size > indexBuffer.Description.SizeInBytes)
             {
                 if (indexBuffer != null)
+                {
                     indexBuffer.Dispose();
-                indexBuffer = null;
+                }
 
                 var indexBufferDescription = new BufferDescription(
                     bytes,
