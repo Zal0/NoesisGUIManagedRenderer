@@ -115,10 +115,10 @@ namespace VisualTests.LowLevel.Tests
             commandBuffer.SetVertexBuffers(this.vertexBuffers);
 
             commandBuffer.Draw((uint)this.vertexData.Length / 2);
+            commandBuffer.EndRenderPass();
 
             ManagedRenderDevice.RenderView();
-
-            commandBuffer.EndRenderPass();
+            
             commandBuffer.End();
 
             commandBuffer.Commit();

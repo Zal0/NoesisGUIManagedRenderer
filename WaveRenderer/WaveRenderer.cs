@@ -170,6 +170,8 @@ namespace WaveRenderer
 
         GraphicsPipelineState[] graphicPipelineStates = new GraphicsPipelineState[Enum.GetNames(typeof(ShaderName)).Length];
 
+        ResourceSet[] resourceSets = new ResourceSet[Enum.GetNames(typeof(ShaderName)).Length];
+
         async void InitGraphicsPipelineState(int shader)
         {
             InputLayouts vertexLayouts = new InputLayouts();
@@ -215,7 +217,7 @@ namespace WaveRenderer
             string pixelShaderPath = ((ShaderName)shader).ToString() + "_FS";
             string vsEntryPoint = "main";
             string psEntryPoint = "main";
-            //if (shader != 7)
+            if (shader != 7)
             {
                 vertexShaderPath = "HLSLVertex";
                 pixelShaderPath = "HLSLVertex";
@@ -228,10 +230,22 @@ namespace WaveRenderer
             var vertexShader = this.graphicsContext.Factory.CreateShader(ref vertexShaderDescription);
             var pixelShader = this.graphicsContext.Factory.CreateShader(ref pixelShaderDescription);
 
+            var resourceLayoutDescription = new ResourceLayoutDescription(
+                    new LayoutElementDescription(0, ResourceType.ConstantBuffer, ShaderStages.Vertex),
+                    new LayoutElementDescription(1, ResourceType.ConstantBuffer, ShaderStages.Vertex)
+                    //new LayoutElementDescription(0, ResourceType.Sampler, ShaderStages.Pixel)
+                    );
+
+            var resourceLayout = this.graphicsContext.Factory.CreateResourceLayout(ref resourceLayoutDescription);
+
+            var resourceSetDescription = new ResourceSetDescription(resourceLayout, prjMtxBuffer, textureSizeBuffer);
+            resourceSets[shader] = this.graphicsContext.Factory.CreateResourceSet(ref resourceSetDescription);
+
             var pipelineDescription = new GraphicsPipelineDescription()
             {
                 PrimitiveTopology = PrimitiveTopology.TriangleList,
                 InputLayouts = vertexLayouts,
+                ResourceLayouts = new[] { resourceLayout },
                 Shaders = new GraphicsShaderStateDescription()
                 {
                     VertexShader = vertexShader,
@@ -257,6 +271,10 @@ namespace WaveRenderer
         Buffer[] vertexBuffers;
         Buffer indexBuffer;
 
+        //constant buffers
+        Buffer prjMtxBuffer;
+        Buffer textureSizeBuffer;
+
         MappedResource vertexBufferWritableResource;
         MappedResource indexBufferWritableResource;
 
@@ -266,7 +284,13 @@ namespace WaveRenderer
             this.assetsDirectory = assetsDirectory;
             this.frameBuffer = frameBuffer;
 
-            for(int i = 0; i < formats.Length; ++i)
+            var constantBufferDescription = new BufferDescription(64, BufferFlags.ConstantBuffer, ResourceUsage.Default);
+            prjMtxBuffer = this.graphicsContext.Factory.CreateBuffer(ref constantBufferDescription);
+
+            constantBufferDescription = new BufferDescription(16, BufferFlags.ConstantBuffer, ResourceUsage.Default);
+            textureSizeBuffer = this.graphicsContext.Factory.CreateBuffer(ref constantBufferDescription);
+
+            for (int i = 0; i < formats.Length; ++i)
             {
                 InitGraphicsPipelineState(i);
             }
@@ -276,6 +300,9 @@ namespace WaveRenderer
         {
             //Set graphics pipeline
             commandBuffer.SetGraphicsPipelineState(graphicPipelineStates[batch.shader]);
+
+            //Set resource set
+            commandBuffer.SetResourceSet(resourceSets[batch.shader]);
 
             //Set Vertex Buffer
             int[] offsets = { (int)batch.vertexOffset };
@@ -352,12 +379,19 @@ namespace WaveRenderer
 
         public override void BeginRender()
         {
+            Matrix4x4 prjMtx = Matrix4x4.CreateOrthographicOffCenter(0.0f, frameBuffer.Width, 0.0f, frameBuffer.Height, 0.0f, 1.0f);
+            commandBuffer.UpdateBufferData(this.prjMtxBuffer, ref prjMtx);
 
+            Vector2 textureSize = new Vector2(256, 256);
+            commandBuffer.UpdateBufferData(this.textureSizeBuffer, ref textureSize);
+
+            RenderPassDescription renderPassDescription = new RenderPassDescription(this.frameBuffer, ClearValue.None);
+            commandBuffer.BeginRenderPass(ref renderPassDescription);
         }
 
         public override void EndRender()
         {
-
+            commandBuffer.EndRenderPass();
         }
     }
 }
