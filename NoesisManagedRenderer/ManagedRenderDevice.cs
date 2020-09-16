@@ -204,11 +204,11 @@ public abstract class ManagedRenderDevice
     [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
     private static extern void SetEndRenderCallback(SetEndRenderCallbackDelegate callback);
 
-    public delegate int CreateTextureDelegate(UInt32 width, UInt32 height, UInt32 numLevels, byte format, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 0)][In, Out] IntPtr[] data);
-    public delegate int GetWidthDelegate(int id);
-    public delegate int GetHeightDelegate(int id);
-    public delegate bool HasMipMapsDelegate(int id);
-    public delegate bool IsInvertedDelegate(int id);
+    public delegate void CreateTextureDelegate(IntPtr ptr, UInt32 width, UInt32 height, UInt32 numLevels, byte format, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 0)][In, Out] IntPtr[] data);
+    public delegate int GetWidthDelegate(IntPtr ptr);
+    public delegate int GetHeightDelegate(IntPtr ptr);
+    public delegate bool HasMipMapsDelegate(IntPtr ptr);
+    public delegate bool IsInvertedDelegate(IntPtr ptr);
     public delegate void UpdateTextureDelegate(IntPtr texture, UInt32 level, UInt32 x, UInt32 y, UInt32 width, UInt32 height, IntPtr data);
 
     [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
@@ -241,49 +241,40 @@ public abstract class ManagedRenderDevice
     public abstract void EndRender();
 
     //Texture stuff
-    public static Dictionary<int, ManagedTexture> textures = new Dictionary<int, ManagedTexture>();
+    public static Dictionary<IntPtr, ManagedTexture> textures = new Dictionary<IntPtr, ManagedTexture>();
     public static int nextId = 0;
 
-    protected int RegisterTexture(ManagedTexture texture)
+    public int GetWidth(IntPtr ptr)
     {
-        int id = nextId++;
-        textures[id] = texture;
-        return id;
+        return textures[ptr].GetWidth();
     }
 
-    public int GetWidth(int id)
+    public int GetHeight(IntPtr ptr)
     {
-        return textures[id].GetWidth();
+        return textures[ptr].GetHeight();
     }
 
-    public int GetHeight(int id)
+    public bool HasMipMaps(IntPtr ptr)
     {
-        return textures[id].GetHeight();
+        return textures[ptr].HasMipMaps();
     }
 
-    public bool HasMipMaps(int id)
+    public bool IsInverted(IntPtr ptr)
     {
-        return textures[id].HasMipMaps();
-    }
-
-    public bool IsInverted(int id)
-    {
-        return textures[id].IsInverted();
+        return textures[ptr].IsInverted();
     }
 
     public void UpdateTexture(IntPtr texture, UInt32 level, UInt32 x, UInt32 y, UInt32 width, UInt32 height, IntPtr data)
     {
-        ManagedTexture t = textures[GetTextureId(texture)];
+        ManagedTexture t = textures[texture];
         t.UpdateTexture(level, x, y, width, height, data);
     }
 
-    public int CreateTexture(UInt32 width, UInt32 height, UInt32 numLevels, byte format, IntPtr[] data)
+    public void CreateTexture(IntPtr ptr, UInt32 width, UInt32 height, UInt32 numLevels, byte format, IntPtr[] data)
     {
         ManagedTexture texture = CreateTexture();
-        int id = RegisterTexture(texture);
+        textures[ptr] = texture;
         texture.Init(this, width, height, numLevels, format, data);
-
-        return id;
     }
     public abstract ManagedTexture CreateTexture();
 

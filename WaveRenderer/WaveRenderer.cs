@@ -320,7 +320,7 @@ namespace WaveRenderer
             //Update buffers, textures
             if(batch.pattern != IntPtr.Zero)
             {
-                WaveTexture texture = (WaveTexture)ManagedRenderDevice.textures[GetTextureId(batch.pattern)];
+                WaveTexture texture = (WaveTexture)ManagedRenderDevice.textures[batch.pattern];
                 textures[0] = texture.texture;
 
                 resourceSets[batch.shader].Description.Resources[3] = textures[0];
@@ -328,7 +328,7 @@ namespace WaveRenderer
 
             if (batch.ramps != IntPtr.Zero)
             {
-                WaveTexture texture = (WaveTexture)ManagedRenderDevice.textures[GetTextureId(batch.ramps)];
+                WaveTexture texture = (WaveTexture)ManagedRenderDevice.textures[batch.ramps];
                 textures[1] = texture.texture;
 
                 resourceSets[batch.shader].Description.Resources[5] = textures[1];

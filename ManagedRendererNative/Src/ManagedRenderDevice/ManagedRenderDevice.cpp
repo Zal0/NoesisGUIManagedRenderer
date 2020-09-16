@@ -37,12 +37,13 @@ extern "C"
 }
 
 //Texture callbacks
-typedef int(*CreateTexture)(uint32_t width, uint32_t height, uint32_t numLevels, Noesis::TextureFormat::Enum format, const void** data);
-typedef int(*GetWidth)(int id);
-typedef int(*GetHeight)(int id);
-typedef bool(*HasMipMaps)(int id);
-typedef bool(*IsInverted)(int id);
-typedef void(*UpdateTexture)(Noesis::Texture* texture, uint32_t level, uint32_t x, uint32_t y, uint32_t width, uint32_t height, const void* data);
+class ManagedTexture;
+typedef void(*CreateTexture)(const ManagedTexture* ptr, uint32_t width, uint32_t height, uint32_t numLevels, Noesis::TextureFormat::Enum format, const void** data);
+typedef int(*GetWidth)(const ManagedTexture* ptr);
+typedef int(*GetHeight)(const ManagedTexture* ptr);
+typedef bool(*HasMipMaps)(const ManagedTexture* ptr);
+typedef bool(*IsInverted)(const ManagedTexture* ptr);
+typedef void(*UpdateTexture)(const ManagedTexture* ptr, uint32_t level, uint32_t x, uint32_t y, uint32_t width, uint32_t height, const void* data);
 
 CreateTexture createTextureCallbak = 0;
 GetWidth getWidth = 0;
@@ -67,53 +68,37 @@ extern "C"
 
 class ManagedTexture : public Texture
 {
-private:
-	int id;
-
 public:
 	ManagedTexture(const char* label, uint32_t width, uint32_t height, uint32_t numLevels, Noesis::TextureFormat::Enum format, const void** data)
 	{
-		id = createTextureCallbak(width, height, numLevels, format, data);
+		createTextureCallbak(this, width, height, numLevels, format, data);
 	}
 
 	/// Returns the width of the texture
 	virtual uint32_t GetWidth() const
 	{
-		return getWidth(id);
+		return getWidth(this);
 	}
 
 	/// Returns the height of the texture
 	virtual uint32_t GetHeight() const
 	{
-		return getHeight(id);
+		return getHeight(this);
 	}
 
 	/// True if the texture has mipmaps
 	virtual bool HasMipMaps() const
 	{
-		return hasMipMaps(id);
+		return hasMipMaps(this);
 	}
 
 	/// True is the texture must be vertically inverted when mapped. This is true for render targets
 	/// on platforms (OpenGL) where texture V coordinate is zero at the "bottom of the texture"
 	virtual bool IsInverted() const
 	{
-		return isInverted(id);
-	}
-
-	int GetId()
-	{
-		return id;
+		return isInverted(this);
 	}
 };
-
-extern "C"
-{
-	DLL_FUNC int GetTextureId(ManagedTexture* texture)
-	{
-		return texture->GetId();
-	}
-}
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -143,7 +128,7 @@ Noesis::Ptr<Noesis::Texture> ManagedRenderDevice::CreateTexture(const char* labe
 
 void ManagedRenderDevice::UpdateTexture(Noesis::Texture* texture, uint32_t level, uint32_t x, uint32_t y, uint32_t width, uint32_t height, const void* data)
 {
-	updateTexture(texture, level, x, y, width, height, data);
+	updateTexture((ManagedTexture*)texture, level, x, y, width, height, data);
 }
 
 void ManagedRenderDevice::BeginRender(bool offscreen)
