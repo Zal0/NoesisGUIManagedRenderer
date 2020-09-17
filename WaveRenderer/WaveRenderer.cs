@@ -231,29 +231,14 @@ namespace WaveRenderer
             var pixelShader = this.graphicsContext.Factory.CreateShader(ref pixelShaderDescription);
 
             var resourceLayoutDescription = new ResourceLayoutDescription(
-                    new LayoutElementDescription(0, ResourceType.ConstantBuffer, ShaderStages.Vertex),
-                    new LayoutElementDescription(1, ResourceType.ConstantBuffer, ShaderStages.Vertex),
-                    new LayoutElementDescription(0, ResourceType.Texture, ShaderStages.Pixel),
-                    new LayoutElementDescription(0, ResourceType.Sampler, ShaderStages.Pixel),
-                    new LayoutElementDescription(1, ResourceType.Texture, ShaderStages.Pixel),
-                    new LayoutElementDescription(1, ResourceType.Sampler, ShaderStages.Pixel),
-                    new LayoutElementDescription(2, ResourceType.Texture, ShaderStages.Pixel),
-                    new LayoutElementDescription(2, ResourceType.Sampler, ShaderStages.Pixel),
-                    new LayoutElementDescription(3, ResourceType.Texture, ShaderStages.Pixel),
-                    new LayoutElementDescription(3, ResourceType.Sampler, ShaderStages.Pixel),
-                    new LayoutElementDescription(4, ResourceType.Texture, ShaderStages.Pixel),
-                    new LayoutElementDescription(4, ResourceType.Sampler, ShaderStages.Pixel)
+                new LayoutElementDescription(0, ResourceType.ConstantBuffer, ShaderStages.Vertex),
+                new LayoutElementDescription(1, ResourceType.ConstantBuffer, ShaderStages.Vertex)
             );
 
             var resourceLayout = this.graphicsContext.Factory.CreateResourceLayout(ref resourceLayoutDescription);
 
             var resourceSetDescription = new ResourceSetDescription(
-                resourceLayout, prjMtxBuffer, textureSizeBuffer, 
-                textures[0], samplerStates[0],
-                textures[1], samplerStates[1],
-                textures[2], samplerStates[2],
-                textures[3], samplerStates[3],
-                textures[4], samplerStates[4]
+                resourceLayout, prjMtxBuffer, textureSizeBuffer
             );
 
             resourceSets[shader] = this.graphicsContext.Factory.CreateResourceSet(ref resourceSetDescription);
@@ -291,8 +276,7 @@ namespace WaveRenderer
         //constant buffers
         Buffer prjMtxBuffer;
         Buffer textureSizeBuffer;
-        Texture[] textures = new Texture[5];
-        SamplerState[] samplerStates = new SamplerState[5];
+        IntPtr[] texturePtrs = new IntPtr[5];
 
         MappedResource vertexBufferWritableResource;
         MappedResource indexBufferWritableResource;
@@ -315,27 +299,32 @@ namespace WaveRenderer
             }
         }
 
+        void SetTexture(IntPtr texturePtr, int slot, byte sampler)
+        {
+            if(texturePtr != IntPtr.Zero && texturePtrs[slot] != texturePtr)
+            {
+                WaveTexture texture = (WaveTexture)ManagedRenderDevice.textures[texturePtr];
+                if (texture.resourceSet == null)
+                {
+                    texture.SetResourceSet(this.graphicsContext, 1, sampler);
+                }
+
+                texturePtrs[slot] = texturePtr;
+                commandBuffer.SetResourceSet(texture.resourceSet);
+            }
+        }
+
         public override void DrawBatch(ref Batch batch)
         {
-            //Update buffers, textures
-            if(batch.pattern != IntPtr.Zero)
-            {
-                WaveTexture texture = (WaveTexture)ManagedRenderDevice.textures[batch.pattern];
-                textures[0] = texture.texture;
-
-                resourceSets[batch.shader].Description.Resources[3] = textures[0];
-            }
-
-            if (batch.ramps != IntPtr.Zero)
-            {
-                WaveTexture texture = (WaveTexture)ManagedRenderDevice.textures[batch.ramps];
-                textures[1] = texture.texture;
-
-                resourceSets[batch.shader].Description.Resources[5] = textures[1];
-            }
-
             RenderPassDescription renderPassDescription = new RenderPassDescription(this.frameBuffer, ClearValue.None);
             commandBuffer.BeginRenderPass(ref renderPassDescription);
+
+            //Update textures
+            SetTexture(batch.pattern, 0, batch.patternSampler);
+            SetTexture(batch.ramps, 1, batch.rampsSampler);
+            SetTexture(batch.image, 2, batch.imageSampler);
+            SetTexture(batch.glyphs, 3, batch.glyphsSampler);
+            SetTexture(batch.shadow, 4, batch.shadowSampler);
 
             //Set graphics pipeline
             commandBuffer.SetGraphicsPipelineState(graphicPipelineStates[batch.shader]);
