@@ -1,4 +1,4 @@
-#define EFFECT_PATH_AA_LINEAR 1
+#define EFFECT_PATH_AA_SOLID 1
 
 // ShaderPS.hlsl
 #if EFFECT_RGBA

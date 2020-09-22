@@ -21,6 +21,8 @@
     <None Remove="Content\DrawTriangle\Shaders\HLSL\HLSL.fx" />
     <None Remove="Content\DrawTriangle\Shaders\HLSL\HLSLVertex.fx" />
     <None Remove="Content\DrawTriangle\Shaders\HLSL\PathAA_Linear_FS.fx" />
+    <None Remove="Content\DrawTriangle\Shaders\HLSL\PathAA_Radial_FS.fx" />
+    <None Remove="Content\DrawTriangle\Shaders\HLSL\PathAA_Solid_FS.fx" />
     <None Remove="Content\DrawTriangle\Shaders\HLSL\PosColorCoverage_VS.fx" />
     <None Remove="Content\DrawTriangle\Shaders\HLSL\PosColorTex1Tex2_VS.fx" />
     <None Remove="Content\DrawTriangle\Shaders\HLSL\PosColorTex1_SDF_VS.fx" />
@@ -34,6 +36,7 @@
     <None Remove="Content\DrawTriangle\Shaders\HLSL\Pos_VS.fx" />
     <None Remove="Content\DrawTriangle\Shaders\HLSL\QuadVS.hlsl" />
     <None Remove="Content\DrawTriangle\Shaders\HLSL\ResolvePS.hlsl" />
+    <None Remove="Content\DrawTriangle\Shaders\HLSL\SDF_Solid_FS.fx" />
     <None Remove="Content\DrawTriangle\Shaders\HLSL\ShaderPS.hlsl" />
     <None Remove="Content\DrawTriangle\Shaders\HLSL\ShaderVS.hlsl" />
   </ItemGroup>
@@ -48,7 +51,13 @@
     <Content Include="Content\DrawTriangle\Shaders\HLSL\HLSLVertex.fx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\DrawTriangle\Shaders\HLSL\PathAA_Radial_FS.fx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\DrawTriangle\Shaders\HLSL\PathAA_Linear_FS.fx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\DrawTriangle\Shaders\HLSL\PathAA_Solid_FS.fx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\DrawTriangle\Shaders\HLSL\PosColorCoverage_VS.fx">
@@ -88,6 +97,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\DrawTriangle\Shaders\HLSL\ResolvePS.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\DrawTriangle\Shaders\HLSL\SDF_Solid_FS.fx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\DrawTriangle\Shaders\HLSL\ShaderPS.hlsl">

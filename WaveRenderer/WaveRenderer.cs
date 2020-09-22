@@ -217,7 +217,7 @@ namespace WaveRenderer
             string pixelShaderPath = ((ShaderName)shader).ToString() + "_FS";
             string vsEntryPoint = "main";
             string psEntryPoint = "main";
-            if (shader != 7)
+            if (shader != 6 && shader != 7 && shader != 8 && shader != 10)
             {
                 vertexShaderPath = "HLSLVertex";
                 pixelShaderPath = "HLSLVertex";
