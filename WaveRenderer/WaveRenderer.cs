@@ -281,8 +281,12 @@ namespace WaveRenderer
         MappedResource vertexBufferWritableResource;
         MappedResource indexBufferWritableResource;
 
+        public static WaveRenderer Instance { private set; get; }
+
         public WaveRenderer(GraphicsContext graphicsContext, AssetsDirectory assetsDirectory, FrameBuffer frameBuffer)
         {
+            Instance = this;
+
             this.graphicsContext = graphicsContext;
             this.assetsDirectory = assetsDirectory;
             this.frameBuffer = frameBuffer;
@@ -299,14 +303,14 @@ namespace WaveRenderer
             }
         }
 
-        void SetTexture(IntPtr texturePtr, int slot, byte sampler)
+        void SetTexture(IntPtr texturePtr, uint slot, byte sampler)
         {
-            if(texturePtr != IntPtr.Zero && texturePtrs[slot] != texturePtr)
+            if(texturePtr != IntPtr.Zero /*&& texturePtrs[slot] != texturePtr*/)
             {
                 WaveTexture texture = (WaveTexture)ManagedRenderDevice.textures[texturePtr];
                 if (texture.resourceSet == null)
                 {
-                    texture.SetResourceSet(this.graphicsContext, 1, sampler);
+                    texture.SetResourceSet(this.graphicsContext, slot, sampler);
                 }
 
                 texturePtrs[slot] = texturePtr;
