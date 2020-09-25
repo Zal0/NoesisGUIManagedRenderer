@@ -29,6 +29,7 @@ namespace WaveRenderer
         const int Tex1 = 1 << 3;
         const int Tex2 = 1 << 4;
         const int Coverage = 1 << 5;
+        const int SDF = 1 << 6;
 
         enum ShaderName
         {
@@ -114,15 +115,15 @@ namespace WaveRenderer
             Pos | Tex0  | Coverage,              //PathAA_Radial,             
             Pos | Tex0  | Coverage,              //PathAA_Pattern,            
 
-            Pos | Color | Tex1,                  //SDF_Solid,                 
-            Pos | Tex0  | Tex1,                  //SDF_Linear,                
-            Pos | Tex0  | Tex1,                  //SDF_Radial,                
-            Pos | Tex0  | Tex1,                  //SDF_Pattern,               
+            Pos | Color | Tex1 | SDF,            //SDF_Solid,                 
+            Pos | Tex0  | Tex1 | SDF,            //SDF_Linear,                
+            Pos | Tex0  | Tex1 | SDF,            //SDF_Radial,                
+            Pos | Tex0  | Tex1 | SDF,            //SDF_Pattern,               
 
-            Pos | Color | Tex1,                  //SDF_LCD_Solid,             
-            Pos | Tex0  | Tex1,                  //SDF_LCD_Linear,            
-            Pos | Tex0  | Tex1,                  //SDF_LCD_Radial,            
-            Pos | Tex0  | Tex1,                  //SDF_LCD_Pattern,           
+            Pos | Color | Tex1 | SDF,            //SDF_LCD_Solid,             
+            Pos | Tex0  | Tex1 | SDF,            //SDF_LCD_Linear,            
+            Pos | Tex0  | Tex1 | SDF,            //SDF_LCD_Radial,            
+            Pos | Tex0  | Tex1 | SDF,            //SDF_LCD_Pattern,           
 
             Pos | Color | Tex1,                  //Image_Opacity_Solid,       
             Pos | Tex0  | Tex1,                  //Image_Opacity_Linear,      
@@ -189,7 +190,7 @@ namespace WaveRenderer
             }
             if ((format & Color) != 0)
             {
-                layoutDescription.Add(new ElementDescription(ElementFormat.UInt, ElementSemanticType.Color));
+                layoutDescription.Add(new ElementDescription(ElementFormat.UByte4Normalized, ElementSemanticType.Color));
                 vertexShaderPath += "Color";
             }
             if ((format & Tex0) != 0)
@@ -209,8 +210,12 @@ namespace WaveRenderer
             }
             if ((format & Coverage) != 0)
             {
-                layoutDescription.Add(new ElementDescription(ElementFormat.UInt, ElementSemanticType.TexCoord, 3));
+                layoutDescription.Add(new ElementDescription(ElementFormat.Float, ElementSemanticType.TexCoord, 3));
                 vertexShaderPath += "Coverage";
+            }
+            if ((format & SDF) != 0)
+            {
+                vertexShaderPath += "_SDF";
             }
             vertexShaderPath += "_VS";
 
@@ -255,8 +260,8 @@ namespace WaveRenderer
                 },
                 RenderStates = new RenderStateDescription()
                 {
-                    RasterizerState = RasterizerStates.CullBack,
-                    BlendState = BlendStates.Opaque,
+                    RasterizerState = RasterizerStates.None,
+                    BlendState = BlendStates.AlphaBlend,
                     DepthStencilState = DepthStencilStates.None,
                 },
                 Outputs = this.frameBuffer.OutputDescription,
@@ -411,7 +416,7 @@ namespace WaveRenderer
             Matrix4x4 prjMtx = Matrix4x4.CreateOrthographicOffCenter(0.0f, frameBuffer.Width, 0.0f, frameBuffer.Height, 0.0f, 1.0f);
             commandBuffer.UpdateBufferData(this.prjMtxBuffer, ref prjMtx);
 
-            Vector2 textureSize = new Vector2(256, 256);
+            Vector2 textureSize = new Vector2(1024, 1024); //TODO
             commandBuffer.UpdateBufferData(this.textureSizeBuffer, ref textureSize);
         }
 

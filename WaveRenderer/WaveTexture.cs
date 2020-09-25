@@ -49,7 +49,7 @@ namespace WaveRenderer
                 Usage = ResourceUsage.Dynamic,
                 CpuAccess = ResourceCpuAccess.Write,
                 Flags = TextureFlags.ShaderResource,
-                Format = (format == (byte)Format.RGBA8) ? PixelFormat.R8G8B8A8_UInt : PixelFormat.R8_UInt,
+                Format = (format == (byte)Format.RGBA8) ? PixelFormat.R8G8B8A8_UInt : PixelFormat.R8_UNorm,
                 MipLevels = 1,
                 SampleCount = TextureSampleCount.None,
             };
