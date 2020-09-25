@@ -127,22 +127,22 @@ public abstract class ManagedRenderDevice
         [FieldOffset(56)] public byte shadowSampler;
 
         // Effect parameters
-        /*IntPtr effectParams;
-        UInt32 effectParamsSize;
-        UInt32 effectParamsHash;
+        [FieldOffset(60)] public IntPtr effectParams;
+        [FieldOffset(64)] public UInt32 effectParamsSize;
+        [FieldOffset(68)] public UInt32 effectParamsHash;
 
         // Shader constants (Unused constants are set to null)
-        fixed IntPtr projMtx[16];
-        UInt32 projMtxHash;
+        [FieldOffset(72)] public IntPtr projMtx;
+        [FieldOffset(76)] public UInt32 projMtxHash;
 
-        const float* opacity;
-        UInt32 opacityHash;
+        [FieldOffset(80)] public IntPtr opacity;
+        [FieldOffset(84)] public UInt32 opacityHash;
 
-        const float (*rgba)[4];
-        UInt32 rgbaHash;
+        [FieldOffset(88)] public IntPtr rgba;
+        [FieldOffset(92)] public UInt32 rgbaHash;
 
-        const float (*radialGrad)[8];
-        UInt32 radialGradHash;*/
+        [FieldOffset(96)] public IntPtr radialGrad;
+        [FieldOffset(100)] public UInt32 radialGradHash;
     };
 
     public const string LIB_NOESIS = "../../../../../ManagedRendererNative/Projects/windows_x86/Win32/Debug/ManagedRendererNative.dll";
