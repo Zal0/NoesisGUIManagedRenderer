@@ -222,7 +222,7 @@ namespace WaveRenderer
             string pixelShaderPath = ((ShaderName)shader).ToString() + "_FS";
             string vsEntryPoint = "main";
             string psEntryPoint = "main";
-            if (shader != 6 && shader != 7 && shader != 8 && shader != 10)
+            if (shader != 6 && shader != 7 && shader != 8 && shader != 10) //TODO
             {
                 vertexShaderPath = "HLSLVertex";
                 pixelShaderPath = "HLSLVertex";
@@ -282,6 +282,8 @@ namespace WaveRenderer
         Buffer prjMtxBuffer;
         Buffer textureSizeBuffer;
         IntPtr[] texturePtrs = new IntPtr[5];
+        UInt32 projMtxHash;
+        int textureSizeHash;
 
         MappedResource vertexBufferWritableResource;
         MappedResource indexBufferWritableResource;
@@ -323,8 +325,28 @@ namespace WaveRenderer
             }
         }
 
-        public override void DrawBatch(ref Batch batch)
+        unsafe public override void DrawBatch(ref Batch batch)
         {
+            //Update buffers
+            if (batch.projMtxHash != projMtxHash)
+            {
+                Matrix4x4 prjMtx = Matrix4x4.Transpose(*(Matrix4x4*)batch.projMtx);
+                commandBuffer.UpdateBufferData(this.prjMtxBuffer, ref prjMtx);
+                projMtxHash = batch.projMtxHash;
+            }
+
+            if(batch.glyphs != IntPtr.Zero || batch.image != IntPtr.Zero)
+            {
+                WaveTexture texture = (WaveTexture)ManagedRenderDevice.textures[batch.glyphs != IntPtr.Zero ? batch.glyphs : batch.image];
+                Vector2 textureSize = new Vector2(texture.GetWidth(), texture.GetHeight());
+                int hash = texture.GetWidth() << 16 | texture.GetHeight();
+                if (textureSizeHash != hash)
+                {
+                    commandBuffer.UpdateBufferData(this.textureSizeBuffer, ref textureSize);
+                    textureSizeHash = hash;
+                }
+            }
+
             RenderPassDescription renderPassDescription = new RenderPassDescription(this.frameBuffer, ClearValue.None);
             commandBuffer.BeginRenderPass(ref renderPassDescription);
 
@@ -413,11 +435,7 @@ namespace WaveRenderer
 
         public override void BeginRender()
         {
-            Matrix4x4 prjMtx = Matrix4x4.CreateOrthographicOffCenter(0.0f, frameBuffer.Width, 0.0f, frameBuffer.Height, 0.0f, 1.0f);
-            commandBuffer.UpdateBufferData(this.prjMtxBuffer, ref prjMtx);
-
-            Vector2 textureSize = new Vector2(1024, 1024); //TODO
-            commandBuffer.UpdateBufferData(this.textureSizeBuffer, ref textureSize);
+            
         }
 
         public override void EndRender()
