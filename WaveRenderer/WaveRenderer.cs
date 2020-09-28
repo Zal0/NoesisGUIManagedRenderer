@@ -237,13 +237,14 @@ namespace WaveRenderer
 
             var resourceLayoutDescription = new ResourceLayoutDescription(
                 new LayoutElementDescription(0, ResourceType.ConstantBuffer, ShaderStages.Vertex),
-                new LayoutElementDescription(1, ResourceType.ConstantBuffer, ShaderStages.Vertex)
+                new LayoutElementDescription(1, ResourceType.ConstantBuffer, ShaderStages.Vertex),
+                new LayoutElementDescription(0, ResourceType.ConstantBuffer, ShaderStages.Pixel)
             );
 
             var resourceLayout = this.graphicsContext.Factory.CreateResourceLayout(ref resourceLayoutDescription);
 
             var resourceSetDescription = new ResourceSetDescription(
-                resourceLayout, prjMtxBuffer, textureSizeBuffer
+                resourceLayout, prjMtxBuffer, textureSizeBuffer, pixelCB
             );
 
             resourceSets[shader] = this.graphicsContext.Factory.CreateResourceSet(ref resourceSetDescription);
@@ -281,6 +282,7 @@ namespace WaveRenderer
         //constant buffers
         Buffer prjMtxBuffer;
         Buffer textureSizeBuffer;
+        Buffer pixelCB;
         IntPtr[] texturePtrs = new IntPtr[5];
         UInt32 projMtxHash;
         int textureSizeHash;
@@ -298,11 +300,14 @@ namespace WaveRenderer
             this.assetsDirectory = assetsDirectory;
             this.frameBuffer = frameBuffer;
 
-            var constantBufferDescription = new BufferDescription(64, BufferFlags.ConstantBuffer, ResourceUsage.Default);
+            var constantBufferDescription = new BufferDescription(128, BufferFlags.ConstantBuffer, ResourceUsage.Default);
             prjMtxBuffer = this.graphicsContext.Factory.CreateBuffer(ref constantBufferDescription);
 
             constantBufferDescription = new BufferDescription(16, BufferFlags.ConstantBuffer, ResourceUsage.Default);
             textureSizeBuffer = this.graphicsContext.Factory.CreateBuffer(ref constantBufferDescription);
+
+            constantBufferDescription = new BufferDescription(64, BufferFlags.ConstantBuffer, ResourceUsage.Default);
+            pixelCB = this.graphicsContext.Factory.CreateBuffer(ref constantBufferDescription);
 
             for (int i = 0; i < formats.Length; ++i)
             {
@@ -335,7 +340,38 @@ namespace WaveRenderer
                 projMtxHash = batch.projMtxHash;
             }
 
-            if(batch.glyphs != IntPtr.Zero || batch.image != IntPtr.Zero)
+            // Pixel Constants
+            if (batch.rgba != IntPtr.Zero || batch.radialGrad != IntPtr.Zero || batch.opacity != IntPtr.Zero)
+            {
+                float[] pixelData = new float[32];
+                int idx = 0;
+
+                if(batch.rgba != IntPtr.Zero)
+                {
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        pixelData[idx++] = ((float*)batch.rgba)[i];
+                    }
+                }
+
+                if(batch.radialGrad != IntPtr.Zero)
+                {
+                    for (int i = 0; i < 8; ++i)
+                    {
+                        pixelData[idx++] = ((float*)batch.radialGrad)[i];
+                    }
+                }
+
+                if (batch.opacity != IntPtr.Zero)
+                {
+                    pixelData[idx++] = ((float*)batch.opacity)[0];
+                }
+
+                commandBuffer.UpdateBufferData(this.pixelCB, ref pixelData[0]);
+            }
+
+            // Update Texture dimensions
+            if (batch.glyphs != IntPtr.Zero || batch.image != IntPtr.Zero)
             {
                 WaveTexture texture = (WaveTexture)ManagedRenderDevice.textures[batch.glyphs != IntPtr.Zero ? batch.glyphs : batch.image];
                 Vector2 textureSize = new Vector2(texture.GetWidth(), texture.GetHeight());

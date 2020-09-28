@@ -37,7 +37,6 @@ namespace WaveRenderer
             WaveRenderer waveRenderer = (WaveRenderer)managedRenderDevice;
             GraphicsContext graphicsContext = waveRenderer.graphicsContext;
 
-            //TextureDescription desc = TextureDescription.CreateTexture2DDescription(width, height, (format == (byte)Format.RGBA8) ? PixelFormat.R8G8B8A8_UInt : PixelFormat.R8_UInt);
             var desc = new TextureDescription()
             {
                 Type = TextureType.Texture2D,
@@ -49,7 +48,7 @@ namespace WaveRenderer
                 Usage = ResourceUsage.Dynamic,
                 CpuAccess = ResourceCpuAccess.Write,
                 Flags = TextureFlags.ShaderResource,
-                Format = (format == (byte)Format.RGBA8) ? PixelFormat.R8G8B8A8_UInt : PixelFormat.R8_UNorm,
+                Format = (format == (byte)Format.RGBA8) ? PixelFormat.R8G8B8A8_UNorm : PixelFormat.R8_UNorm,
                 MipLevels = 1,
                 SampleCount = TextureSampleCount.None,
             };
@@ -91,7 +90,7 @@ namespace WaveRenderer
         {
             byte* dataByte = (byte*)data;
 
-            int bpp = texture.Description.Format == PixelFormat.R8G8B8A8_UInt ? 4 : 1;
+            int bpp = texture.Description.Format == PixelFormat.R8G8B8A8_UNorm ? 4 : 1;
             for (uint j = 0; j < height; ++ j)
             {
                 for(uint i = 0; i < width; ++i)
