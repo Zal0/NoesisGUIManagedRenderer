@@ -44,8 +44,8 @@ namespace VisualTests.Runners.Common
 
                     break;
                 case GraphicsBackend.OpenGLES:
-                //case GraphicsBackend.WebGL1:
-                //case GraphicsBackend.WebGL2:
+                case GraphicsBackend.WebGL1:
+                case GraphicsBackend.WebGL2:
 
                     source = await assetsDirectory.ReadAsStringAsync($"Shaders/ESSL/{translateFileName}.essl");
                     bytecode = graphicsContext.ShaderCompile(source, entryPoint, stage, compileParameters).ByteCode;

@@ -67,9 +67,9 @@ namespace VisualTests.Runners.Common
                 swapChainDescriptor.SurfaceInfo = surface.SurfaceInfo;
 
                 var graphicsContext = test.CreateGraphicsContext(swapChainDescriptor, prefferedBackend);
-                windowsTitle = $"{windowsTitle} [{prefferedSurface.ToString()}] [{prefferedAudio}] [{graphicsContext.BackendType}]";                
+                windowsTitle = $"{windowsTitle} [{prefferedSurface.ToString()}] [{prefferedAudio}] [{graphicsContext.BackendType}]";
 
-                test.Run(); 
+                test.Run();
             }
         }
     }

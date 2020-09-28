@@ -72,14 +72,11 @@ namespace VisualTests.Runners.Common
                 case SurfaceTypes.WPF:
                     this.windowSystem = GetInstance<WindowsSystem>("WaveEngine.WPF", "WPFWindowsSystem");
                     break;
-                case SurfaceTypes.GTK:
-                    this.windowSystem = GetInstance<WindowsSystem>("WaveEngine.GTK", "GTKWindowsSystem");
-                    break;
                 case SurfaceTypes.SDL:
                     this.windowSystem = GetInstance<WindowsSystem>("WaveEngine.SDL", "SDLWindowsSystem");
                     break;
                 case SurfaceTypes.Android:
-                    this.windowSystem = GetInstance<WindowsSystem>("WaveEngine.AndroidView", "AndroidWindowsSystem", true, context);
+                    this.windowSystem = GetInstance<WindowsSystem>("WaveEngine.AndroidView", "AndroidWindowsSystem", context);
                     break;
                 case SurfaceTypes.IOS:
                     this.windowSystem = GetInstance<WindowsSystem>("WaveEngine.iOSView", "iOSWindowsSystem");
@@ -88,7 +85,7 @@ namespace VisualTests.Runners.Common
                     this.windowSystem = GetInstance<WindowsSystem>("WaveEngine.UWPView", "UWPWindowsSystem");
                     break;
                 case SurfaceTypes.MixedReality:
-                    this.windowSystem = GetInstance<WindowsSystem>("WaveEngine.MixedReality", "MixedRealityWindowsSystem", true, context);
+                    this.windowSystem = GetInstance<WindowsSystem>("WaveEngine.MixedReality", "MixedRealityWindowsSystem", context);
                     break;
                 case SurfaceTypes.Web:
                     this.windowSystem = GetInstance<WindowsSystem>("WaveEngine.Web", "WebWindowsSystem");
@@ -127,7 +124,7 @@ namespace VisualTests.Runners.Common
                     break;
                 case GraphicsBackend.OpenGL:
                 case GraphicsBackend.OpenGLES:
-                //case GraphicsBackend.WebGL2:
+                case GraphicsBackend.WebGL2:
                     this.graphicsContext = this.GetInstance<GraphicsContext>("WaveEngine.OpenGL", "GLGraphicsContext");
                     break;
                 case GraphicsBackend.Vulkan:
@@ -157,11 +154,25 @@ namespace VisualTests.Runners.Common
             return this.graphicsContext;
         }
 
-        protected T GetInstance<T>(string assemblyName, string typeName, bool needArguments = false, params object[] arguments)
+        protected bool TryGetInstance<T>(string assemblyName, string typeName, out T instance, params object[] arguments)
+        {
+            try
+            {
+                instance = this.GetInstance<T>(assemblyName, typeName, arguments);
+                return true;
+            }
+            catch
+            {
+                instance = default;
+                return false;
+            }
+        }
+
+        protected T GetInstance<T>(string assemblyName, string typeName, params object[] arguments)
         {
             var assembly = Assembly.Load(assemblyName);
             typeName = $"{assemblyName}.{typeName}";
-            if (needArguments)
+            if (arguments.Length > 0)
             {
                 return (T)Activator.CreateInstance(assembly.GetType(typeName), arguments);
             }
