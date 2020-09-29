@@ -96,10 +96,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Src\ManagedRenderDevice\ManagedRenderDevice.cpp" />
-    <ClCompile Include="..\..\Src\Main.cpp">
-    </ClCompile>
-    <ClInclude Include="..\..\Src\ManagedRenderDevice\ManagedRenderDevice.h" />
+    <ClCompile Include="..\..\Src\NoesisApp.cpp" />
+    <ClCompile Include="..\..\Src\ManagedRenderDevice.cpp" />
+    <ClInclude Include="..\..\Src\ManagedRenderDevice.h" />
+    <ClInclude Include="..\..\Src\ManagedTexture.h" />
     <ResourceCompile Include="resources.rc" />
     <None Include="Noesis.ico" />
   </ItemGroup>

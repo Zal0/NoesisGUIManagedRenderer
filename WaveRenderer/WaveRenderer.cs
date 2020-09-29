@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
 using WaveEngine.Common.Graphics;
 using WaveEngine.Mathematics;
 using WaveEngine.Platform;
 using VisualTests.Runners.Common;
 using Buffer = WaveEngine.Common.Graphics.Buffer;
+using NoesisManagedRenderer;
 
 namespace WaveRenderer
 {
-    class WaveRenderer : ManagedRenderDevice
+    public class WaveRenderer : ManagedRenderDevice
     {
         // List of shaders to be implemented by the device with expected vertex format
         //
@@ -285,7 +283,7 @@ namespace WaveRenderer
         Buffer pixelCB;
         IntPtr[] texturePtrs = new IntPtr[5];
         UInt32 projMtxHash;
-        int textureSizeHash;
+        uint textureSizeHash;
 
         MappedResource vertexBufferWritableResource;
         MappedResource indexBufferWritableResource;
@@ -317,9 +315,9 @@ namespace WaveRenderer
 
         void SetTexture(IntPtr texturePtr, uint slot, byte sampler)
         {
-            if(texturePtr != IntPtr.Zero /*&& texturePtrs[slot] != texturePtr*/)
+            if(texturePtr != IntPtr.Zero)
             {
-                WaveTexture texture = (WaveTexture)ManagedRenderDevice.textures[texturePtr];
+                var texture = WaveTexture.GetTexture(texturePtr);
                 if (texture.resourceSet == null)
                 {
                     texture.SetResourceSet(this.graphicsContext, slot, sampler);
@@ -330,7 +328,7 @@ namespace WaveRenderer
             }
         }
 
-        unsafe public override void DrawBatch(ref Batch batch)
+        unsafe public override void DrawBatch(ref NoesisBatch batch)
         {
             //Update buffers
             if (batch.projMtxHash != projMtxHash)
@@ -373,9 +371,10 @@ namespace WaveRenderer
             // Update Texture dimensions
             if (batch.glyphs != IntPtr.Zero || batch.image != IntPtr.Zero)
             {
-                WaveTexture texture = (WaveTexture)ManagedRenderDevice.textures[batch.glyphs != IntPtr.Zero ? batch.glyphs : batch.image];
-                Vector2 textureSize = new Vector2(texture.GetWidth(), texture.GetHeight());
-                int hash = texture.GetWidth() << 16 | texture.GetHeight();
+                var texturePtr = batch.glyphs != IntPtr.Zero ? batch.glyphs : batch.image;
+                var texture = WaveTexture.GetTexture(texturePtr);
+                Vector2 textureSize = new Vector2(texture.Width, texture.Height);
+                uint hash = texture.Width << 16 | texture.Height;
                 if (textureSizeHash != hash)
                 {
                     commandBuffer.UpdateBufferData(this.textureSizeBuffer, ref textureSize);
@@ -471,17 +470,17 @@ namespace WaveRenderer
 
         public override void BeginRender()
         {
-            
         }
 
         public override void EndRender()
         {
-            
+            throw new NotImplementedException();
         }
 
-        public override ManagedTexture CreateTexture()
+        public override void CreateTexture(IntPtr ptr, uint width, uint height, uint numLevels, NoesisTextureFormat format)
         {
-            return new WaveTexture();
+            var texture = new WaveTexture(this.graphicsContext, ptr, width, height, numLevels, format, null);
+            //return texture.IsInverted();
         }
     }
 }

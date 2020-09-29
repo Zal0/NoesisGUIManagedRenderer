@@ -1,315 +1,102 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
-public abstract class ManagedRenderDevice
+namespace NoesisManagedRenderer
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct Shader
+    public abstract class ManagedRenderDevice
     {
-        // List of shaders to be implemented by the device with expected vertex format
-        //
-        //  Name       Format                   Size (bytes)      Semantic
-        //  ---------------------------------------------------------------------------------
-        //  Pos        R32G32_FLOAT             8                 Position (x,y)
-        //  Color      R8G8B8A8_UNORM           4                 Color (rgba)
-        //  Tex0       R32G32_FLOAT             8                 Texture (u,v)
-        //  Tex1       R32G32_FLOAT             8                 Texture (u,v)
-        //  Tex2       R16G16B16A16_UNORM       8                 Rect (x0,y0, x1,y1)
-        //  Coverage   R32_FLOAT                4                 Coverage (x)
-        //
-        public enum Enum
+        public const string LIB_NOESIS = "ManagedRendererNative";
+
+        public delegate void SetDrawBatchCallbackDelegate(ref NoesisBatch batch);
+        public delegate IntPtr SetMapVerticesCallbackDelegate(UInt32 size);
+        public delegate void SetUnmapVerticesCallbackDelegate();
+        public delegate IntPtr SetMapIndicesCallbackDelegate(UInt32 size);
+        public delegate void SetUnmapIndicesCallbackDelegate();
+        public delegate void SetBeginRenderCallbackDelegate();
+        public delegate void SetEndRenderCallbackDelegate();
+        public delegate void CreateTextureDelegate(IntPtr ptr, UInt32 width, UInt32 height, UInt32 numLevels, NoesisTextureFormat format);
+        public delegate void UpdateTextureDelegate(IntPtr ptr, UInt32 level, UInt32 x, UInt32 y, UInt32 width, UInt32 height, IntPtr data);
+
+        internal IntPtr cPtr;
+
+        static ManagedRenderDevice()
         {
-            RGBA,                       // Pos
-            Mask,                       // Pos
-
-            Path_Solid,                 // Pos | Color
-            Path_Linear,                // Pos | Tex0
-            Path_Radial,                // Pos | Tex0
-            Path_Pattern,               // Pos | Tex0
-
-            PathAA_Solid,               // Pos | Color | Coverage
-            PathAA_Linear,              // Pos | Tex0  | Coverage
-            PathAA_Radial,              // Pos | Tex0  | Coverage
-            PathAA_Pattern,             // Pos | Tex0  | Coverage
-
-            SDF_Solid,                  // Pos | Color | Tex1
-            SDF_Linear,                 // Pos | Tex0  | Tex1
-            SDF_Radial,                 // Pos | Tex0  | Tex1
-            SDF_Pattern,                // Pos | Tex0  | Tex1
-
-            SDF_LCD_Solid,              // Pos | Color | Tex1
-            SDF_LCD_Linear,             // Pos | Tex0  | Tex1
-            SDF_LCD_Radial,             // Pos | Tex0  | Tex1
-            SDF_LCD_Pattern,            // Pos | Tex0  | Tex1
-
-            Image_Opacity_Solid,        // Pos | Color | Tex1
-            Image_Opacity_Linear,       // Pos | Tex0  | Tex1
-            Image_Opacity_Radial,       // Pos | Tex0  | Tex1
-            Image_Opacity_Pattern,      // Pos | Tex0  | Tex1
-
-            Image_Shadow35V,            // Pos | Color | Tex1 | Tex2
-            Image_Shadow63V,            // Pos | Color | Tex1 | Tex2
-            Image_Shadow127V,           // Pos | Color | Tex1 | Tex2
-
-            Image_Shadow35H_Solid,      // Pos | Color | Tex1 | Tex2
-            Image_Shadow35H_Linear,     // Pos | Tex0  | Tex1 | Tex2
-            Image_Shadow35H_Radial,     // Pos | Tex0  | Tex1 | Tex2
-            Image_Shadow35H_Pattern,    // Pos | Tex0  | Tex1 | Tex2
-
-            Image_Shadow63H_Solid,      // Pos | Color | Tex1 | Tex2
-            Image_Shadow63H_Linear,     // Pos | Tex0  | Tex1 | Tex2
-            Image_Shadow63H_Radial,     // Pos | Tex0  | Tex1 | Tex2
-            Image_Shadow63H_Pattern,    // Pos | Tex0  | Tex1 | Tex2
-
-            Image_Shadow127H_Solid,     // Pos | Color | Tex1 | Tex2
-            Image_Shadow127H_Linear,    // Pos | Tex0  | Tex1 | Tex2
-            Image_Shadow127H_Radial,    // Pos | Tex0  | Tex1 | Tex2
-            Image_Shadow127H_Pattern,   // Pos | Tex0  | Tex1 | Tex2
-
-            Image_Blur35V,              // Pos | Color | Tex1 | Tex2
-            Image_Blur63V,              // Pos | Color | Tex1 | Tex2
-            Image_Blur127V,             // Pos | Color | Tex1 | Tex2
-
-            Image_Blur35H_Solid,        // Pos | Color | Tex1 | Tex2
-            Image_Blur35H_Linear,       // Pos | Tex0  | Tex1 | Tex2
-            Image_Blur35H_Radial,       // Pos | Tex0  | Tex1 | Tex2
-            Image_Blur35H_Pattern,      // Pos | Tex0  | Tex1 | Tex2
-
-            Image_Blur63H_Solid,        // Pos | Color | Tex1 | Tex2
-            Image_Blur63H_Linear,       // Pos | Tex0  | Tex1 | Tex2
-            Image_Blur63H_Radial,       // Pos | Tex0  | Tex1 | Tex2
-            Image_Blur63H_Pattern,      // Pos | Tex0  | Tex1 | Tex2
-
-            Image_Blur127H_Solid,       // Pos | Color | Tex1 | Tex2
-            Image_Blur127H_Linear,      // Pos | Tex0  | Tex1 | Tex2
-            Image_Blur127H_Radial,      // Pos | Tex0  | Tex1 | Tex2
-            Image_Blur127H_Pattern,     // Pos | Tex0  | Tex1 | Tex2
-
-            Count
-        };
-
-        byte v;
-    }
-
-    // Render batch information
-    [StructLayout(LayoutKind.Explicit, Size = 184)]
-    public struct Batch
-    {
-        // Render state
-        [FieldOffset(0)] public byte shader;
-        [FieldOffset(1)] public byte renderState;
-        [FieldOffset(2)] public byte stencilRef;
-
-        // Draw parameters
-        [FieldOffset(4)] public UInt32 vertexOffset;
-        [FieldOffset(8)] public UInt32 numVertices;
-        [FieldOffset(12)] public UInt32 startIndex;
-        [FieldOffset(16)] public UInt32 numIndices;
-
-        // Textures (Unused textures are set to null)
-        [FieldOffset(20)] public IntPtr pattern;
-        [FieldOffset(24)] public byte patternSampler;
-
-        [FieldOffset(28)] public IntPtr ramps;
-        [FieldOffset(32)] public byte rampsSampler;
-
-        [FieldOffset(36)] public IntPtr image;
-        [FieldOffset(40)] public byte imageSampler;
-
-        [FieldOffset(44)] public IntPtr glyphs;
-        [FieldOffset(48)] public byte glyphsSampler;
-
-        [FieldOffset(52)] public IntPtr shadow;
-        [FieldOffset(56)] public byte shadowSampler;
-
-        // Effect parameters
-        [FieldOffset(60)] public IntPtr effectParams;
-        [FieldOffset(64)] public UInt32 effectParamsSize;
-        [FieldOffset(68)] public UInt32 effectParamsHash;
-
-        // Shader constants (Unused constants are set to null)
-        [FieldOffset(72)] public IntPtr projMtx;
-        [FieldOffset(76)] public UInt32 projMtxHash;
-
-        [FieldOffset(80)] public IntPtr opacity;
-        [FieldOffset(84)] public UInt32 opacityHash;
-
-        [FieldOffset(88)] public IntPtr rgba;
-        [FieldOffset(92)] public UInt32 rgbaHash;
-
-        [FieldOffset(96)] public IntPtr radialGrad;
-        [FieldOffset(100)] public UInt32 radialGradHash;
-    };
-
-    public const string LIB_NOESIS = "../../../../../ManagedRendererNative/Projects/windows_x86/Win32/Debug/ManagedRendererNative.dll";
-
-    [DllImport(ManagedRenderDevice.LIB_NOESIS)]
-    [System.Security.SuppressUnmanagedCodeSecurity()]
-    private static extern void NoesisInit();
-
-    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-    [System.Security.SuppressUnmanagedCodeSecurity()]
-    public static extern void UpdateView(float t);
-
-    [DllImport(ManagedRenderDevice.LIB_NOESIS)]
-    [System.Security.SuppressUnmanagedCodeSecurity()]
-    public static extern void RenderView();
-
-    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-    [System.Security.SuppressUnmanagedCodeSecurity()]
-    public static extern void SetViewSize(int w, int h);
-
-    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-    [System.Security.SuppressUnmanagedCodeSecurity()]
-    public static extern void ViewMouseMove(int x, int y);
-
-    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-    [System.Security.SuppressUnmanagedCodeSecurity()]
-    public static extern void ViewMouseButtonDown(int x, int y);
-
-    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-    [System.Security.SuppressUnmanagedCodeSecurity()]
-    public static extern void ViewMouseButtonUp(int x, int y);
-
-    public delegate void SetDrawBatchCallbackDelegate(ref Batch batch);
-    public delegate IntPtr SetMapVerticesCallbackDelegate(UInt32 size);
-    public delegate void SetUnmapVerticesCallbackDelegate();
-    public delegate IntPtr SetMapIndicesCallbackDelegate(UInt32 size);
-    public delegate void SetUnmapIndicesCallbackDelegate();
-    public delegate void SetBeginRenderCallbackDelegate();
-    public delegate void SetEndRenderCallbackDelegate();
-
-    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-    private static extern void SetDrawBatchCallback(SetDrawBatchCallbackDelegate callback);
-
-    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-    private static extern void SetMapVerticesCallback(SetMapVerticesCallbackDelegate callback);
-
-    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-    private static extern void SetUnmapVerticesCallback(SetUnmapVerticesCallbackDelegate callback);
-
-    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-    private static extern void SetMapIndicesCallback(SetMapIndicesCallbackDelegate callback);
-
-    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-    private static extern void SetUnmapIndicesCallback(SetUnmapIndicesCallbackDelegate callback);
-
-    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-    private static extern void SetBeginRenderCallback(SetBeginRenderCallbackDelegate callback);
-
-    [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-    private static extern void SetEndRenderCallback(SetEndRenderCallbackDelegate callback);
-
-    public delegate void CreateTextureDelegate(IntPtr ptr, UInt32 width, UInt32 height, UInt32 numLevels, byte format, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 0)][In, Out] IntPtr[] data);
-    public delegate int GetWidthDelegate(IntPtr ptr);
-    public delegate int GetHeightDelegate(IntPtr ptr);
-    public delegate bool HasMipMapsDelegate(IntPtr ptr);
-    public delegate bool IsInvertedDelegate(IntPtr ptr);
-    public delegate void UpdateTextureDelegate(IntPtr texture, UInt32 level, UInt32 x, UInt32 y, UInt32 width, UInt32 height, IntPtr data);
-
-    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-    private static extern void SetCreateTextureCallback(CreateTextureDelegate callback);
-
-    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-    private static extern void SetGetWidthCallback(GetWidthDelegate callback);
-
-    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-    private static extern void SetGetHeightCallback(GetHeightDelegate callback);
-
-    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-    private static extern void SetHasMipMapsCallback(HasMipMapsDelegate callback);
-
-    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-    private static extern void SetIsInvertedCallback(IsInvertedDelegate callback);
-
-    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-    private static extern void SetUpdateTextureCallback(UpdateTextureDelegate callback);
-
-    [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int GetTextureId(IntPtr texture);
-
-    public abstract void DrawBatch(ref Batch batch);
-    public abstract IntPtr MapVertices(UInt32 size);
-    public abstract void UnmapVertices();
-    public abstract IntPtr MapIndices(UInt32 size);
-    public abstract void UnmapIndices();
-    public abstract void BeginRender();
-    public abstract void EndRender();
-
-    //Texture stuff
-    public static Dictionary<IntPtr, ManagedTexture> textures = new Dictionary<IntPtr, ManagedTexture>();
-    public static int nextId = 0;
-
-    public int GetWidth(IntPtr ptr)
-    {
-        return textures[ptr].GetWidth();
-    }
-
-    public int GetHeight(IntPtr ptr)
-    {
-        return textures[ptr].GetHeight();
-    }
-
-    public bool HasMipMaps(IntPtr ptr)
-    {
-        return textures[ptr].HasMipMaps();
-    }
-
-    public bool IsInverted(IntPtr ptr)
-    {
-        return textures[ptr].IsInverted();
-    }
-
-    public void UpdateTexture(IntPtr texture, UInt32 level, UInt32 x, UInt32 y, UInt32 width, UInt32 height, IntPtr data)
-    {
-        ManagedTexture t = textures[texture];
-        t.UpdateTexture(level, x, y, width, height, data);
-    }
-
-    public void CreateTexture(IntPtr ptr, UInt32 width, UInt32 height, UInt32 numLevels, byte format, IntPtr[] data)
-    {
-        ManagedTexture texture = CreateTexture();
-        textures[ptr] = texture;
-        texture.Init(this, width, height, numLevels, format, data);
-    }
-    public abstract ManagedTexture CreateTexture();
-
-    public static void SetMamanagedRenderDevice(ManagedRenderDevice renderDevice)
-    {
-        SetDrawBatchCallback(renderDevice.DrawBatch);
-        SetMapVerticesCallback(renderDevice.MapVertices);
-        SetUnmapVerticesCallback(renderDevice.UnmapVertices);
-        SetMapIndicesCallback(renderDevice.MapIndices);
-        SetUnmapIndicesCallback(renderDevice.UnmapIndices);
-        SetBeginRenderCallback(renderDevice.BeginRender);
-        SetEndRenderCallback(renderDevice.EndRender);
-
-        SetCreateTextureCallback(renderDevice.CreateTexture);
-        SetGetWidthCallback(renderDevice.GetWidth);
-        SetGetHeightCallback(renderDevice.GetHeight);
-        SetHasMipMapsCallback(renderDevice.HasMipMaps);
-        SetIsInvertedCallback(renderDevice.IsInverted);
-        SetUpdateTextureCallback(renderDevice.UpdateTexture);
-    }
-
-    [DllImport("kernel32.dll")]
-    private static extern IntPtr LoadLibrary(string filename);
-
-    public static void Init(ManagedRenderDevice renderer)
-    {
-        //Manually load lib dependencies before calling any function
-        IntPtr error;
-        string NoesisPath = Environment.GetEnvironmentVariable("NOESIS_SDK_PATH");
-        error = LoadLibrary(NoesisPath + @"\Bin\windows_x86\Noesis.dll");
-        error = LoadLibrary(NoesisPath + @"\Bin\windows_x86\NoesisApp.dll");
-        error = LoadLibrary(ManagedRenderDevice.LIB_NOESIS);
-
-        ManagedRenderDevice.SetMamanagedRenderDevice(renderer);
-        ManagedRenderDevice.NoesisInit();
+            //Manually load lib dependencies before calling any function
+            IntPtr error;
+            string NoesisPath = Environment.GetEnvironmentVariable("NOESIS_SDK_PATH");
+            error = LoadLibrary(NoesisPath + @"\Bin\windows_x86\Noesis.dll");
+            error = LoadLibrary(NoesisPath + @"\Bin\windows_x86\NoesisApp.dll");
+            error = LoadLibrary(ManagedRenderDevice.LIB_NOESIS);
+        }
+
+        public ManagedRenderDevice()
+        {
+            this.cPtr = CreateManagedRenderDevice();
+            SetMamanagedRenderDevice(this);
+        }
+
+        [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr CreateManagedRenderDevice();
+
+        [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+        private static extern void SetDrawBatchCallback(IntPtr pDevice, SetDrawBatchCallbackDelegate callback);
+
+        [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+        private static extern void SetMapVerticesCallback(IntPtr pDevice, SetMapVerticesCallbackDelegate callback);
+
+        [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+        private static extern void SetUnmapVerticesCallback(IntPtr pDevice, SetUnmapVerticesCallbackDelegate callback);
+
+        [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+        private static extern void SetMapIndicesCallback(IntPtr pDevice, SetMapIndicesCallbackDelegate callback);
+
+        [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+        private static extern void SetUnmapIndicesCallback(IntPtr pDevice, SetUnmapIndicesCallbackDelegate callback);
+
+        [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+        private static extern void SetBeginRenderCallback(IntPtr pDevice, SetBeginRenderCallbackDelegate callback);
+
+        [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+        private static extern void SetEndRenderCallback(IntPtr pDevice, SetEndRenderCallbackDelegate callback);
+
+        [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+        private static extern void SetCreateTextureCallback(IntPtr pDevice, CreateTextureDelegate callback);
+
+        [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+        private static extern void SetUpdateTextureCallback(IntPtr pDevice, UpdateTextureDelegate callback);
+
+        public abstract void DrawBatch(ref NoesisBatch batch);
+        public abstract IntPtr MapVertices(UInt32 size);
+        public abstract void UnmapVertices();
+        public abstract IntPtr MapIndices(UInt32 size);
+        public abstract void UnmapIndices();
+        public abstract void BeginRender();
+        public abstract void EndRender();
+
+        public abstract void CreateTexture(IntPtr ptr, UInt32 width, UInt32 height, UInt32 numLevels, NoesisTextureFormat format);
+
+        public void UpdateTexture(IntPtr ptr, UInt32 level, UInt32 x, UInt32 y, UInt32 width, UInt32 height, IntPtr data)
+        {
+            var texture = ManagedTexture.GetTexture(ptr);
+            texture.UpdateTexture(level, x, y, width, height, data);
+        }
+
+        public static void SetMamanagedRenderDevice(ManagedRenderDevice renderDevice)
+        {
+            var cPtr = renderDevice.cPtr;
+            SetDrawBatchCallback(cPtr, renderDevice.DrawBatch);
+            SetMapVerticesCallback(cPtr, renderDevice.MapVertices);
+            SetUnmapVerticesCallback(cPtr, renderDevice.UnmapVertices);
+            SetMapIndicesCallback(cPtr, renderDevice.MapIndices);
+            SetUnmapIndicesCallback(cPtr, renderDevice.UnmapIndices);
+            SetBeginRenderCallback(cPtr, renderDevice.BeginRender);
+            SetEndRenderCallback(cPtr, renderDevice.EndRender);
+            SetCreateTextureCallback(cPtr, renderDevice.CreateTexture);
+            SetUpdateTextureCallback(cPtr, renderDevice.UpdateTexture);
+        }
+
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr LoadLibrary(string filename);
     }
 }
 

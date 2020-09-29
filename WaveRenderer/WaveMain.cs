@@ -1,5 +1,6 @@
 ﻿// Copyright © Wave Engine S.L. All rights reserved. Use is subject to license terms.
 
+using NoesisManagedRenderer;
 using System;
 using System.Runtime.CompilerServices;
 using VisualTests.Runners.Common;
@@ -35,7 +36,7 @@ namespace VisualTests.LowLevel.Tests
         protected override void OnResized(uint width, uint height)
         {
             this.viewports[0] = new Viewport(0, 0, width, height);
-            ManagedRenderDevice.SetViewSize((int)width, (int)height);
+            NoesisApp.SetViewSize((int)width, (int)height);
         }
 
         protected override async void InternalLoad()
@@ -93,13 +94,14 @@ namespace VisualTests.LowLevel.Tests
             this.MarkAsLoaded();
 
             waveRenderer = new WaveRenderer.WaveRenderer(this.graphicsContext, assetsDirectory, frameBuffer);
-            ManagedRenderDevice.Init(waveRenderer);
-            ManagedRenderDevice.SetViewSize((int)width, (int)height);
+
+            NoesisApp.NoesisInit(waveRenderer);
+            NoesisApp.SetViewSize((int)width, (int)height);
         }
 
         protected override void InternalDrawCallback(TimeSpan gameTime)
         {
-            ManagedRenderDevice.UpdateView((float)gameTime.TotalMilliseconds);
+            NoesisApp.UpdateView((float)gameTime.TotalMilliseconds);
 
             var commandBuffer = this.commandQueue.CommandBuffer();
             waveRenderer.commandBuffer = commandBuffer;
@@ -117,7 +119,7 @@ namespace VisualTests.LowLevel.Tests
             commandBuffer.Draw((uint)this.vertexData.Length / 2);
             commandBuffer.EndRenderPass();
 
-            ManagedRenderDevice.RenderView();
+            NoesisApp.RenderView();
             
             commandBuffer.End();
 

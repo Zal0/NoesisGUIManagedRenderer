@@ -12,22 +12,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Src\Main.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
     <ResourceCompile Include="resources.rc">
       <Filter>Resources</Filter>
     </ResourceCompile>
     <None Include="Noesis.ico">
       <Filter>Resources</Filter>
     </None>
-    <ClInclude Include="..\..\Src\ManagedRenderDevice\ManagedRenderDevice.h">
-      <Filter>Src\ManagedRenderDevice</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Src\ManagedRenderDevice\ManagedRenderDevice.cpp">
-      <Filter>Src\ManagedRenderDevice</Filter>
+    <ClCompile Include="..\..\Src\NoesisApp.cpp">
+      <Filter>Src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Src\ManagedRenderDevice.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Src\ManagedRenderDevice.h" />
+    <ClInclude Include="..\..\Src\ManagedTexture.h" />
   </ItemGroup>
 </Project>

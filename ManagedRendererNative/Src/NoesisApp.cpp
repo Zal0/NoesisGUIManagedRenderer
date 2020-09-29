@@ -24,7 +24,7 @@
 #include <NsGui/IView.h>
 #include <NsGui/Grid.h>
 
-#include "ManagedRenderDevice/ManagedRenderDevice.h"
+#include "ManagedRenderDevice.h"
 
 static Noesis::IView* _view;
 
@@ -33,7 +33,7 @@ extern "C"
 {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-DLL_FUNC void NoesisInit()
+DLL_FUNC void NoesisInit(Noesis::RenderDevice* renderDevice)
 {
     Noesis::SetLogHandler([](const char*, uint32_t, uint32_t level, const char*, const char* msg)
     {
@@ -82,9 +82,8 @@ DLL_FUNC void NoesisInit()
     _view = Noesis::GUI::CreateView(xaml).GiveOwnership();
     _view->SetFlags(Noesis::RenderFlags_PPAA | Noesis::RenderFlags_LCD);
 
-    // Renderer initialization with an OpenGL device
-    //_view->GetRenderer()->Init(NoesisApp::GLFactory::CreateDevice(false));
-    _view->GetRenderer()->Init(new ManagedRenderDevice());
+    // Renderer initialization with the render device
+    _view->GetRenderer()->Init(renderDevice);
 }
 
 DLL_FUNC void UpdateView(float t)
