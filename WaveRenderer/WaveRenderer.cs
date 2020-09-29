@@ -274,7 +274,7 @@ namespace WaveRenderer
         AssetsDirectory assetsDirectory;
         FrameBuffer frameBuffer;
 
-        Buffer[] vertexBuffers;
+        Buffer vertexBuffer;
         Buffer indexBuffer;
 
         //constant buffers
@@ -395,8 +395,7 @@ namespace WaveRenderer
             commandBuffer.SetResourceSet(resourceSets[batch.shader]);
 
             //Set Vertex Buffer
-            int[] offsets = { (int)batch.vertexOffset };
-            commandBuffer.SetVertexBuffers(vertexBuffers, offsets);
+            commandBuffer.SetVertexBuffer(0, vertexBuffer, batch.vertexOffset);
 
             //Set Index Buffer
             commandBuffer.SetIndexBuffer(indexBuffer);
@@ -409,13 +408,9 @@ namespace WaveRenderer
         
         unsafe protected override IntPtr MapVertices(UInt32 bytes)
         {
-            if (vertexBuffers == null || bytes > vertexBuffers[0].Description.SizeInBytes)
+            if (vertexBuffer == null || bytes > vertexBuffer.Description.SizeInBytes)
             {
-                if (vertexBuffers != null)
-                {
-                    foreach(Buffer b in vertexBuffers)
-                        b.Dispose();
-                }
+                vertexBuffer?.Dispose();
 
                 var vertexBufferDescription = new BufferDescription(
                     bytes,
@@ -423,17 +418,16 @@ namespace WaveRenderer
                     ResourceUsage.Dynamic,
                     ResourceCpuAccess.Write);
 
-                var vertexBuffer = graphicsContext.Factory.CreateBuffer(ref vertexBufferDescription);
-                vertexBuffers = new Buffer[] { vertexBuffer };    
+                vertexBuffer = graphicsContext.Factory.CreateBuffer(ref vertexBufferDescription);
             }
 
-            vertexBufferWritableResource = graphicsContext.MapMemory(vertexBuffers[0], MapMode.Write);
+            vertexBufferWritableResource = graphicsContext.MapMemory(vertexBuffer, MapMode.Write);
             return vertexBufferWritableResource.Data;
         }
 
         unsafe protected override void UnmapVertices()
         {
-            graphicsContext.UnmapMemory(vertexBuffers[0]);
+            graphicsContext.UnmapMemory(vertexBuffer);
         }
 
         unsafe protected override IntPtr MapIndices(uint bytes)
@@ -441,10 +435,7 @@ namespace WaveRenderer
             UInt32 size = bytes / sizeof(UInt16);
             if (indexBuffer == null || size > indexBuffer.Description.SizeInBytes)
             {
-                if (indexBuffer != null)
-                {
-                    indexBuffer.Dispose();
-                }
+                indexBuffer?.Dispose();
 
                 var indexBufferDescription = new BufferDescription(
                     bytes,
