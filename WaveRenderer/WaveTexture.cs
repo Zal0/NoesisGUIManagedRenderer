@@ -1,6 +1,7 @@
 ﻿using NoesisManagedRenderer;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Text;
@@ -26,6 +27,9 @@ namespace WaveRenderer
         public WaveTexture(GraphicsContext graphicsContext, IntPtr nativePointer, uint width, uint height, uint numLevels, NoesisTextureFormat format, IntPtr[] data)
             : base(nativePointer)
         {
+            if (numLevels > 1)
+                throw new NotImplementedException();
+
             this.graphicsContext = graphicsContext;
 
             var desc = new TextureDescription()
@@ -46,6 +50,7 @@ namespace WaveRenderer
 
             if (data != null)
             {
+                throw new NotImplementedException();
                 //TODO: copy data to texture Data
                 //DataBox textureDataBox = new DataBox(data[0]);
                 //texture = graphicsContext.Factory.CreateTexture(new DataBox[] { textureDataBox }, ref desc);
@@ -83,6 +88,10 @@ namespace WaveRenderer
 
         unsafe public override void UpdateTexture(uint level, uint x, uint y, uint width, uint height, IntPtr data)
         {
+            if(level > 1)
+                throw new NotImplementedException();
+
+            Debug.WriteLine("Updating texture");
             byte* dataByte = (byte*)data;
 
             int bpp = texture.Description.Format == PixelFormat.R8G8B8A8_UNorm ? 4 : 1;
