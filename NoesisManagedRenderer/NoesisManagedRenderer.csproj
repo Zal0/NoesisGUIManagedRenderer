@@ -2,6 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <None Include="..\ManagedRendererNative\Projects\windows_x86\Win32\Debug\ManagedRendererNative.dll" Link="ManagedRendererNative.dll">

@@ -4,40 +4,26 @@
 #include <NsRender/Texture.h>
 #include <NsRender/RenderDevice.h>
 
-class ManagedTexture : public Noesis::Texture
+class ManagedTexture final : public  Noesis::Texture
 {
-private:
-	uint32_t mWidth;
-	uint32_t mHeight;
-	uint32_t mNumLevels;
-	bool mIsInverted;
-
 public:
+	ManagedTexture(uint32_t width_, uint32_t height_,
+		uint32_t levels_) : width(width_), height(height_),
+		levels(levels_) {}
 
 	~ManagedTexture()
 	{
 	}
 
-	/// Returns the width of the texture
-	virtual uint32_t GetWidth() const { return mWidth; }
+	uint32_t GetWidth() const override { return width; }
+	uint32_t GetHeight() const override { return height; }
+	bool HasMipMaps() const override { return levels > 1; }
+	bool IsInverted() const override { return isInverted; }
+	void SetIsInverted(bool value) { isInverted = value; }
 
-	/// Returns the height of the texture
-	virtual uint32_t GetHeight() const { return mHeight; }
-
-	/// True if the texture has mipmaps
-	virtual bool HasMipMaps() const { return mNumLevels > 1; }
-
-	/// True is the texture must be vertically inverted when mapped. This is true for render targets
-	/// on platforms (OpenGL) where texture V coordinate is zero at the "bottom of the texture"
-	virtual bool IsInverted() const { return mIsInverted; }
-
-	void SetIsInverted(bool value) { mIsInverted = value; }
-
-	void Update(uint32_t width, uint32_t height, uint32_t numLevels)
-	{
-		mWidth = width;
-		mHeight = height;
-		mNumLevels = numLevels;
-	}
+	const uint32_t width;
+	const uint32_t height;
+	const uint32_t levels;
+	bool isInverted;
 };
 #endif

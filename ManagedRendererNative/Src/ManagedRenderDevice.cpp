@@ -44,10 +44,9 @@ Noesis::Ptr<Noesis::Texture> ManagedRenderDevice::CreateTexture(const char* labe
 {
 	if (createTextureCallback)
 	{
-		Noesis::Ptr<ManagedTexture> texture = *new ManagedTexture();
-		texture->Update(width, height, numLevels);
-		texture->SetIsInverted(false);
-		createTextureCallback(texture, width, height, numLevels, format);
+		Noesis::Ptr<ManagedTexture> texture = *new ManagedTexture(width, height, numLevels);
+		bool isInverted = createTextureCallback(texture, CreateTextureParams{ width = width, height = height, numLevels = numLevels, format = format  });
+		texture->SetIsInverted(isInverted);
 		return texture;
 	}
 

@@ -7,15 +7,23 @@ namespace NoesisManagedRenderer
     {
         public const string LIB_NOESIS = "ManagedRendererNative";
 
-        public delegate void SetDrawBatchCallbackDelegate(ref NoesisBatch batch);
-        public delegate IntPtr SetMapVerticesCallbackDelegate(UInt32 size);
-        public delegate void SetUnmapVerticesCallbackDelegate();
-        public delegate IntPtr SetMapIndicesCallbackDelegate(UInt32 size);
-        public delegate void SetUnmapIndicesCallbackDelegate();
-        public delegate void SetBeginRenderCallbackDelegate();
-        public delegate void SetEndRenderCallbackDelegate();
-        public delegate void CreateTextureDelegate(IntPtr ptr, UInt32 width, UInt32 height, UInt32 numLevels, NoesisTextureFormat format);
-        public delegate void UpdateTextureDelegate(IntPtr ptr, UInt32 level, UInt32 x, UInt32 y, UInt32 width, UInt32 height, IntPtr data);
+        private delegate void SetDrawBatchCallbackDelegate(ref NoesisBatch batch);
+        private delegate IntPtr SetMapVerticesCallbackDelegate(UInt32 size);
+        private delegate void SetUnmapVerticesCallbackDelegate();
+        private delegate IntPtr SetMapIndicesCallbackDelegate(UInt32 size);
+        private delegate void SetUnmapIndicesCallbackDelegate();
+        private delegate void SetBeginRenderCallbackDelegate();
+        private delegate void SetEndRenderCallbackDelegate();
+        private delegate bool CreateTextureDelegate(IntPtr ptr, ref CreateTextureParams args);
+        private delegate void UpdateTextureDelegate(IntPtr ptr, UInt32 level, UInt32 x, UInt32 y, UInt32 width, UInt32 height, IntPtr data);
+
+        protected struct CreateTextureParams
+        {
+            public UInt32 width;
+            public UInt32 height;
+            public UInt32 numLevels;
+            public NoesisTextureFormat format;
+        }
 
         internal IntPtr cPtr;
 
@@ -65,23 +73,22 @@ namespace NoesisManagedRenderer
         [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
         private static extern void SetUpdateTextureCallback(IntPtr pDevice, UpdateTextureDelegate callback);
 
-        public abstract void DrawBatch(ref NoesisBatch batch);
-        public abstract IntPtr MapVertices(UInt32 size);
-        public abstract void UnmapVertices();
-        public abstract IntPtr MapIndices(UInt32 size);
-        public abstract void UnmapIndices();
-        public abstract void BeginRender();
-        public abstract void EndRender();
+        protected abstract void DrawBatch(ref NoesisBatch batch);
+        protected abstract IntPtr MapVertices(UInt32 size);
+        protected abstract void UnmapVertices();
+        protected abstract IntPtr MapIndices(UInt32 size);
+        protected abstract void UnmapIndices();
+        protected abstract void BeginRender();
+        protected abstract void EndRender();
+        protected abstract bool CreateTexture(IntPtr ptr, ref CreateTextureParams args);
 
-        public abstract void CreateTexture(IntPtr ptr, UInt32 width, UInt32 height, UInt32 numLevels, NoesisTextureFormat format);
-
-        public void UpdateTexture(IntPtr ptr, UInt32 level, UInt32 x, UInt32 y, UInt32 width, UInt32 height, IntPtr data)
+        private void UpdateTexture(IntPtr ptr, UInt32 level, UInt32 x, UInt32 y, UInt32 width, UInt32 height, IntPtr data)
         {
             var texture = ManagedTexture.GetTexture(ptr);
             texture.UpdateTexture(level, x, y, width, height, data);
         }
 
-        public static void SetMamanagedRenderDevice(ManagedRenderDevice renderDevice)
+        private static void SetMamanagedRenderDevice(ManagedRenderDevice renderDevice)
         {
             var cPtr = renderDevice.cPtr;
             SetDrawBatchCallback(cPtr, renderDevice.DrawBatch);

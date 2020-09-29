@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using WaveEngine.Common.Graphics;
 
@@ -9,6 +10,8 @@ namespace WaveRenderer
 {
     public class WaveTexture : ManagedTexture
     {
+        private GraphicsContext graphicsContext;
+
         public Texture texture { private set; get; }
         public ResourceSet resourceSet { private set; get; }
 
@@ -23,6 +26,8 @@ namespace WaveRenderer
         public WaveTexture(GraphicsContext graphicsContext, IntPtr nativePointer, uint width, uint height, uint numLevels, NoesisTextureFormat format, IntPtr[] data)
             : base(nativePointer)
         {
+            this.graphicsContext = graphicsContext;
+
             var desc = new TextureDescription()
             {
                 Type = TextureType.Texture2D,
@@ -47,28 +52,28 @@ namespace WaveRenderer
             }
             else
             {
-                texture = graphicsContext.Factory.CreateTexture(ref desc);
+                texture = this.graphicsContext.Factory.CreateTexture(ref desc);
                 textureData = new byte[width * height * ((format == NoesisTextureFormat.RGBA8) ? 4 : 1)];
             }
         }
 
-        public void SetResourceSet(GraphicsContext graphicsContext, uint slot, byte sampler)
+        public void SetResourceSet(uint slot, byte sampler)
         {
             var resourceLayoutDescription = new ResourceLayoutDescription(
                 new LayoutElementDescription(slot, ResourceType.Texture, ShaderStages.Pixel),
                 new LayoutElementDescription(slot, ResourceType.Sampler, ShaderStages.Pixel)
             );
 
-            var resourceLayout = graphicsContext.Factory.CreateResourceLayout(ref resourceLayoutDescription);
+            var resourceLayout = this.graphicsContext.Factory.CreateResourceLayout(ref resourceLayoutDescription);
 
             SamplerStateDescription samplerDescription = SamplerStates.LinearClamp;//TODO
-            var samplerState = graphicsContext.Factory.CreateSamplerState(ref samplerDescription);
+            var samplerState = this.graphicsContext.Factory.CreateSamplerState(ref samplerDescription);
 
             var resourceSetDescription = new ResourceSetDescription(resourceLayout,
                 texture, samplerState
             );
 
-            resourceSet = graphicsContext.Factory.CreateResourceSet(ref resourceSetDescription);
+            resourceSet = this.graphicsContext.Factory.CreateResourceSet(ref resourceSetDescription);
         }
 
         public override bool IsInverted()
@@ -92,7 +97,7 @@ namespace WaveRenderer
                 }
             }
 
-            WaveRenderer.Instance.graphicsContext.UpdateTextureData(texture, textureData);
+            this.graphicsContext.UpdateTextureData(texture, textureData);
         }
     }
 }

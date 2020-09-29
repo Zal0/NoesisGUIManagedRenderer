@@ -288,12 +288,8 @@ namespace WaveRenderer
         MappedResource vertexBufferWritableResource;
         MappedResource indexBufferWritableResource;
 
-        public static WaveRenderer Instance { private set; get; }
-
         public WaveRenderer(GraphicsContext graphicsContext, AssetsDirectory assetsDirectory, FrameBuffer frameBuffer)
         {
-            Instance = this;
-
             this.graphicsContext = graphicsContext;
             this.assetsDirectory = assetsDirectory;
             this.frameBuffer = frameBuffer;
@@ -320,7 +316,7 @@ namespace WaveRenderer
                 var texture = WaveTexture.GetTexture(texturePtr);
                 if (texture.resourceSet == null)
                 {
-                    texture.SetResourceSet(this.graphicsContext, slot, sampler);
+                    texture.SetResourceSet(slot, sampler);
                 }
 
                 texturePtrs[slot] = texturePtr;
@@ -328,7 +324,7 @@ namespace WaveRenderer
             }
         }
 
-        unsafe public override void DrawBatch(ref NoesisBatch batch)
+        unsafe protected override void DrawBatch(ref NoesisBatch batch)
         {
             //Update buffers
             if (batch.projMtxHash != projMtxHash)
@@ -411,7 +407,7 @@ namespace WaveRenderer
             commandBuffer.EndRenderPass();
         }
         
-        unsafe public override IntPtr MapVertices(UInt32 bytes)
+        unsafe protected override IntPtr MapVertices(UInt32 bytes)
         {
             if (vertexBuffers == null || bytes > vertexBuffers[0].Description.SizeInBytes)
             {
@@ -435,12 +431,12 @@ namespace WaveRenderer
             return vertexBufferWritableResource.Data;
         }
 
-        unsafe public override void UnmapVertices()
+        unsafe protected override void UnmapVertices()
         {
             graphicsContext.UnmapMemory(vertexBuffers[0]);
         }
 
-        unsafe public override IntPtr MapIndices(uint bytes)
+        unsafe protected override IntPtr MapIndices(uint bytes)
         {
             UInt32 size = bytes / sizeof(UInt16);
             if (indexBuffer == null || size > indexBuffer.Description.SizeInBytes)
@@ -463,24 +459,23 @@ namespace WaveRenderer
             return indexBufferWritableResource.Data;
         }
 
-        unsafe public override void UnmapIndices()
+        unsafe protected override void UnmapIndices()
         {
             graphicsContext.UnmapMemory(indexBuffer);
         }
 
-        public override void BeginRender()
+        protected override void BeginRender()
         {
         }
 
-        public override void EndRender()
+        protected override void EndRender()
         {
-            throw new NotImplementedException();
         }
 
-        public override void CreateTexture(IntPtr ptr, uint width, uint height, uint numLevels, NoesisTextureFormat format)
+        protected override bool CreateTexture(IntPtr ptr, ref CreateTextureParams args)
         {
-            var texture = new WaveTexture(this.graphicsContext, ptr, width, height, numLevels, format, null);
-            //return texture.IsInverted();
+            var texture = new WaveTexture(this.graphicsContext, ptr, args.width, args.height, args.numLevels, args.format, null);
+            return texture.IsInverted();
         }
     }
 }

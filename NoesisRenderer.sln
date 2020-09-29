@@ -16,7 +16,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WaveRenderer", "WaveRendere
 		{BBE504D0-51C9-3E5B-8E79-5EEF41D6BF37} = {BBE504D0-51C9-3E5B-8E79-5EEF41D6BF37}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoesisManagedRenderer", "NoesisManagedRenderer\NoesisManagedRenderer.csproj", "{892A6D36-0CE7-4F93-A75E-192544E27592}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NoesisManagedRenderer", "NoesisManagedRenderer\NoesisManagedRenderer.csproj", "{892A6D36-0CE7-4F93-A75E-192544E27592}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BBE504D0-51C9-3E5B-8E79-5EEF41D6BF37} = {BBE504D0-51C9-3E5B-8E79-5EEF41D6BF37}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Renderers", "Renderers", "{89C6B8E3-28B3-41C9-9512-E92E29DAC1EF}"
 EndProject
