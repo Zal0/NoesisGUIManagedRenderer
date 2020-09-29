@@ -242,7 +242,7 @@ namespace WaveRenderer
             var resourceLayout = this.graphicsContext.Factory.CreateResourceLayout(ref resourceLayoutDescription);
 
             var resourceSetDescription = new ResourceSetDescription(
-                resourceLayout, prjMtxBuffer, textureSizeBuffer, pixelCB
+                resourceLayout, vertexCB, texDimensionsCB, pixelCB
             );
 
             resourceSets[shader] = this.graphicsContext.Factory.CreateResourceSet(ref resourceSetDescription);
@@ -272,32 +272,55 @@ namespace WaveRenderer
         public CommandBuffer commandBuffer;
         public GraphicsContext graphicsContext { private set; get; }
 
+        //Buffers
         Buffer vertexBuffer;
         Buffer indexBuffer;
-
-        //constant buffers
-        Buffer prjMtxBuffer;
-        Buffer textureSizeBuffer;
+        Buffer vertexCB;
         Buffer pixelCB;
+        Buffer effectCB;
+        Buffer texDimensionsCB;
+
+        uint vertexCBHash;
+        uint pixelCBHash;
+        uint effectCBHash;
+        uint texDimensionsCBHash;
+
         IntPtr[] texturePtrs = new IntPtr[5];
-        UInt32 projMtxHash;
-        uint textureSizeHash;
 
         MappedResource vertexBufferWritableResource;
         MappedResource indexBufferWritableResource;
+
+        private void CreateBuffers()
+        {
+            vertexCBHash = 0;
+            pixelCBHash = 0;
+            effectCBHash = 0;
+            texDimensionsCBHash = 0;
+
+            var bufferDescription = new BufferDescription(DYNAMIC_VB_SIZE, BufferFlags.VertexBuffer, ResourceUsage.Dynamic, ResourceCpuAccess.Write);
+            vertexBuffer = graphicsContext.Factory.CreateBuffer(ref bufferDescription);
+
+            bufferDescription = new BufferDescription(DYNAMIC_IB_SIZE, BufferFlags.VertexBuffer, ResourceUsage.Dynamic, ResourceCpuAccess.Write);
+            indexBuffer = graphicsContext.Factory.CreateBuffer(ref bufferDescription);
+
+            bufferDescription = new BufferDescription(16 * sizeof(float), BufferFlags.ConstantBuffer, ResourceUsage.Default);
+            vertexCB = this.graphicsContext.Factory.CreateBuffer(ref bufferDescription);
+
+            bufferDescription = new BufferDescription(12 * sizeof(float), BufferFlags.ConstantBuffer, ResourceUsage.Default);
+            pixelCB = this.graphicsContext.Factory.CreateBuffer(ref bufferDescription);
+
+            bufferDescription = new BufferDescription(16 * sizeof(float), BufferFlags.ConstantBuffer, ResourceUsage.Default);
+            effectCB = this.graphicsContext.Factory.CreateBuffer(ref bufferDescription);
+
+            bufferDescription = new BufferDescription(4 * sizeof(float), BufferFlags.ConstantBuffer, ResourceUsage.Default);
+            texDimensionsCB = this.graphicsContext.Factory.CreateBuffer(ref bufferDescription);
+        }
 
         public WaveRenderer(GraphicsContext graphicsContext, AssetsDirectory assetsDirectory, FrameBuffer frameBuffer)
         {
             this.graphicsContext = graphicsContext;
 
-            var constantBufferDescription = new BufferDescription(128, BufferFlags.ConstantBuffer, ResourceUsage.Default);
-            prjMtxBuffer = this.graphicsContext.Factory.CreateBuffer(ref constantBufferDescription);
-
-            constantBufferDescription = new BufferDescription(16, BufferFlags.ConstantBuffer, ResourceUsage.Default);
-            textureSizeBuffer = this.graphicsContext.Factory.CreateBuffer(ref constantBufferDescription);
-
-            constantBufferDescription = new BufferDescription(64, BufferFlags.ConstantBuffer, ResourceUsage.Default);
-            pixelCB = this.graphicsContext.Factory.CreateBuffer(ref constantBufferDescription);
+            CreateBuffers();
 
             for (int i = 0; i < formats.Length; ++i)
             {
@@ -323,11 +346,11 @@ namespace WaveRenderer
         unsafe protected override void DrawBatch(ref NoesisBatch batch)
         {
             //Update buffers
-            if (batch.projMtxHash != projMtxHash)
+            if (batch.projMtxHash != vertexCBHash)
             {
                 Matrix4x4 prjMtx = Matrix4x4.Transpose(*(Matrix4x4*)batch.projMtx);
-                commandBuffer.UpdateBufferData(this.prjMtxBuffer, ref prjMtx);
-                projMtxHash = batch.projMtxHash;
+                commandBuffer.UpdateBufferData(this.vertexCB, ref prjMtx);
+                vertexCBHash = batch.projMtxHash;
             }
 
             // Pixel Constants
@@ -367,10 +390,10 @@ namespace WaveRenderer
                 var texture = WaveTexture.GetTexture(texturePtr);
                 Vector2 textureSize = new Vector2(texture.Width, texture.Height);
                 uint hash = texture.Width << 16 | texture.Height;
-                if (textureSizeHash != hash)
+                if (texDimensionsCBHash != hash)
                 {
-                    commandBuffer.UpdateBufferData(this.textureSizeBuffer, ref textureSize);
-                    textureSizeHash = hash;
+                    commandBuffer.UpdateBufferData(this.texDimensionsCB, ref textureSize);
+                    texDimensionsCBHash = hash;
                 }
             }
 
@@ -399,19 +422,6 @@ namespace WaveRenderer
         
         unsafe protected override IntPtr MapVertices(UInt32 bytes)
         {
-            if (vertexBuffer == null || bytes > vertexBuffer.Description.SizeInBytes)
-            {
-                vertexBuffer?.Dispose();
-
-                var vertexBufferDescription = new BufferDescription(
-                    bytes,
-                    BufferFlags.VertexBuffer,
-                    ResourceUsage.Dynamic,
-                    ResourceCpuAccess.Write);
-
-                vertexBuffer = graphicsContext.Factory.CreateBuffer(ref vertexBufferDescription);
-            }
-
             vertexBufferWritableResource = graphicsContext.MapMemory(vertexBuffer, MapMode.Write);
             return vertexBufferWritableResource.Data;
         }
@@ -423,20 +433,6 @@ namespace WaveRenderer
 
         unsafe protected override IntPtr MapIndices(uint bytes)
         {
-            UInt32 size = bytes / sizeof(UInt16);
-            if (indexBuffer == null || size > indexBuffer.Description.SizeInBytes)
-            {
-                indexBuffer?.Dispose();
-
-                var indexBufferDescription = new BufferDescription(
-                    bytes,
-                    BufferFlags.VertexBuffer,
-                    ResourceUsage.Dynamic,
-                    ResourceCpuAccess.Write);
-
-                indexBuffer = graphicsContext.Factory.CreateBuffer(ref indexBufferDescription);
-            }
-
             indexBufferWritableResource = graphicsContext.MapMemory(indexBuffer, MapMode.Write);
             return indexBufferWritableResource.Data;
         }

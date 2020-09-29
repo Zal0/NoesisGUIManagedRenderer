@@ -17,6 +17,10 @@ namespace NoesisManagedRenderer
         private delegate bool CreateTextureDelegate(IntPtr ptr, ref CreateTextureParams args);
         private delegate void UpdateTextureDelegate(IntPtr ptr, UInt32 level, UInt32 x, UInt32 y, UInt32 width, UInt32 height, IntPtr data);
 
+        protected const uint DYNAMIC_VB_SIZE = 512 * 1024;
+        protected const uint DYNAMIC_IB_SIZE = 128 * 1024;
+        protected const uint DYNAMIC_TEX_SIZE = 128 * 1024;
+
         protected struct CreateTextureParams
         {
             public UInt32 width;
