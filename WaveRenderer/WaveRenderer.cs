@@ -171,7 +171,7 @@ namespace WaveRenderer
 
         ResourceSet[] resourceSets = new ResourceSet[Enum.GetNames(typeof(ShaderName)).Length];
 
-        async void InitGraphicsPipelineState(int shader)
+        async void InitGraphicsPipelineState(int shader, AssetsDirectory assetsDirectory, FrameBuffer frameBuffer)
         {
             InputLayouts vertexLayouts = new InputLayouts();
             LayoutDescription layoutDescription = new LayoutDescription();
@@ -228,8 +228,8 @@ namespace WaveRenderer
                 psEntryPoint = "PS";
             }
 
-            var vertexShaderDescription = await this.assetsDirectory.ReadAndCompileShader(this.graphicsContext, vertexShaderPath, "VertexShader", ShaderStages.Vertex, vsEntryPoint);
-            var pixelShaderDescription = await this.assetsDirectory.ReadAndCompileShader(this.graphicsContext, pixelShaderPath, "FragmentShader", ShaderStages.Pixel, psEntryPoint);
+            var vertexShaderDescription = await assetsDirectory.ReadAndCompileShader(this.graphicsContext, vertexShaderPath, "VertexShader", ShaderStages.Vertex, vsEntryPoint);
+            var pixelShaderDescription = await assetsDirectory.ReadAndCompileShader(this.graphicsContext, pixelShaderPath, "FragmentShader", ShaderStages.Pixel, psEntryPoint);
             var vertexShader = this.graphicsContext.Factory.CreateShader(ref vertexShaderDescription);
             var pixelShader = this.graphicsContext.Factory.CreateShader(ref pixelShaderDescription);
 
@@ -263,7 +263,7 @@ namespace WaveRenderer
                     BlendState = BlendStates.AlphaBlend,
                     DepthStencilState = DepthStencilStates.None,
                 },
-                Outputs = this.frameBuffer.OutputDescription,
+                Outputs = frameBuffer.OutputDescription,
             };
 
             graphicPipelineStates[shader] = this.graphicsContext.Factory.CreateGraphicsPipeline(ref pipelineDescription);
@@ -271,8 +271,6 @@ namespace WaveRenderer
 
         public CommandBuffer commandBuffer;
         public GraphicsContext graphicsContext { private set; get; }
-        AssetsDirectory assetsDirectory;
-        FrameBuffer frameBuffer;
 
         Buffer vertexBuffer;
         Buffer indexBuffer;
@@ -291,8 +289,6 @@ namespace WaveRenderer
         public WaveRenderer(GraphicsContext graphicsContext, AssetsDirectory assetsDirectory, FrameBuffer frameBuffer)
         {
             this.graphicsContext = graphicsContext;
-            this.assetsDirectory = assetsDirectory;
-            this.frameBuffer = frameBuffer;
 
             var constantBufferDescription = new BufferDescription(128, BufferFlags.ConstantBuffer, ResourceUsage.Default);
             prjMtxBuffer = this.graphicsContext.Factory.CreateBuffer(ref constantBufferDescription);
@@ -305,7 +301,7 @@ namespace WaveRenderer
 
             for (int i = 0; i < formats.Length; ++i)
             {
-                InitGraphicsPipelineState(i);
+                InitGraphicsPipelineState(i, assetsDirectory, frameBuffer);
             }
         }
 
@@ -378,9 +374,6 @@ namespace WaveRenderer
                 }
             }
 
-            RenderPassDescription renderPassDescription = new RenderPassDescription(this.frameBuffer, ClearValue.None);
-            commandBuffer.BeginRenderPass(ref renderPassDescription);
-
             //Update textures
             SetTexture(batch.pattern, 0, batch.patternSampler);
             SetTexture(batch.ramps, 1, batch.rampsSampler);
@@ -402,8 +395,6 @@ namespace WaveRenderer
 
             //Draw
             commandBuffer.DrawIndexed(batch.numIndices, batch.startIndex);
-
-            commandBuffer.EndRenderPass();
         }
         
         unsafe protected override IntPtr MapVertices(UInt32 bytes)
