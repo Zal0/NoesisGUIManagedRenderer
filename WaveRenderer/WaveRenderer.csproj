@@ -121,4 +121,10 @@
     <ProjectReference Include="..\NoesisManagedRenderer\NoesisManagedRenderer.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Content\DrawTriangle\xamls\test.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
