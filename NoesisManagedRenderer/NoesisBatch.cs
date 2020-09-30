@@ -8,7 +8,7 @@ namespace NoesisManagedRenderer
     public struct NoesisBatch
     {
         // Render state
-        [FieldOffset(0)] public byte shader;
+        [FieldOffset(0)] public NoesisShader shader;
         [FieldOffset(1)] public byte renderState;
         [FieldOffset(2)] public byte stencilRef;
 

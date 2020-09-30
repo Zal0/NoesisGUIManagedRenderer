@@ -5,220 +5,63 @@ using WaveEngine.Platform;
 using VisualTests.Runners.Common;
 using Buffer = WaveEngine.Common.Graphics.Buffer;
 using NoesisManagedRenderer;
-using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace WaveRenderer
 {
-    public class WaveRenderer : ManagedRenderDevice
+    public class WaveRenderDevice : ManagedRenderDevice
     {
-        // List of shaders to be implemented by the device with expected vertex format
-        //
-        //  Name       Format                   Size (bytes)      Semantic
-        //  ---------------------------------------------------------------------------------
-        //  Pos        R32G32_FLOAT             8                 Position (x,y)
-        //  Color      R8G8B8A8_UNORM           4                 Color (rgba)
-        //  Tex0       R32G32_FLOAT             8                 Texture (u,v)
-        //  Tex1       R32G32_FLOAT             8                 Texture (u,v)
-        //  Tex2       R16G16B16A16_UNORM       8                 Rect (x0,y0, x1,y1)
-        //  Coverage   R32_FLOAT                4                 Coverage (x)
+        GraphicsPipelineState[] graphicPipelineStates = new GraphicsPipelineState[Enum.GetNames(typeof(NoesisShader.Enum)).Length];
 
-        const int Pos = 1 << 0;
-        const int Color = 1 << 1;
-        const int Tex0 = 1 << 2;
-        const int Tex1 = 1 << 3;
-        const int Tex2 = 1 << 4;
-        const int Coverage = 1 << 5;
-        const int SDF = 1 << 6;
+        ResourceSet[] resourceSets = new ResourceSet[Enum.GetNames(typeof(NoesisShader.Enum)).Length];
 
-        enum ShaderName
-        {
-            RGBA,
-            Mask,
-
-            Path_Solid,
-            Path_Linear,
-            Path_Radial,
-            Path_Pattern,
-
-            PathAA_Solid,
-            PathAA_Linear,
-            PathAA_Radial,
-            PathAA_Pattern,
-
-            SDF_Solid,
-            SDF_Linear,
-            SDF_Radial,
-            SDF_Pattern,
-
-            SDF_LCD_Solid,
-            SDF_LCD_Linear,
-            SDF_LCD_Radial,
-            SDF_LCD_Pattern,
-
-            Image_Opacity_Solid,
-            Image_Opacity_Linear,
-            Image_Opacity_Radial,
-            Image_Opacity_Pattern,
-
-            Image_Shadow35V,
-            Image_Shadow63V,
-            Image_Shadow127V,
-
-            Image_Shadow35H_Solid,
-            Image_Shadow35H_Linear,
-            Image_Shadow35H_Radial,
-            Image_Shadow35H_Pattern,
-
-            Image_Shadow63H_Solid,
-            Image_Shadow63H_Linear,
-            Image_Shadow63H_Radial,
-            Image_Shadow63H_Pattern,
-
-            Image_Shadow127H_Solid,
-            Image_Shadow127H_Linear,
-            Image_Shadow127H_Radial,
-            Image_Shadow127H_Pattern,
-
-            Image_Blur35V,
-            Image_Blur63V,
-            Image_Blur127V,
-
-            Image_Blur35H_Solid,
-            Image_Blur35H_Linear,
-            Image_Blur35H_Radial,
-            Image_Blur35H_Pattern,
-
-            Image_Blur63H_Solid,
-            Image_Blur63H_Linear,
-            Image_Blur63H_Radial,
-            Image_Blur63H_Pattern,
-
-            Image_Blur127H_Solid,
-            Image_Blur127H_Linear,
-            Image_Blur127H_Radial,
-            Image_Blur127H_Pattern,
-        }
-
-        int[] formats =
-        {
-            Pos,                                 //RGBA,                      
-            Pos,                                 //Mask,                      
-
-            Pos | Color,                         //Path_Solid,                
-            Pos | Tex0,                          //Path_Linear,               
-            Pos | Tex0,                          //Path_Radial,               
-            Pos | Tex0,                          //Path_Pattern,              
-
-            Pos | Color | Coverage,              //PathAA_Solid,              
-            Pos | Tex0  | Coverage,              //PathAA_Linear,             
-            Pos | Tex0  | Coverage,              //PathAA_Radial,             
-            Pos | Tex0  | Coverage,              //PathAA_Pattern,            
-
-            Pos | Color | Tex1 | SDF,            //SDF_Solid,                 
-            Pos | Tex0  | Tex1 | SDF,            //SDF_Linear,                
-            Pos | Tex0  | Tex1 | SDF,            //SDF_Radial,                
-            Pos | Tex0  | Tex1 | SDF,            //SDF_Pattern,               
-
-            Pos | Color | Tex1 | SDF,            //SDF_LCD_Solid,             
-            Pos | Tex0  | Tex1 | SDF,            //SDF_LCD_Linear,            
-            Pos | Tex0  | Tex1 | SDF,            //SDF_LCD_Radial,            
-            Pos | Tex0  | Tex1 | SDF,            //SDF_LCD_Pattern,           
-
-            Pos | Color | Tex1,                  //Image_Opacity_Solid,       
-            Pos | Tex0  | Tex1,                  //Image_Opacity_Linear,      
-            Pos | Tex0  | Tex1,                  //Image_Opacity_Radial,      
-            Pos | Tex0  | Tex1,                  //Image_Opacity_Pattern,     
-
-            Pos | Color | Tex1 | Tex2,           //Image_Shadow35V,           
-            Pos | Color | Tex1 | Tex2,           //Image_Shadow63V,           
-            Pos | Color | Tex1 | Tex2,           //Image_Shadow127V,          
-
-            Pos | Color | Tex1 | Tex2,           //Image_Shadow35H_Solid,     
-            Pos | Tex0  | Tex1 | Tex2,           //Image_Shadow35H_Linear,    
-            Pos | Tex0  | Tex1 | Tex2,           //Image_Shadow35H_Radial,    
-            Pos | Tex0  | Tex1 | Tex2,           //Image_Shadow35H_Pattern,   
-
-            Pos | Color | Tex1 | Tex2,           //Image_Shadow63H_Solid,     
-            Pos | Tex0  | Tex1 | Tex2,           //Image_Shadow63H_Linear,    
-            Pos | Tex0  | Tex1 | Tex2,           //Image_Shadow63H_Radial,    
-            Pos | Tex0  | Tex1 | Tex2,           //Image_Shadow63H_Pattern,   
-
-            Pos | Color | Tex1 | Tex2,           //Image_Shadow127H_Solid,    
-            Pos | Tex0  | Tex1 | Tex2,           //Image_Shadow127H_Linear,   
-            Pos | Tex0  | Tex1 | Tex2,           //Image_Shadow127H_Radial,   
-            Pos | Tex0  | Tex1 | Tex2,           //Image_Shadow127H_Pattern,  
-
-            Pos | Color | Tex1 | Tex2,           //Image_Blur35V,             
-            Pos | Color | Tex1 | Tex2,           //Image_Blur63V,             
-            Pos | Color | Tex1 | Tex2,           //Image_Blur127V,            
-
-            Pos | Color | Tex1 | Tex2,           //Image_Blur35H_Solid,       
-            Pos | Tex0  | Tex1 | Tex2,           //Image_Blur35H_Linear,      
-            Pos | Tex0  | Tex1 | Tex2,           //Image_Blur35H_Radial,      
-            Pos | Tex0  | Tex1 | Tex2,           //Image_Blur35H_Pattern,     
-
-            Pos | Color | Tex1 | Tex2,           //Image_Blur63H_Solid,       
-            Pos | Tex0  | Tex1 | Tex2,           //Image_Blur63H_Linear,      
-            Pos | Tex0  | Tex1 | Tex2,           //Image_Blur63H_Radial,      
-            Pos | Tex0  | Tex1 | Tex2,           //Image_Blur63H_Pattern,     
-
-            Pos | Color | Tex1 | Tex2,           //Image_Blur127H_Solid,      
-            Pos | Tex0  | Tex1 | Tex2,           //Image_Blur127H_Linear,     
-            Pos | Tex0  | Tex1 | Tex2,           //Image_Blur127H_Radial,     
-            Pos | Tex0  | Tex1 | Tex2,           //Image_Blur127H_Pattern,    
-        };
-
-        GraphicsPipelineState[] graphicPipelineStates = new GraphicsPipelineState[Enum.GetNames(typeof(ShaderName)).Length];
-
-        ResourceSet[] resourceSets = new ResourceSet[Enum.GetNames(typeof(ShaderName)).Length];
-
-        async void InitGraphicsPipelineState(int shader, AssetsDirectory assetsDirectory, FrameBuffer frameBuffer)
+        private async Task InitGraphicsPipelineStateAsync(int shader, AssetsDirectory assetsDirectory, FrameBuffer frameBuffer)
         {
             InputLayouts vertexLayouts = new InputLayouts();
             LayoutDescription layoutDescription = new LayoutDescription();
             vertexLayouts.Add(layoutDescription);
 
-            int format = formats[shader];
+            int format = NoesisShader.Formats[shader];
 
             string vertexShaderPath = "";
 
-            if ((format & Pos) != 0)
+            if ((format & NoesisShader.Pos) != 0)
             {
                 layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.Position));
                 vertexShaderPath += "Pos";
             }
-            if ((format & Color) != 0)
+            if ((format & NoesisShader.Color) != 0)
             {
                 layoutDescription.Add(new ElementDescription(ElementFormat.UByte4Normalized, ElementSemanticType.Color));
                 vertexShaderPath += "Color";
             }
-            if ((format & Tex0) != 0)
+            if ((format & NoesisShader.Tex0) != 0)
             {
                 layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.TexCoord, 0));
                 vertexShaderPath += "Tex0";
             }
-            if ((format & Tex1) != 0)
+            if ((format & NoesisShader.Tex1) != 0)
             {
                 layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.TexCoord, 1));
                 vertexShaderPath += "Tex1";
             }
-            if ((format & Tex2) != 0)
+            if ((format & NoesisShader.Tex2) != 0)
             {
                 layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.TexCoord, 2));
                 vertexShaderPath += "Tex2";
             }
-            if ((format & Coverage) != 0)
+            if ((format & NoesisShader.Coverage) != 0)
             {
                 layoutDescription.Add(new ElementDescription(ElementFormat.Float, ElementSemanticType.TexCoord, 3));
                 vertexShaderPath += "Coverage";
             }
-            if ((format & SDF) != 0)
+            if ((format & NoesisShader.SDF) != 0)
             {
                 vertexShaderPath += "_SDF";
             }
             vertexShaderPath += "_VS";
 
-            string pixelShaderPath = ((ShaderName)shader).ToString() + "_FS";
+            string pixelShaderPath = ((NoesisShader.Enum)shader).ToString() + "_FS";
             string vsEntryPoint = "main";
             string psEntryPoint = "main";
             if (shader != 6 && shader != 7 && shader != 8 && shader != 10)
@@ -318,16 +161,19 @@ namespace WaveRenderer
             texDimensionsCB = this.graphicsContext.Factory.CreateBuffer(ref bufferDescription);
         }
 
-        public WaveRenderer(GraphicsContext graphicsContext, AssetsDirectory assetsDirectory, FrameBuffer frameBuffer)
+        public WaveRenderDevice(GraphicsContext graphicsContext)
             : base(new NoesisDeviceCaps(), flippedTextures: false)
         {
             this.graphicsContext = graphicsContext;
 
             CreateBuffers();
+        }
 
-            for (int i = 0; i < formats.Length; ++i)
+        public async Task InitializeAsync(AssetsDirectory assetsDirectory, FrameBuffer frameBuffer)
+        {
+            for (int i = 0; i < NoesisShader.Formats.Length; ++i)
             {
-                InitGraphicsPipelineState(i, assetsDirectory, frameBuffer);
+                await this.InitGraphicsPipelineStateAsync(i, assetsDirectory, frameBuffer);
             }
         }
 
@@ -361,8 +207,8 @@ namespace WaveRenderer
 
         private void SetShaders(NoesisBatch batch)
         {
-            commandBuffer.SetGraphicsPipelineState(graphicPipelineStates[batch.shader]);
-            commandBuffer.SetResourceSet(resourceSets[batch.shader]);
+            commandBuffer.SetGraphicsPipelineState(graphicPipelineStates[batch.shader.v]);
+            commandBuffer.SetResourceSet(resourceSets[batch.shader.v]);
         }
 
         private unsafe void SetBuffers(NoesisBatch batch)
