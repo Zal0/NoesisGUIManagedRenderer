@@ -153,12 +153,14 @@ namespace VisualTests.LowLevel.Tests
             }
         }
 
+        float timeAccum = 0.0f;
         protected override void InternalDrawCallback(TimeSpan gameTime)
         {
             var mouseDispatcher = this.surface.MouseDispatcher;
             mouseDispatcher.DispatchEvents();
 
-            NoesisApp.UpdateView((float)gameTime.TotalMilliseconds);
+            timeAccum += (float)gameTime.TotalSeconds;
+            NoesisApp.UpdateView(timeAccum);
 
             var commandBuffer = this.commandQueue.CommandBuffer();
             waveRenderer.commandBuffer = commandBuffer;
