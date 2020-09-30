@@ -5,6 +5,7 @@ using WaveEngine.Platform;
 using VisualTests.Runners.Common;
 using Buffer = WaveEngine.Common.Graphics.Buffer;
 using NoesisManagedRenderer;
+using System.Runtime.InteropServices;
 
 namespace WaveRenderer
 {
@@ -220,8 +221,9 @@ namespace WaveRenderer
             string pixelShaderPath = ((ShaderName)shader).ToString() + "_FS";
             string vsEntryPoint = "main";
             string psEntryPoint = "main";
-            if (shader != 6 && shader != 7 && shader != 8 && shader != 10) //TODO
+            if (shader != 6 && shader != 7 && shader != 8 && shader != 10)
             {
+                //TODO: Include this shaders
                 vertexShaderPath = "HLSLVertex";
                 pixelShaderPath = "HLSLVertex";
                 vsEntryPoint = "VS";
@@ -300,7 +302,7 @@ namespace WaveRenderer
             var bufferDescription = new BufferDescription(DYNAMIC_VB_SIZE, BufferFlags.VertexBuffer, ResourceUsage.Dynamic, ResourceCpuAccess.Write);
             vertexBuffer = graphicsContext.Factory.CreateBuffer(ref bufferDescription);
 
-            bufferDescription = new BufferDescription(DYNAMIC_IB_SIZE, BufferFlags.VertexBuffer, ResourceUsage.Dynamic, ResourceCpuAccess.Write);
+            bufferDescription = new BufferDescription(DYNAMIC_IB_SIZE, BufferFlags.IndexBuffer, ResourceUsage.Dynamic, ResourceCpuAccess.Write);
             indexBuffer = graphicsContext.Factory.CreateBuffer(ref bufferDescription);
 
             bufferDescription = new BufferDescription(16 * sizeof(float), BufferFlags.ConstantBuffer, ResourceUsage.Default);
@@ -330,7 +332,7 @@ namespace WaveRenderer
 
         void SetTexture(IntPtr texturePtr, uint slot, byte sampler)
         {
-            if(texturePtr != IntPtr.Zero)
+            if (texturePtr != IntPtr.Zero)
             {
                 var texture = WaveTexture.GetTexture(texturePtr);
                 if (texture.resourceSet == null)
@@ -345,81 +347,114 @@ namespace WaveRenderer
 
         unsafe protected override void DrawBatch(ref NoesisBatch batch)
         {
-            //Update buffers
-            if (batch.projMtxHash != vertexCBHash)
+            this.SetShaders(batch);
+            this.SetBuffers(batch);
+
+            //TODO: SetRenderState
+
+            this.SetTextures(batch);
+
+            //Draw
+            commandBuffer.DrawIndexed(batch.numIndices, batch.startIndex);
+        }
+
+        private void SetShaders(NoesisBatch batch)
+        {
+            commandBuffer.SetGraphicsPipelineState(graphicPipelineStates[batch.shader]);
+            commandBuffer.SetResourceSet(resourceSets[batch.shader]);
+        }
+
+        private unsafe void SetBuffers(NoesisBatch batch)
+        {
+            //Set Index Buffer
+            commandBuffer.SetIndexBuffer(indexBuffer);
+
+            //Set Vertex Buffer
+            commandBuffer.SetVertexBuffer(0, vertexBuffer, batch.vertexOffset);
+
+            // Vertex Constants
+            if (vertexCBHash != batch.projMtxHash)
             {
                 Matrix4x4 prjMtx = Matrix4x4.Transpose(*(Matrix4x4*)batch.projMtx);
                 commandBuffer.UpdateBufferData(this.vertexCB, ref prjMtx);
                 vertexCBHash = batch.projMtxHash;
+
             }
 
             // Pixel Constants
             if (batch.rgba != IntPtr.Zero || batch.radialGrad != IntPtr.Zero || batch.opacity != IntPtr.Zero)
             {
-                float[] pixelData = new float[32];
-                int idx = 0;
-
-                if(batch.rgba != IntPtr.Zero)
+                uint hash = batch.rgbaHash ^ batch.radialGradHash ^ batch.opacityHash;
+                if (pixelCBHash != hash)
                 {
-                    for (int i = 0; i < 4; ++i)
+                    float[] pixelData = new float[12];
+                    int idx = 0;
+
+                    if (batch.rgba != IntPtr.Zero)
                     {
-                        pixelData[idx++] = ((float*)batch.rgba)[i];
+                        for (int i = 0; i < 4; ++i)
+                        {
+                            pixelData[idx++] = ((float*)batch.rgba)[i];
+                        }
                     }
-                }
 
-                if(batch.radialGrad != IntPtr.Zero)
-                {
-                    for (int i = 0; i < 8; ++i)
+                    if (batch.radialGrad != IntPtr.Zero)
                     {
-                        pixelData[idx++] = ((float*)batch.radialGrad)[i];
+                        for (int i = 0; i < 8; ++i)
+                        {
+                            pixelData[idx++] = ((float*)batch.radialGrad)[i];
+                        }
                     }
-                }
 
-                if (batch.opacity != IntPtr.Zero)
-                {
-                    pixelData[idx++] = ((float*)batch.opacity)[0];
-                }
+                    if (batch.opacity != IntPtr.Zero)
+                    {
+                        pixelData[idx++] = ((float*)batch.opacity)[0];
+                    }
 
-                commandBuffer.UpdateBufferData(this.pixelCB, ref pixelData[0]);
+                    commandBuffer.UpdateBufferData(this.pixelCB, pixelData);
+                    pixelCBHash = hash;
+                }
             }
 
-            // Update Texture dimensions
+            // Texture dimensions
             if (batch.glyphs != IntPtr.Zero || batch.image != IntPtr.Zero)
             {
                 var texturePtr = batch.glyphs != IntPtr.Zero ? batch.glyphs : batch.image;
                 var texture = WaveTexture.GetTexture(texturePtr);
-                Vector2 textureSize = new Vector2(texture.Width, texture.Height);
                 uint hash = texture.Width << 16 | texture.Height;
                 if (texDimensionsCBHash != hash)
                 {
-                    commandBuffer.UpdateBufferData(this.texDimensionsCB, ref textureSize);
+                    Vector4 data = new Vector4(texture.Width, texture.Height, 1f / texture.Width, 1f / texture.Height);
+                    commandBuffer.UpdateBufferData(this.texDimensionsCB, ref data);
                     texDimensionsCBHash = hash;
                 }
             }
 
-            //Update textures
-            SetTexture(batch.pattern, 0, batch.patternSampler);
-            SetTexture(batch.ramps, 1, batch.rampsSampler);
-            SetTexture(batch.image, 2, batch.imageSampler);
-            SetTexture(batch.glyphs, 3, batch.glyphsSampler);
-            SetTexture(batch.shadow, 4, batch.shadowSampler);
-
-            //Set graphics pipeline
-            commandBuffer.SetGraphicsPipelineState(graphicPipelineStates[batch.shader]);
-
-            //Set resource set
-            commandBuffer.SetResourceSet(resourceSets[batch.shader]);
-
-            //Set Vertex Buffer
-            commandBuffer.SetVertexBuffer(0, vertexBuffer, batch.vertexOffset);
-
-            //Set Index Buffer
-            commandBuffer.SetIndexBuffer(indexBuffer);
-
-            //Draw
-            commandBuffer.DrawIndexed(batch.numIndices, batch.startIndex);
+            //Effects
+            if (batch.effectParamsSize != 0)
+            {
+                if (effectCBHash != batch.effectParamsHash)
+                {
+                    float[] effectData = new float[16];
+                    for (int i = 0; i < batch.effectParamsSize; ++i)
+                    {
+                        effectData[i] = ((float*)batch.effectParams)[i];
+                    }
+                    commandBuffer.UpdateBufferData(this.effectCB, effectData);
+                    effectCBHash = batch.effectParamsHash;
+                }
+            }
         }
-        
+
+        private unsafe void SetTextures(NoesisBatch batch)
+        {
+            this.SetTexture(batch.pattern, 0, batch.patternSampler);
+            this.SetTexture(batch.ramps, 1, batch.rampsSampler);
+            this.SetTexture(batch.image, 2, batch.imageSampler);
+            this.SetTexture(batch.glyphs, 3, batch.glyphsSampler);
+            this.SetTexture(batch.shadow, 4, batch.shadowSampler);
+        }
+
         unsafe protected override IntPtr MapVertices(UInt32 bytes)
         {
             vertexBufferWritableResource = graphicsContext.MapMemory(vertexBuffer, MapMode.Write);
