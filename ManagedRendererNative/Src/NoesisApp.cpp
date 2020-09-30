@@ -26,14 +26,12 @@
 
 #include "ManagedRenderDevice.h"
 
-static Noesis::IView* _view;
-
 #define DLL_FUNC __declspec(dllexport)
 extern "C"
 {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-DLL_FUNC void NoesisInit(Noesis::RenderDevice* renderDevice, const char* xamlString)
+DLL_FUNC void NoesisInit()
 {
     Noesis::SetLogHandler([](const char*, uint32_t, uint32_t level, const char*, const char* msg)
     {
@@ -48,7 +46,10 @@ DLL_FUNC void NoesisInit(Noesis::RenderDevice* renderDevice, const char* xamlStr
     // Setup theme
     NoesisApp::SetThemeProviders();
     Noesis::GUI::LoadApplicationResources("Theme/NoesisTheme.DarkBlue.xaml");
+}
 
+DLL_FUNC Noesis::IView* CreateView(Noesis::RenderDevice* renderDevice, const char* xamlString)
+{
     // For simplicity purposes we are not using resource providers in this sample. ParseXaml() is
     // enough if there is no extra XAML dependencies
     Noesis::Ptr<Noesis::Grid> xaml(Noesis::GUI::ParseXaml<Noesis::Grid>(xamlString));
@@ -56,111 +57,117 @@ DLL_FUNC void NoesisInit(Noesis::RenderDevice* renderDevice, const char* xamlStr
     // View creation to render and interact with the user interface
     // We transfer the ownership to a global pointer instead of a Ptr<> because there is no way
     // in GLUT to do shutdown and we don't want the Ptr<> to be released at global time
-    _view = Noesis::GUI::CreateView(xaml).GiveOwnership();
-    _view->SetFlags(Noesis::RenderFlags_PPAA | Noesis::RenderFlags_LCD);
+    auto view = Noesis::GUI::CreateView(xaml).GiveOwnership();
+    view->SetFlags(Noesis::RenderFlags_PPAA | Noesis::RenderFlags_LCD);
 
     // Renderer initialization with the render device
-    _view->GetRenderer()->Init(renderDevice);
+    view->GetRenderer()->Init(renderDevice);
+    return view;
 }
 
-DLL_FUNC void UpdateView(float t)
+DLL_FUNC void DeleteView(Noesis::IView* view)
+{
+    delete view;
+}
+
+DLL_FUNC void UpdateView(Noesis::IView* view, float t)
 {
     // Update view (layout, animations, ...)
-    _view->Update(t);
+    view->Update(t);
 }
 
-DLL_FUNC void RenderView()
+DLL_FUNC void RenderView(Noesis::IView* view)
 {
     // Offscreen rendering phase populates textures needed by the on-screen rendering
-    _view->GetRenderer()->UpdateRenderTree();
-    _view->GetRenderer()->RenderOffscreen();
+    view->GetRenderer()->UpdateRenderTree();
+    view->GetRenderer()->RenderOffscreen();
 
-    _view->GetRenderer()->Render();
+    view->GetRenderer()->Render();
 }
 
-DLL_FUNC void SetViewSize(int w, int h)
+DLL_FUNC void SetViewSize(Noesis::IView* view, int w, int h)
 {
-    _view->SetSize(w, h);
+    view->SetSize(w, h);
 }
 
-DLL_FUNC bool ViewMouseButtonDown(int x, int y, Noesis::MouseButton button)
+DLL_FUNC bool ViewMouseButtonDown(Noesis::IView* view, int x, int y, Noesis::MouseButton button)
 {
-    return _view->MouseButtonDown(x, y, button);
+    return view->MouseButtonDown(x, y, button);
 }
 
-DLL_FUNC bool ViewMouseButtonUp(int x, int y, Noesis::MouseButton button)
+DLL_FUNC bool ViewMouseButtonUp(Noesis::IView* view, int x, int y, Noesis::MouseButton button)
 {
-    return _view->MouseButtonUp(x, y, button);
+    return view->MouseButtonUp(x, y, button);
 }
 
-DLL_FUNC bool ViewMouseDoubleClick(int x, int y, Noesis::MouseButton button)
+DLL_FUNC bool ViewMouseDoubleClick(Noesis::IView* view, int x, int y, Noesis::MouseButton button)
 {
-    return _view->MouseDoubleClick(x, y, button);
+    return view->MouseDoubleClick(x, y, button);
 }
 
-DLL_FUNC bool ViewMouseMove(int x, int y)
+DLL_FUNC bool ViewMouseMove(Noesis::IView* view, int x, int y)
 {
-    return _view->MouseMove(x, y);
+    return view->MouseMove(x, y);
 }
 
-DLL_FUNC bool ViewMouseWheel(int x, int y, int wheelRotation)
+DLL_FUNC bool ViewMouseWheel(Noesis::IView* view, int x, int y, int wheelRotation)
 {
-    return _view->MouseWheel(x, y, wheelRotation);
+    return view->MouseWheel(x, y, wheelRotation);
 }
 
-DLL_FUNC bool ViewMouseHWheel(int x, int y, int wheelRotation)
+DLL_FUNC bool ViewMouseHWheel(Noesis::IView* view, int x, int y, int wheelRotation)
 {
-    return _view->MouseHWheel(x, y, wheelRotation);
+    return view->MouseHWheel(x, y, wheelRotation);
 }
 
-DLL_FUNC bool ViewScroll(float value)
+DLL_FUNC bool ViewScroll(Noesis::IView* view, float value)
 {
-    return _view->Scroll(value);
+    return view->Scroll(value);
 }
 
-DLL_FUNC bool ViewScrollPos(int x, int y, float value)
+DLL_FUNC bool ViewScrollPos(Noesis::IView* view, int x, int y, float value)
 {
-    return _view->Scroll(x, y, value);
+    return view->Scroll(x, y, value);
 }
 
-DLL_FUNC bool ViewHScroll(float value)
+DLL_FUNC bool ViewHScroll(Noesis::IView* view, float value)
 {
-    return _view->HScroll(value);
+    return view->HScroll(value);
 }
 
-DLL_FUNC bool ViewHScrollPos(int x, int y, float value)
+DLL_FUNC bool ViewHScrollPos(Noesis::IView* view, int x, int y, float value)
 {
-    return _view->HScroll(x, y, value);
+    return view->HScroll(x, y, value);
 }
 
-DLL_FUNC bool ViewTouchDown(int x, int y, uint64_t id)
+DLL_FUNC bool ViewTouchDown(Noesis::IView* view, int x, int y, uint64_t id)
 {
-    return _view->TouchDown(x, y, id);
+    return view->TouchDown(x, y, id);
 }
 
-DLL_FUNC bool ViewTouchMove(int x, int y, uint64_t id)
+DLL_FUNC bool ViewTouchMove(Noesis::IView* view, int x, int y, uint64_t id)
 {
-    return _view->TouchMove(x, y, id);
+    return view->TouchMove(x, y, id);
 }
 
-DLL_FUNC bool ViewTouchUp(int x, int y, uint64_t id)
+DLL_FUNC bool ViewTouchUp(Noesis::IView* view, int x, int y, uint64_t id)
 {
-    return _view->TouchUp(x, y, id);
+    return view->TouchUp(x, y, id);
 }
 
-DLL_FUNC bool ViewKeyDown(Noesis::Key key)
+DLL_FUNC bool ViewKeyDown(Noesis::IView* view, Noesis::Key key)
 {
-    return _view->KeyDown(key);
+    return view->KeyDown(key);
 }
 
-DLL_FUNC bool ViewKeyUp(Noesis::Key key)
+DLL_FUNC bool ViewKeyUp(Noesis::IView* view, Noesis::Key key)
 {
-    return _view->KeyUp(key);
+    return view->KeyUp(key);
 }
 
-DLL_FUNC bool ViewChar(uint32_t ch)
+DLL_FUNC bool ViewChar(Noesis::IView* view, uint32_t ch)
 {
-    return _view->Char(ch);
+    return view->Char(ch);
 }
 
 

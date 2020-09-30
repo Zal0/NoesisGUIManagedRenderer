@@ -27,8 +27,10 @@ namespace VisualTests.LowLevel.Tests
         private CommandQueue commandQueue;
         private GraphicsPipelineState pipelineState;
         private Buffer[] vertexBuffers;
+        private float timeAccum = 0.0f;
 
-        private WaveRenderer.WaveRenderer waveRenderer;
+        private WaveRenderer.WaveRenderDevice waveRenderer;
+        private IntPtr view;
 
         public WaveMain()
             : base("DrawTriangle")
@@ -38,7 +40,7 @@ namespace VisualTests.LowLevel.Tests
         protected override void OnResized(uint width, uint height)
         {
             this.viewports[0] = new Viewport(0, 0, width, height);
-            NoesisApp.SetViewSize((int)width, (int)height);
+            NoesisApp.SetViewSize(this.view, (int)width, (int)height);
         }
 
         protected override async void InternalLoad()
@@ -92,14 +94,14 @@ namespace VisualTests.LowLevel.Tests
             this.vertexBuffers = new Buffer[1];
             this.vertexBuffers[0] = vertexBuffer;
 
-            this.MarkAsLoaded();
-
-            waveRenderer = new WaveRenderer.WaveRenderer(this.graphicsContext, assetsDirectory, frameBuffer);
+            this.waveRenderer = new WaveRenderer.WaveRenderDevice(this.graphicsContext);
+            await this.waveRenderer.InitializeAsync(assetsDirectory, frameBuffer);
 
             string xamlString = await this.assetsDirectory.ReadAsStringAsync("xamls/test.xaml");
 
-            NoesisApp.NoesisInit(waveRenderer, xamlString);
-            NoesisApp.SetViewSize((int)width, (int)height);
+            NoesisApp.NoesisInit();
+            this.view = NoesisApp.CreateView(this.waveRenderer, xamlString);
+            NoesisApp.SetViewSize(this.view, (int)width, (int)height);
 
 
             var mouseDispatcher = this.surface.MouseDispatcher;
@@ -115,52 +117,53 @@ namespace VisualTests.LowLevel.Tests
 
             mouseDispatcher.MouseMove += (s, e) =>
             {
-                NoesisApp.ViewMouseMove(e.Position.X, e.Position.Y);
+                NoesisApp.ViewMouseMove(this.view, e.Position.X, e.Position.Y);
             };
 
             mouseDispatcher.MouseScroll += (s, e) =>
             {
-                NoesisApp.ViewMouseWheel(e.Position.X, e.Position.Y, e.Delta.Y);
+                NoesisApp.ViewMouseWheel(this.view, e.Position.X, e.Position.Y, e.Delta.Y);
             };
+
+            this.MarkAsLoaded();
         }
 
-        private void SendMouseButton(Func<int, int, int, bool> call, MouseButtonEventArgs args)
+        private void SendMouseButton(Func<IntPtr, int, int, int, bool> call, MouseButtonEventArgs args)
         {
             var buttons = args.Button;
             if ((buttons & MouseButtons.Left) != 0)
             {
-                call(args.Position.X, args.Position.Y, 0);
+                call(this.view, args.Position.X, args.Position.Y, 0);
             }
 
             if ((buttons & MouseButtons.Right) != 0)
             {
-                call(args.Position.X, args.Position.Y, 1);
+                call(this.view, args.Position.X, args.Position.Y, 1);
             }
 
             if ((buttons & MouseButtons.Middle) != 0)
             {
-                call(args.Position.X, args.Position.Y, 2);
+                call(this.view, args.Position.X, args.Position.Y, 2);
             }
 
             if ((buttons & MouseButtons.XButton1) != 0)
             {
-                call(args.Position.X, args.Position.Y, 3);
+                call(this.view, args.Position.X, args.Position.Y, 3);
             }
 
             if ((buttons & MouseButtons.XButton2) != 0)
             {
-                call(args.Position.X, args.Position.Y, 4);
+                call(this.view, args.Position.X, args.Position.Y, 4);
             }
         }
 
-        float timeAccum = 0.0f;
         protected override void InternalDrawCallback(TimeSpan gameTime)
         {
             var mouseDispatcher = this.surface.MouseDispatcher;
             mouseDispatcher.DispatchEvents();
 
             timeAccum += (float)gameTime.TotalSeconds;
-            NoesisApp.UpdateView(timeAccum);
+            NoesisApp.UpdateView(this.view, timeAccum);
 
             var commandBuffer = this.commandQueue.CommandBuffer();
             waveRenderer.commandBuffer = commandBuffer;
@@ -178,7 +181,7 @@ namespace VisualTests.LowLevel.Tests
             commandBuffer.Draw((uint)this.vertexData.Length / 2);
             commandBuffer.EndRenderPass();
 
-            NoesisApp.RenderView();
+            NoesisApp.RenderView(this.view);
 
             commandBuffer.End();
 
