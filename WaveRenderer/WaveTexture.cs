@@ -1,10 +1,6 @@
 ﻿using NoesisManagedRenderer;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Net.NetworkInformation;
-using System.Text;
 using WaveEngine.Common.Graphics;
 
 namespace WaveRenderer
@@ -79,11 +75,6 @@ namespace WaveRenderer
             );
 
             resourceSet = this.graphicsContext.Factory.CreateResourceSet(ref resourceSetDescription);
-        }
-
-        public override bool IsInverted()
-        {
-            return false;
         }
 
         unsafe public override void UpdateTexture(uint level, uint x, uint y, uint width, uint height, IntPtr data)

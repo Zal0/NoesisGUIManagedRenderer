@@ -3,7 +3,7 @@
 namespace NoesisManagedRenderer
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct Shader
+    public struct NoesisShader
     {
         // List of shaders to be implemented by the device with expected vertex format
         //

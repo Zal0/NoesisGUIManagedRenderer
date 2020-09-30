@@ -67,14 +67,14 @@ DLL_FUNC void UpdateView(float t)
 {
     // Update view (layout, animations, ...)
     _view->Update(t);
-
-    // Offscreen rendering phase populates textures needed by the on-screen rendering
-    _view->GetRenderer()->UpdateRenderTree();
-    _view->GetRenderer()->RenderOffscreen();
 }
 
 DLL_FUNC void RenderView()
 {
+    // Offscreen rendering phase populates textures needed by the on-screen rendering
+    _view->GetRenderer()->UpdateRenderTree();
+    _view->GetRenderer()->RenderOffscreen();
+
     _view->GetRenderer()->Render();
 }
 

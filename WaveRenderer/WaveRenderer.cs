@@ -319,6 +319,7 @@ namespace WaveRenderer
         }
 
         public WaveRenderer(GraphicsContext graphicsContext, AssetsDirectory assetsDirectory, FrameBuffer frameBuffer)
+            : base(new NoesisDeviceCaps(), flippedTextures: false)
         {
             this.graphicsContext = graphicsContext;
 
@@ -378,7 +379,6 @@ namespace WaveRenderer
                 Matrix4x4 prjMtx = Matrix4x4.Transpose(*(Matrix4x4*)batch.projMtx);
                 commandBuffer.UpdateBufferData(this.vertexCB, ref prjMtx);
                 vertexCBHash = batch.projMtxHash;
-
             }
 
             // Pixel Constants
@@ -477,7 +477,7 @@ namespace WaveRenderer
             graphicsContext.UnmapMemory(indexBuffer);
         }
 
-        protected override void BeginRender()
+        protected override void BeginRender(bool offscreen)
         {
         }
 
@@ -485,10 +485,39 @@ namespace WaveRenderer
         {
         }
 
-        protected override bool CreateTexture(IntPtr ptr, ref CreateTextureParams args)
+        protected override void CreateTexture(IntPtr ptr, ref CreateTextureParams args)
         {
-            var texture = new WaveTexture(this.graphicsContext, ptr, args.width, args.height, args.numLevels, args.format, null);
-            return texture.IsInverted();
+            new WaveTexture(this.graphicsContext, ptr, args.width, args.height, args.numLevels, args.format, null);
+        }
+
+        protected override void CreateRenderTarget(IntPtr pSurface, IntPtr pSurfaceTexture, ref CreateRenderTargetParams args)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void CloneRenderTarget(IntPtr pClonedSurface, IntPtr pClonedSurfaceTexture, IntPtr pSurface)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void SetRenderTarget(IntPtr pSurface)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void BeginTile(ref NoesisTile tile, uint surfaceWidth, uint surfaceHeight)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void EndTile()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void ResolveRenderTarget(IntPtr pSurface, NoesisTile[] tiles, uint numTiles)
+        {
+            throw new NotImplementedException();
         }
     }
 }

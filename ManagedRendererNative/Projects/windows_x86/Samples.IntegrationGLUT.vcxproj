@@ -99,6 +99,7 @@
     <ClCompile Include="..\..\Src\NoesisApp.cpp" />
     <ClCompile Include="..\..\Src\ManagedRenderDevice.cpp" />
     <ClInclude Include="..\..\Src\ManagedRenderDevice.h" />
+    <ClInclude Include="..\..\Src\ManagedRenderTarget.h" />
     <ClInclude Include="..\..\Src\ManagedTexture.h" />
     <ResourceCompile Include="resources.rc" />
     <None Include="Noesis.ico" />

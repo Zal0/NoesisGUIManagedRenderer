@@ -7,46 +7,77 @@ using namespace Noesis;
 #define DLL_FUNC __declspec(dllexport)
 extern "C"
 {
-	DLL_FUNC ManagedRenderDevice* CreateManagedRenderDevice() { return new ManagedRenderDevice(); }
-	DLL_FUNC void SetDrawBatchCallback    (ManagedRenderDevice* pDevice, DrawBatch func)     { pDevice->drawBatchCallback = func;}
-	DLL_FUNC void SetMapVerticesCallback  (ManagedRenderDevice* pDevice, MapVertices func)   { pDevice->mapVerticesCallback = func; }
-	DLL_FUNC void SetUnmapVerticesCallback(ManagedRenderDevice* pDevice, UnmapVertices func) { pDevice->unmapVerticesCallback = func; }
-	DLL_FUNC void SetMapIndicesCallback   (ManagedRenderDevice* pDevice, MapVertices func)   { pDevice->mapIndicesCallback = func; }
-	DLL_FUNC void SetUnmapIndicesCallback (ManagedRenderDevice* pDevice, UnmapVertices func) { pDevice->unmapIndicesCallback = func; }
-	DLL_FUNC void SetBeginRenderCallback  (ManagedRenderDevice* pDevice, BeginRender func)   { pDevice->beginRenderCallback = func; }
-	DLL_FUNC void SetEndRenderCallback    (ManagedRenderDevice* pDevice, EndRender func)     { pDevice->endRenderCallback = func; }
-	DLL_FUNC void SetCreateTextureCallback(ManagedRenderDevice* pDevice, CreateTexture func) { pDevice->createTextureCallback = func; }
-	DLL_FUNC void SetUpdateTextureCallback(ManagedRenderDevice* pDevice, UpdateTexture func) { pDevice->updateTextureCallback = func; }
-}
-
+	DLL_FUNC ManagedRenderDevice* CreateManagedRenderDevice(const Noesis::DeviceCaps deviceCaps, bool flippedTextures) { return new ManagedRenderDevice(deviceCaps, flippedTextures); }
+	DLL_FUNC void SetManagedRenderDeviceCallbacks(
+		ManagedRenderDevice* pDevice,
+		DrawBatch drawBatchCallback,
+		MapVertices mapVerticesCallback,
+		UnmapVertices unmapVerticesCallback,
+		MapIndices mapIndicesCallback,
+		UnmapIndices unmapIndicesCallback,
+		BeginRender beginRenderCallback,
+		EndRender endRenderCallback,
+		CreateTexture createTextureCallback,
+		UpdateTexture updateTextureCallback,
+		CreateRenderTarget createRenderTargetCallback,
+		CloneRenderTarget cloneRenderTargetCallback,
+		SetRenderTarget setRenderTargetCallback,
+		BeginTile beginTileCallback,
+		EndTile endTileCallback,
+		ResolveRenderTarget resolveRenderTargetCallback)
+	{
+		pDevice->drawBatchCallback = drawBatchCallback;
+		pDevice->mapVerticesCallback = mapVerticesCallback;
+		pDevice->unmapVerticesCallback = unmapVerticesCallback;
+		pDevice->mapIndicesCallback = mapIndicesCallback;
+		pDevice->unmapIndicesCallback = unmapIndicesCallback;
+		pDevice->beginRenderCallback = beginRenderCallback;
+		pDevice->endRenderCallback = endRenderCallback;
+		pDevice->createTextureCallback = createTextureCallback;
+		pDevice->updateTextureCallback = updateTextureCallback;
+		pDevice->createRenderTargetCallback = createRenderTargetCallback;
+		pDevice->cloneRenderTargetCallback = cloneRenderTargetCallback;
+		pDevice->setRenderTargetCallback = setRenderTargetCallback;
+		pDevice->beginTileCallback = beginTileCallback;
+		pDevice->endTileCallback = endTileCallback;
+		pDevice->resolveRenderTargetCallback = resolveRenderTargetCallback;
+	}
+};
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-const Noesis::DeviceCaps& ManagedRenderDevice::GetCaps() const
-{
-	static Noesis::DeviceCaps caps;
-	return caps;
-}
 
 Noesis::Ptr<Noesis::RenderTarget> ManagedRenderDevice::CreateRenderTarget(const char* label, uint32_t width, uint32_t height, uint32_t sampleCount)
 {
-	return Noesis::Ptr<Noesis::RenderTarget>();
+	if (createRenderTargetCallback)
+	{
+		Noesis::Ptr<ManagedRenderTarget> surface = *new ManagedRenderTarget(width, height, flippedTextures);
+		createRenderTargetCallback(surface, surface->texture, CreateRenderTargetParams{ width = width, height = height, sampleCount = sampleCount });
+		return surface;
+	}
+
+	return 0;
 }
 
 Noesis::Ptr<Noesis::RenderTarget> ManagedRenderDevice::CloneRenderTarget(const char* label, Noesis::RenderTarget* surface)
 {
-	return Noesis::Ptr<Noesis::RenderTarget>();
+	if (cloneRenderTargetCallback)
+	{
+		auto managedTexture = (ManagedTexture*)surface->GetTexture();
+		Noesis::Ptr<ManagedRenderTarget> clonedSurface = *new ManagedRenderTarget(managedTexture->width, managedTexture->height, flippedTextures);
+		cloneRenderTargetCallback(clonedSurface, clonedSurface->texture, surface);
+		return clonedSurface;
+	}
+
+	return 0;
 }
 
 Noesis::Ptr<Noesis::Texture> ManagedRenderDevice::CreateTexture(const char* label, uint32_t width, uint32_t height, uint32_t numLevels, Noesis::TextureFormat::Enum format, const void** data)
 {
 	if (createTextureCallback)
 	{
-		Noesis::Ptr<ManagedTexture> texture = *new ManagedTexture(width, height, numLevels);
-		bool isInverted = createTextureCallback(texture, CreateTextureParams{ width = width, height = height, numLevels = numLevels, format = format  });
-		texture->SetIsInverted(isInverted);
+		Noesis::Ptr<ManagedTexture> texture = *new ManagedTexture(width, height, numLevels, flippedTextures);
+		createTextureCallback(texture, CreateTextureParams{ width = width, height = height, numLevels = numLevels, format = format });
 		return texture;
 	}
 
@@ -62,27 +93,31 @@ void ManagedRenderDevice::UpdateTexture(Noesis::Texture* texture, uint32_t level
 void ManagedRenderDevice::BeginRender(bool offscreen)
 {
 	if (beginRenderCallback)
-		beginRenderCallback();
+		beginRenderCallback(offscreen);
 }
 
 void ManagedRenderDevice::SetRenderTarget(Noesis::RenderTarget* surface)
 {
-
+	if (setRenderTargetCallback)
+		setRenderTargetCallback((ManagedRenderTarget*)surface);
 }
 
 void ManagedRenderDevice::BeginTile(const Noesis::Tile& tile, uint32_t surfaceWidth, uint32_t surfaceHeight)
 {
-
+	if (beginTileCallback)
+		beginTileCallback(tile, surfaceWidth, surfaceHeight);
 }
 
 void ManagedRenderDevice::EndTile()
 {
-
+	if (endTileCallback)
+		endTileCallback();
 }
 
 void ManagedRenderDevice::ResolveRenderTarget(Noesis::RenderTarget* surface, const Noesis::Tile* tiles, uint32_t numTiles)
 {
-
+	if (resolveRenderTargetCallback)
+		resolveRenderTargetCallback((ManagedRenderTarget*)surface, *tiles, numTiles);
 }
 
 void ManagedRenderDevice::EndRender()
