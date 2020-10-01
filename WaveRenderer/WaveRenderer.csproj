@@ -122,9 +122,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Content\DrawTriangle\xamls\HelloWorld.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </None>
     <None Update="Content\DrawTriangle\xamls\Sample3D.xaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Generator>MSBuild:Compile</Generator>
     </None>
     <None Update="Content\DrawTriangle\xamls\test.xaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
