@@ -23,5 +23,5 @@ public abstract class ManagedTexture
         textures.Remove(this.nativePointer);
     }
 
-    public abstract void UpdateTexture(UInt32 level, UInt32 x, UInt32 y, UInt32 width, UInt32 height, IntPtr data);
+    public abstract void UpdateTexture(uint level, uint x, uint y, uint width, uint height, IntPtr data);
 }

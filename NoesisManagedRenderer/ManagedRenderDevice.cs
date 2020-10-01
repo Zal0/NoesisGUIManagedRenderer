@@ -5,7 +5,32 @@ namespace NoesisManagedRenderer
 {
     public abstract class ManagedRenderDevice
     {
-        public const string LIB_NOESIS = "ManagedRendererNative";
+        public const string LIB_NOESIS = "ManagedRenderDevice.Native";
+
+        [DllImport("kernel32")]
+        private static extern IntPtr LoadLibrary(string filename);
+
+        [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr CreateManagedRenderDevice(NoesisDeviceCaps deviceCaps, bool flippedTextures);
+
+        [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
+        private static extern void SetManagedRenderDeviceCallbacks(
+            IntPtr pDevice,
+            DrawBatchCallbackDelegate drawBatchCallback,
+            MapVerticesCallbackDelegate mapVerticesCallback,
+            UnmapVerticesCallbackDelegate unmapVerticesCallback,
+            MapIndicesCallbackDelegate mapIndicesCallback,
+            UnmapIndicesCallbackDelegate unmapIndicesCallback,
+            BeginRenderCallbackDelegate beginRenderCallback,
+            EndRenderCallbackDelegate endRenderCallback,
+            CreateTextureDelegate createTextureCallback,
+            UpdateTextureDelegate updateTextureCallback,
+            CreateRenderTargetDelegate createRenderTargetCallback,
+            CloneRenderTargetDelegate cloneRenderTargetCallback,
+            SetRenderTargetDelegate setRenderTargetCallback,
+            BeginTileDelegate beginTileCallback,
+            EndTileDelegate endTileCallback,
+            ResolveRenderTargetDelegate resolveRenderTargetCallback);
 
         private delegate void DrawBatchCallbackDelegate(ref NoesisBatch batch);
         private delegate IntPtr MapVerticesCallbackDelegate(uint size);
@@ -23,31 +48,6 @@ namespace NoesisManagedRenderer
         private delegate void EndTileDelegate();
         private delegate void ResolveRenderTargetDelegate(IntPtr pSurface, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 2)] NoesisTile[] tiles, uint numTiles);
 
-        [DllImport("kernel32.dll")]
-        private static extern IntPtr LoadLibrary(string filename);
-
-        [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr CreateManagedRenderDevice(NoesisDeviceCaps deviceCaps, bool flippedTextures);
-
-        [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
-        private static extern void SetManagedRenderDeviceCallbacks(
-        IntPtr pDevice,
-        DrawBatchCallbackDelegate drawBatchCallback,
-        MapVerticesCallbackDelegate mapVerticesCallback,
-        UnmapVerticesCallbackDelegate unmapVerticesCallback,
-        MapIndicesCallbackDelegate mapIndicesCallback,
-        UnmapIndicesCallbackDelegate unmapIndicesCallback,
-        BeginRenderCallbackDelegate beginRenderCallback,
-        EndRenderCallbackDelegate endRenderCallback,
-        CreateTextureDelegate createTextureCallback,
-        UpdateTextureDelegate updateTextureCallback,
-        CreateRenderTargetDelegate createRenderTargetCallback,
-        CloneRenderTargetDelegate cloneRenderTargetCallback,
-        SetRenderTargetDelegate setRenderTargetCallback,
-        BeginTileDelegate beginTileCallback,
-        EndTileDelegate endTileCallback,
-        ResolveRenderTargetDelegate resolveRenderTargetCallback);
-
         protected const uint DYNAMIC_VB_SIZE = 512 * 1024;
         protected const uint DYNAMIC_IB_SIZE = 128 * 1024;
         protected const uint DYNAMIC_TEX_SIZE = 128 * 1024;
@@ -56,11 +56,19 @@ namespace NoesisManagedRenderer
 
         static ManagedRenderDevice()
         {
-            //Manually load lib dependencies before calling any function
-            string NoesisPath = Environment.GetEnvironmentVariable("NOESIS_SDK_PATH");
-            LoadLibrary(NoesisPath + @"\Bin\windows_x86\Noesis.dll");
-            LoadLibrary(NoesisPath + @"\Bin\windows_x86\NoesisApp.dll");
-            LoadLibrary(ManagedRenderDevice.LIB_NOESIS);
+            // Manually load lib dependencies before calling any function
+            var noesisSDKPath = Environment.GetEnvironmentVariable("NOESIS_SDK_PATH");
+            if (string.IsNullOrEmpty(noesisSDKPath))
+            {
+                throw new InvalidOperationException(
+                    "'NOESIS_SDK_PATH' environment variable not defined. " +
+                    "Add this variable pointing to 'NoesisGUI-NativeSDK-win-3.0.6' base directory");
+            }
+
+            var platform = Environment.Is64BitProcess ? "windows_x86_64" : "windows_x86";
+            LoadLibrary(noesisSDKPath + $@"\Bin\{platform}\Noesis.dll");
+            LoadLibrary(noesisSDKPath + $@"\Bin\{platform}\NoesisApp.dll");
+            LoadLibrary(LIB_NOESIS);
         }
 
         public ManagedRenderDevice(NoesisDeviceCaps deviceCaps, bool flippedTextures)
