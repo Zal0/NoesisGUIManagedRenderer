@@ -3,7 +3,7 @@ using System;
 using System.Diagnostics;
 using WaveEngine.Common.Graphics;
 
-namespace WaveRenderer
+namespace WaveRenderer.WaveRenderDevice
 {
     public class WaveTexture : ManagedTexture
     {

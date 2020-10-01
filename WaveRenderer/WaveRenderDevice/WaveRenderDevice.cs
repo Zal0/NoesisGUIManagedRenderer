@@ -7,7 +7,7 @@ using Buffer = WaveEngine.Common.Graphics.Buffer;
 using NoesisManagedRenderer;
 using System.Threading.Tasks;
 
-namespace WaveRenderer
+namespace WaveRenderer.WaveRenderDevice
 {
     public class WaveRenderDevice : ManagedRenderDevice
     {

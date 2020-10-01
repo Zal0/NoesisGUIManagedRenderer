@@ -10,6 +10,7 @@ using VisualTests.Runners.Common;
 using WaveEngine.Common.Graphics;
 using WaveEngine.Common.Input.Mouse;
 using WaveEngine.Mathematics;
+using WaveRenderer.WaveRenderDevice;
 using Buffer = WaveEngine.Common.Graphics.Buffer;
 
 namespace VisualTests.LowLevel.Tests
@@ -31,7 +32,7 @@ namespace VisualTests.LowLevel.Tests
         private Buffer[] vertexBuffers;
         private float timeAccum = 0.0f;
 
-        private WaveRenderer.WaveRenderDevice waveRenderer;
+        private WaveRenderDevice waveRenderer;
         private List<IntPtr> noesisViews = new List<IntPtr>();
 
         public WaveMain()
@@ -107,7 +108,7 @@ namespace VisualTests.LowLevel.Tests
 
         private async Task InitializeNoesis(uint width, uint height)
         {
-            this.waveRenderer = new WaveRenderer.WaveRenderDevice(this.graphicsContext);
+            this.waveRenderer = new WaveRenderDevice(this.graphicsContext);
             await this.waveRenderer.InitializeAsync(this.assetsDirectory, this.frameBuffer);
 
             NoesisApp.NoesisInit();
@@ -115,6 +116,8 @@ namespace VisualTests.LowLevel.Tests
             string xamlString = await this.assetsDirectory.ReadAsStringAsync("xamls/test.xaml");
             this.noesisViews.Add(NoesisApp.CreateView(this.waveRenderer, xamlString));
 
+            xamlString = await this.assetsDirectory.ReadAsStringAsync("xamls/HelloWorld.xaml");
+            this.noesisViews.Add(NoesisApp.CreateView(this.waveRenderer, xamlString));
 
             foreach (var view in this.noesisViews)
             {
