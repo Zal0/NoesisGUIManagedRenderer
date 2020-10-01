@@ -3,7 +3,6 @@
 using NoesisManagedRenderer;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using VisualTests.Runners.Common;
@@ -113,11 +112,15 @@ namespace VisualTests.LowLevel.Tests
 
             NoesisApp.NoesisInit();
 
-            string xamlString = await this.assetsDirectory.ReadAsStringAsync("xamls/test.xaml");
+            string xamlString;
+            xamlString = await this.assetsDirectory.ReadAsStringAsync("xamls/test.xaml");
             this.noesisViews.Add(NoesisApp.CreateView(this.waveRenderer, xamlString));
 
-            xamlString = await this.assetsDirectory.ReadAsStringAsync("xamls/HelloWorld.xaml");
-            this.noesisViews.Add(NoesisApp.CreateView(this.waveRenderer, xamlString));
+            //xamlString = await this.assetsDirectory.ReadAsStringAsync("xamls/HelloWorld.xaml");
+            //this.noesisViews.Add(NoesisApp.CreateView(this.waveRenderer, xamlString));
+
+            ////xamlString = await this.assetsDirectory.ReadAsStringAsync("xamls/Sample3D.xaml");
+            ////this.noesisViews.Add(NoesisApp.CreateView(this.waveRenderer, xamlString));
 
             foreach (var view in this.noesisViews)
             {

@@ -18,15 +18,18 @@ namespace WaveRenderer.WaveRenderDevice
 
         private byte[] textureData;
 
-        public static new WaveTexture GetTexture(IntPtr nativePointer) => (WaveTexture)ManagedTexture.GetTexture(nativePointer);
-
-        public WaveTexture(GraphicsContext graphicsContext, IntPtr nativePointer, uint width, uint height, uint numLevels, NoesisTextureFormat format, IntPtr[] data)
-            : base(nativePointer)
+        internal WaveTexture(GraphicsContext graphicsContext, ref TextureDescription desc, DataBox[] data)
         {
-            if (numLevels > 1)
-                throw new NotImplementedException();
-
             this.graphicsContext = graphicsContext;
+
+            this.texture = this.graphicsContext.Factory.CreateTexture(data, ref desc);
+            this.textureData = new byte[desc.Width * desc.Height * ((desc.Format == PixelFormat.R8G8B8A8_UNorm) ? 4 : 1)];
+        }
+
+        public static WaveTexture Create(GraphicsContext graphicsContext, uint width, uint height, uint numLevels, ref NoesisTextureFormat format, IntPtr[] data)
+        {
+            if (numLevels > 1 || data != null)
+                throw new NotImplementedException();
 
             var desc = new TextureDescription()
             {
@@ -44,18 +47,7 @@ namespace WaveRenderer.WaveRenderDevice
                 SampleCount = TextureSampleCount.None,
             };
 
-            if (data != null)
-            {
-                throw new NotImplementedException();
-                //TODO: copy data to texture Data
-                //DataBox textureDataBox = new DataBox(data[0]);
-                //texture = graphicsContext.Factory.CreateTexture(new DataBox[] { textureDataBox }, ref desc);
-            }
-            else
-            {
-                texture = this.graphicsContext.Factory.CreateTexture(ref desc);
-                textureData = new byte[width * height * ((format == NoesisTextureFormat.RGBA8) ? 4 : 1)];
-            }
+            return new WaveTexture(graphicsContext, ref desc, null);
         }
 
         public void SetResourceSet(uint slot, byte sampler)
@@ -79,7 +71,7 @@ namespace WaveRenderer.WaveRenderDevice
 
         unsafe public override void UpdateTexture(uint level, uint x, uint y, uint width, uint height, IntPtr data)
         {
-            if(level > 1)
+            if (level > 1)
                 throw new NotImplementedException();
 
             Debug.WriteLine("Updating texture");

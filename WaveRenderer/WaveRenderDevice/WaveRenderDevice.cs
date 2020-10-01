@@ -15,6 +15,68 @@ namespace WaveRenderer.WaveRenderDevice
 
         ResourceSet[] resourceSets = new ResourceSet[Enum.GetNames(typeof(NoesisShader.Enum)).Length];
 
+        public CommandBuffer commandBuffer;
+
+        public GraphicsContext GraphicsContext { get; }
+
+        //Buffers
+        Buffer vertexBuffer;
+        Buffer indexBuffer;
+        Buffer vertexCB;
+        Buffer pixelCB;
+        Buffer effectCB;
+        Buffer texDimensionsCB;
+
+        uint vertexCBHash;
+        uint pixelCBHash;
+        uint effectCBHash;
+        uint texDimensionsCBHash;
+
+        MappedResource vertexBufferWritableResource;
+        MappedResource indexBufferWritableResource;
+
+        public WaveRenderDevice(GraphicsContext graphicsContext)
+            : base(new NoesisDeviceCaps(), flippedTextures: false)
+        {
+            this.GraphicsContext = graphicsContext;
+
+            CreateBuffers();
+        }
+
+        private void CreateBuffers()
+        {
+            vertexCBHash = 0;
+            pixelCBHash = 0;
+            effectCBHash = 0;
+            texDimensionsCBHash = 0;
+
+            var bufferDescription = new BufferDescription(DYNAMIC_VB_SIZE, BufferFlags.VertexBuffer, ResourceUsage.Dynamic, ResourceCpuAccess.Write);
+            vertexBuffer = this.GraphicsContext.Factory.CreateBuffer(ref bufferDescription);
+
+            bufferDescription = new BufferDescription(DYNAMIC_IB_SIZE, BufferFlags.IndexBuffer, ResourceUsage.Dynamic, ResourceCpuAccess.Write);
+            indexBuffer = this.GraphicsContext.Factory.CreateBuffer(ref bufferDescription);
+
+            bufferDescription = new BufferDescription(16 * sizeof(float), BufferFlags.ConstantBuffer, ResourceUsage.Default);
+            vertexCB = this.GraphicsContext.Factory.CreateBuffer(ref bufferDescription);
+
+            bufferDescription = new BufferDescription(12 * sizeof(float), BufferFlags.ConstantBuffer, ResourceUsage.Default);
+            pixelCB = this.GraphicsContext.Factory.CreateBuffer(ref bufferDescription);
+
+            bufferDescription = new BufferDescription(16 * sizeof(float), BufferFlags.ConstantBuffer, ResourceUsage.Default);
+            effectCB = this.GraphicsContext.Factory.CreateBuffer(ref bufferDescription);
+
+            bufferDescription = new BufferDescription(4 * sizeof(float), BufferFlags.ConstantBuffer, ResourceUsage.Default);
+            texDimensionsCB = this.GraphicsContext.Factory.CreateBuffer(ref bufferDescription);
+        }
+
+        public async Task InitializeAsync(AssetsDirectory assetsDirectory, FrameBuffer frameBuffer)
+        {
+            for (int i = 0; i < NoesisShader.Formats.Length; ++i)
+            {
+                await this.InitGraphicsPipelineStateAsync(i, assetsDirectory, frameBuffer);
+            }
+        }
+
         private async Task InitGraphicsPipelineStateAsync(int shader, AssetsDirectory assetsDirectory, FrameBuffer frameBuffer)
         {
             InputLayouts vertexLayouts = new InputLayouts();
@@ -73,10 +135,10 @@ namespace WaveRenderer.WaveRenderDevice
                 psEntryPoint = "PS";
             }
 
-            var vertexShaderDescription = await assetsDirectory.ReadAndCompileShader(this.graphicsContext, vertexShaderPath, "VertexShader", ShaderStages.Vertex, vsEntryPoint);
-            var pixelShaderDescription = await assetsDirectory.ReadAndCompileShader(this.graphicsContext, pixelShaderPath, "FragmentShader", ShaderStages.Pixel, psEntryPoint);
-            var vertexShader = this.graphicsContext.Factory.CreateShader(ref vertexShaderDescription);
-            var pixelShader = this.graphicsContext.Factory.CreateShader(ref pixelShaderDescription);
+            var vertexShaderDescription = await assetsDirectory.ReadAndCompileShader(this.GraphicsContext, vertexShaderPath, "VertexShader", ShaderStages.Vertex, vsEntryPoint);
+            var pixelShaderDescription = await assetsDirectory.ReadAndCompileShader(this.GraphicsContext, pixelShaderPath, "FragmentShader", ShaderStages.Pixel, psEntryPoint);
+            var vertexShader = this.GraphicsContext.Factory.CreateShader(ref vertexShaderDescription);
+            var pixelShader = this.GraphicsContext.Factory.CreateShader(ref pixelShaderDescription);
 
             var resourceLayoutDescription = new ResourceLayoutDescription(
                 new LayoutElementDescription(0, ResourceType.ConstantBuffer, ShaderStages.Vertex),
@@ -84,13 +146,13 @@ namespace WaveRenderer.WaveRenderDevice
                 new LayoutElementDescription(0, ResourceType.ConstantBuffer, ShaderStages.Pixel)
             );
 
-            var resourceLayout = this.graphicsContext.Factory.CreateResourceLayout(ref resourceLayoutDescription);
+            var resourceLayout = this.GraphicsContext.Factory.CreateResourceLayout(ref resourceLayoutDescription);
 
             var resourceSetDescription = new ResourceSetDescription(
                 resourceLayout, vertexCB, texDimensionsCB, pixelCB
             );
 
-            resourceSets[shader] = this.graphicsContext.Factory.CreateResourceSet(ref resourceSetDescription);
+            resourceSets[shader] = this.GraphicsContext.Factory.CreateResourceSet(ref resourceSetDescription);
 
             var pipelineDescription = new GraphicsPipelineDescription()
             {
@@ -111,85 +173,7 @@ namespace WaveRenderer.WaveRenderDevice
                 Outputs = frameBuffer.OutputDescription,
             };
 
-            graphicPipelineStates[shader] = this.graphicsContext.Factory.CreateGraphicsPipeline(ref pipelineDescription);
-        }
-
-        public CommandBuffer commandBuffer;
-        public GraphicsContext graphicsContext { private set; get; }
-
-        //Buffers
-        Buffer vertexBuffer;
-        Buffer indexBuffer;
-        Buffer vertexCB;
-        Buffer pixelCB;
-        Buffer effectCB;
-        Buffer texDimensionsCB;
-
-        uint vertexCBHash;
-        uint pixelCBHash;
-        uint effectCBHash;
-        uint texDimensionsCBHash;
-
-        IntPtr[] texturePtrs = new IntPtr[5];
-
-        MappedResource vertexBufferWritableResource;
-        MappedResource indexBufferWritableResource;
-
-        private void CreateBuffers()
-        {
-            vertexCBHash = 0;
-            pixelCBHash = 0;
-            effectCBHash = 0;
-            texDimensionsCBHash = 0;
-
-            var bufferDescription = new BufferDescription(DYNAMIC_VB_SIZE, BufferFlags.VertexBuffer, ResourceUsage.Dynamic, ResourceCpuAccess.Write);
-            vertexBuffer = graphicsContext.Factory.CreateBuffer(ref bufferDescription);
-
-            bufferDescription = new BufferDescription(DYNAMIC_IB_SIZE, BufferFlags.IndexBuffer, ResourceUsage.Dynamic, ResourceCpuAccess.Write);
-            indexBuffer = graphicsContext.Factory.CreateBuffer(ref bufferDescription);
-
-            bufferDescription = new BufferDescription(16 * sizeof(float), BufferFlags.ConstantBuffer, ResourceUsage.Default);
-            vertexCB = this.graphicsContext.Factory.CreateBuffer(ref bufferDescription);
-
-            bufferDescription = new BufferDescription(12 * sizeof(float), BufferFlags.ConstantBuffer, ResourceUsage.Default);
-            pixelCB = this.graphicsContext.Factory.CreateBuffer(ref bufferDescription);
-
-            bufferDescription = new BufferDescription(16 * sizeof(float), BufferFlags.ConstantBuffer, ResourceUsage.Default);
-            effectCB = this.graphicsContext.Factory.CreateBuffer(ref bufferDescription);
-
-            bufferDescription = new BufferDescription(4 * sizeof(float), BufferFlags.ConstantBuffer, ResourceUsage.Default);
-            texDimensionsCB = this.graphicsContext.Factory.CreateBuffer(ref bufferDescription);
-        }
-
-        public WaveRenderDevice(GraphicsContext graphicsContext)
-            : base(new NoesisDeviceCaps(), flippedTextures: false)
-        {
-            this.graphicsContext = graphicsContext;
-
-            CreateBuffers();
-        }
-
-        public async Task InitializeAsync(AssetsDirectory assetsDirectory, FrameBuffer frameBuffer)
-        {
-            for (int i = 0; i < NoesisShader.Formats.Length; ++i)
-            {
-                await this.InitGraphicsPipelineStateAsync(i, assetsDirectory, frameBuffer);
-            }
-        }
-
-        void SetTexture(IntPtr texturePtr, uint slot, byte sampler)
-        {
-            if (texturePtr != IntPtr.Zero)
-            {
-                var texture = WaveTexture.GetTexture(texturePtr);
-                if (texture.resourceSet == null)
-                {
-                    texture.SetResourceSet(slot, sampler);
-                }
-
-                texturePtrs[slot] = texturePtr;
-                commandBuffer.SetResourceSet(texture.resourceSet);
-            }
+            graphicPipelineStates[shader] = this.GraphicsContext.Factory.CreateGraphicsPipeline(ref pipelineDescription);
         }
 
         unsafe protected override void DrawBatch(ref NoesisBatch batch)
@@ -203,12 +187,6 @@ namespace WaveRenderer.WaveRenderDevice
 
             //Draw
             commandBuffer.DrawIndexed(batch.numIndices, batch.startIndex);
-        }
-
-        private void SetShaders(NoesisBatch batch)
-        {
-            commandBuffer.SetGraphicsPipelineState(graphicPipelineStates[batch.shader.v]);
-            commandBuffer.SetResourceSet(resourceSets[batch.shader.v]);
         }
 
         private unsafe void SetBuffers(NoesisBatch batch)
@@ -263,10 +241,9 @@ namespace WaveRenderer.WaveRenderDevice
             }
 
             // Texture dimensions
-            if (batch.glyphs != IntPtr.Zero || batch.image != IntPtr.Zero)
+            if (batch.Glyphs != null || batch.Image != null)
             {
-                var texturePtr = batch.glyphs != IntPtr.Zero ? batch.glyphs : batch.image;
-                var texture = WaveTexture.GetTexture(texturePtr);
+                var texture = batch.Glyphs ?? batch.Image;
                 uint hash = texture.Width << 16 | texture.Height;
                 if (texDimensionsCBHash != hash)
                 {
@@ -292,35 +269,54 @@ namespace WaveRenderer.WaveRenderDevice
             }
         }
 
+        private void SetShaders(NoesisBatch batch)
+        {
+            commandBuffer.SetGraphicsPipelineState(graphicPipelineStates[batch.shader.v]);
+            commandBuffer.SetResourceSet(resourceSets[batch.shader.v]);
+        }
+
         private unsafe void SetTextures(NoesisBatch batch)
         {
-            this.SetTexture(batch.pattern, 0, batch.patternSampler);
-            this.SetTexture(batch.ramps, 1, batch.rampsSampler);
-            this.SetTexture(batch.image, 2, batch.imageSampler);
-            this.SetTexture(batch.glyphs, 3, batch.glyphsSampler);
-            this.SetTexture(batch.shadow, 4, batch.shadowSampler);
+            this.SetTexture((WaveTexture)batch.Pattern, 0, batch.patternSampler);
+            this.SetTexture((WaveTexture)batch.Ramps, 1, batch.rampsSampler);
+            this.SetTexture((WaveTexture)batch.Image, 2, batch.imageSampler);
+            this.SetTexture((WaveTexture)batch.Glyphs, 3, batch.glyphsSampler);
+            this.SetTexture((WaveTexture)batch.Shadow, 4, batch.shadowSampler);
+        }
+
+        private void SetTexture(WaveTexture texture, uint slot, byte sampler)
+        {
+            if (texture != null)
+            {
+                if (texture.resourceSet == null)
+                {
+                    texture.SetResourceSet(slot, sampler);
+                }
+
+                commandBuffer.SetResourceSet(texture.resourceSet);
+            }
         }
 
         unsafe protected override IntPtr MapVertices(UInt32 bytes)
         {
-            vertexBufferWritableResource = graphicsContext.MapMemory(vertexBuffer, MapMode.Write);
+            vertexBufferWritableResource = this.GraphicsContext.MapMemory(vertexBuffer, MapMode.Write);
             return vertexBufferWritableResource.Data;
         }
 
         unsafe protected override void UnmapVertices()
         {
-            graphicsContext.UnmapMemory(vertexBuffer);
+            this.GraphicsContext.UnmapMemory(vertexBuffer);
         }
 
         unsafe protected override IntPtr MapIndices(uint bytes)
         {
-            indexBufferWritableResource = graphicsContext.MapMemory(indexBuffer, MapMode.Write);
+            indexBufferWritableResource = this.GraphicsContext.MapMemory(indexBuffer, MapMode.Write);
             return indexBufferWritableResource.Data;
         }
 
         unsafe protected override void UnmapIndices()
         {
-            graphicsContext.UnmapMemory(indexBuffer);
+            this.GraphicsContext.UnmapMemory(indexBuffer);
         }
 
         protected override void BeginRender(bool offscreen)
@@ -331,22 +327,22 @@ namespace WaveRenderer.WaveRenderDevice
         {
         }
 
-        protected override void CreateTexture(IntPtr ptr, ref CreateTextureParams args)
+        protected override ManagedTexture CreateTexture(uint width, uint height, uint numLevels, ref NoesisTextureFormat format)
         {
-            new WaveTexture(this.graphicsContext, ptr, args.width, args.height, args.numLevels, args.format, null);
+            return WaveTexture.Create(this.GraphicsContext, width, height, numLevels, ref format, null);
         }
 
-        protected override void CreateRenderTarget(IntPtr pSurface, IntPtr pSurfaceTexture, ref CreateRenderTargetParams args)
+        protected override ManagedRenderTarget CreateRenderTarget(uint width, uint height, uint sampleCount)
+        {
+            return new WaveRenderTarget(this.GraphicsContext, width, height, sampleCount);
+        }
+
+        protected override ManagedRenderTarget CloneRenderTarget(ManagedRenderTarget surface)
         {
             throw new NotImplementedException();
         }
 
-        protected override void CloneRenderTarget(IntPtr pClonedSurface, IntPtr pClonedSurfaceTexture, IntPtr pSurface)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void SetRenderTarget(IntPtr pSurface)
+        protected override void SetRenderTarget(ManagedRenderTarget surface)
         {
             throw new NotImplementedException();
         }
@@ -361,7 +357,7 @@ namespace WaveRenderer.WaveRenderDevice
             throw new NotImplementedException();
         }
 
-        protected override void ResolveRenderTarget(IntPtr pSurface, NoesisTile[] tiles, uint numTiles)
+        protected override void ResolveRenderTarget(ManagedRenderTarget surface, NoesisTile[] tiles)
         {
             throw new NotImplementedException();
         }

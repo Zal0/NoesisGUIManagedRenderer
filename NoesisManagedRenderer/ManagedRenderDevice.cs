@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace NoesisManagedRenderer
@@ -52,7 +53,7 @@ namespace NoesisManagedRenderer
         protected const uint DYNAMIC_IB_SIZE = 128 * 1024;
         protected const uint DYNAMIC_TEX_SIZE = 128 * 1024;
 
-        internal IntPtr cPtr;
+        internal IntPtr NativePointer;
 
         static ManagedRenderDevice()
         {
@@ -73,10 +74,10 @@ namespace NoesisManagedRenderer
 
         public ManagedRenderDevice(NoesisDeviceCaps deviceCaps, bool flippedTextures)
         {
-            this.cPtr = CreateManagedRenderDevice(deviceCaps, flippedTextures);
+            this.NativePointer = CreateManagedRenderDevice(deviceCaps, flippedTextures);
 
             SetManagedRenderDeviceCallbacks(
-                this.cPtr,
+                this.NativePointer,
                 this.DrawBatch,
                 this.MapVertices,
                 this.UnmapVertices,
@@ -108,25 +109,56 @@ namespace NoesisManagedRenderer
 
         protected abstract void EndRender();
 
-        protected abstract void CreateTexture(IntPtr ptr, ref CreateTextureParams args);
+        protected abstract ManagedTexture CreateTexture(uint width, uint height, uint numLevels, ref NoesisTextureFormat format);
 
-        private void UpdateTexture(IntPtr ptr, uint level, uint x, uint y, uint width, uint height, IntPtr data)
+        private void CreateTexture(IntPtr pTexture, ref CreateTextureParams args)
         {
-            var texture = ManagedTexture.GetTexture(ptr);
+            var texture = this.CreateTexture(args.width, args.height, args.numLevels, ref args.format);
+            texture.Register(pTexture);
+        }
+
+        private void UpdateTexture(IntPtr pTexture, uint level, uint x, uint y, uint width, uint height, IntPtr data)
+        {
+            var texture = ManagedTexture.GetTexture(pTexture);
             texture.UpdateTexture(level, x, y, width, height, data);
         }
 
-        protected abstract void CreateRenderTarget(IntPtr pSurface, IntPtr pSurfaceTexture, ref CreateRenderTargetParams args);
+        protected abstract ManagedRenderTarget CreateRenderTarget(uint width, uint height, uint sampleCount);
 
-        protected abstract void CloneRenderTarget(IntPtr pClonedSurface, IntPtr pClonedSurfaceTexture, IntPtr pSurface);
+        private void CreateRenderTarget(IntPtr pSurface, IntPtr pSurfaceTexture, ref CreateRenderTargetParams args)
+        {
+            var renderTarget = this.CreateRenderTarget(args.width, args.height, args.sampleCount);
+            renderTarget.Register(pSurface, pSurfaceTexture);
+        }
 
-        protected abstract void SetRenderTarget(IntPtr pSurface);
+        protected abstract ManagedRenderTarget CloneRenderTarget(ManagedRenderTarget surface);
+
+        private void CloneRenderTarget(IntPtr pClonedSurface, IntPtr pClonedSurfaceTexture, IntPtr pSurface)
+        {
+            var surface = ManagedRenderTarget.GetRenderTarget(pSurface);
+            var clonedRenderTarget = this.CloneRenderTarget(surface);
+            clonedRenderTarget.Register(pClonedSurface, pClonedSurfaceTexture);
+        }
+
+        protected abstract void SetRenderTarget(ManagedRenderTarget surface);
+
+        private void SetRenderTarget(IntPtr pSurface)
+        {
+            var surface = ManagedRenderTarget.GetRenderTarget(pSurface);
+            this.SetRenderTarget(surface);
+        }
 
         protected abstract void BeginTile(ref NoesisTile tile, uint surfaceWidth, uint surfaceHeight);
 
         protected abstract void EndTile();
 
-        protected abstract void ResolveRenderTarget(IntPtr pSurface, NoesisTile[] tiles, uint numTiles);
+        protected abstract void ResolveRenderTarget(ManagedRenderTarget surface, NoesisTile[] tiles);
+
+        private void ResolveRenderTarget(IntPtr pSurface, NoesisTile[] tiles, uint numTiles)
+        {
+            var surface = ManagedRenderTarget.GetRenderTarget(pSurface);
+            this.ResolveRenderTarget(surface, tiles);
+        }
     }
 }
 

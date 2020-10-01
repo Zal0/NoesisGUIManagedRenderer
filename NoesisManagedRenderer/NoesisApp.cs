@@ -5,7 +5,7 @@ namespace NoesisManagedRenderer
 {
     public static class NoesisApp
     {
-        public static IntPtr CreateView(ManagedRenderDevice renderDevice, string xamlString) => CreateView(renderDevice.cPtr, xamlString);
+        public static IntPtr CreateView(ManagedRenderDevice renderDevice, string xamlString) => CreateView(renderDevice.NativePointer, xamlString);
 
         [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl, CharSet= CharSet.Ansi)]
         [System.Security.SuppressUnmanagedCodeSecurity()]

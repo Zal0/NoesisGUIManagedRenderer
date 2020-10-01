@@ -2,16 +2,15 @@
 
 namespace NoesisManagedRenderer
 {
-    [StructLayout(LayoutKind.Explicit)]
+    [StructLayout(LayoutKind.Sequential)]
     public struct NoesisDeviceCaps
     {
-        [FieldOffset(0)]
         public float CenterPixelOffset;
 
-        [FieldOffset(4)]
+        [MarshalAs(UnmanagedType.U1)]
         public bool LinearRendering;
 
-        [FieldOffset(5)]
+        [MarshalAs(UnmanagedType.U1)]
         public bool SubpixelRendering;
     };
 }

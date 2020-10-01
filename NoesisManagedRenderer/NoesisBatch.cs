@@ -19,20 +19,30 @@ namespace NoesisManagedRenderer
         public uint numIndices;
 
         // Textures (Unused textures are set to null)
-        public IntPtr pattern;
+        private IntPtr pPattern;
         public byte patternSampler;
 
-        public IntPtr ramps;
+        private IntPtr pRamps;
         public byte rampsSampler;
 
-        public IntPtr image;
+        private IntPtr pImage;
         public byte imageSampler;
 
-        public IntPtr glyphs;
+        private IntPtr pGlyphs;
         public byte glyphsSampler;
 
-        public IntPtr shadow;
+        private IntPtr pShadow;
         public byte shadowSampler;
+
+        public ManagedTexture Pattern => ManagedTexture.GetTexture(this.pPattern);
+
+        public ManagedTexture Ramps => ManagedTexture.GetTexture(this.pRamps);
+
+        public ManagedTexture Image => ManagedTexture.GetTexture(this.pImage);
+
+        public ManagedTexture Glyphs => ManagedTexture.GetTexture(this.pGlyphs);
+
+        public ManagedTexture Shadow => ManagedTexture.GetTexture(this.pShadow);
 
         // Effect parameters
         public IntPtr effectParams;
