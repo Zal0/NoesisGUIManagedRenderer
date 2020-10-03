@@ -196,7 +196,6 @@ namespace VisualTests.LowLevel.Tests
             foreach (var view in this.noesisViews)
             {
                 NoesisApp.UpdateView(view, timeAccum);
-                NoesisApp.UpdateView(view, timeAccum);
             }
 
             var commandBuffer = this.commandQueue.CommandBuffer();
@@ -217,7 +216,6 @@ namespace VisualTests.LowLevel.Tests
 
             foreach (var view in this.noesisViews)
             {
-                NoesisApp.RenderView(view);
                 NoesisApp.RenderView(view);
             }
 
