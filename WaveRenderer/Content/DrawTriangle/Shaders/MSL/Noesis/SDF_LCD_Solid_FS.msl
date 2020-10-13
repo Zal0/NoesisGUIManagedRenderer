@@ -1,0 +1,38 @@
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct type_Buffer1
+{
+    float4 textureSize;
+};
+
+struct main0_out
+{
+    float4 out_var_SV_Target0 [[color(0)]];
+    float4 out_var_SV_Target1 [[color(1)]];
+};
+
+struct main0_in
+{
+    float4 in_var_COLOR [[user(locn0)]];
+    float2 in_var_TEXCOORD1 [[user(locn1)]];
+    float2 in_var_TEXCOORD4 [[user(locn2)]];
+};
+
+fragment main0_out main0(main0_in in [[stage_in]], constant type_Buffer1& Buffer1 [[buffer(0)]], texture2d<float> glyphs [[texture(0)]], sampler glyphsSampler [[sampler(0)]])
+{
+    main0_out out = {};
+    float2 _45 = dfdx(in.in_var_TEXCOORD4);
+    float2 _50 = (_45 * Buffer1.textureSize.zw) * 0.3333333432674407958984375;
+    float _67 = length(_45);
+    float _73 = (-0.64999997615814208984375) * (1.0 - ((fast::clamp(1.0 / _67, 0.125, 0.25) - 0.125) * 8.0));
+    float _74 = 0.64999997615814208984375 * _67;
+    float3 _79 = smoothstep(float3(_73 - _74), float3(_73 + _74), (float3(glyphs.sample(glyphsSampler, (in.in_var_TEXCOORD1 - _50)).x, glyphs.sample(glyphsSampler, in.in_var_TEXCOORD1).x, glyphs.sample(glyphsSampler, (in.in_var_TEXCOORD1 + _50)).x) - float3(0.501960813999176025390625)) * 7.96875);
+    float _83 = _79.y;
+    out.out_var_SV_Target0 = float4((in.in_var_COLOR.xyz * 1.0) * _79, _83);
+    out.out_var_SV_Target1 = float4(_79 * in.in_var_COLOR.w, _83);
+    return out;
+}
+

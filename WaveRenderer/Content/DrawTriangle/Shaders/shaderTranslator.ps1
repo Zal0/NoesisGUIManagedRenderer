@@ -1,22 +1,25 @@
-..\..\..\..\Binaries\dxc.exe -Zpr -fvk-u-shift 20 all -fvk-s-shift 40 all -fvk-t-shift 60 all -spirv HLSL\HLSL.fx -T vs_5_0 -E VS -Fo VK\VertexShader.spirv
-..\..\..\..\Binaries\dxc.exe -Zpr -fvk-u-shift 20 all -fvk-s-shift 40 all -fvk-t-shift 60 all -spirv HLSL\HLSL.fx -T ps_5_0 -E PS -Fo VK\FragmentShader.spirv
+$binaries_path = "..\..\..\..\Binaries"
+$hlsl_shaders = Get-ChildItem .\HLSL\Noesis -Recurse -Include ("*.fx")
 
-Write-Host 'Vulkan Shaders generated'
+foreach ($hlsl_path in $hlsl_shaders)
+{
+	$vk_path = $hlsl_path -Replace "HLSL", "VK" -Replace "fx", "spirv"
+	$msl_path = $hlsl_path -Replace "HLSL", "MSL" -Replace "fx", "msl"
+	$glsl_path = $hlsl_path -Replace "HLSL", "GLSL" -Replace "fx", "glsl"
+	$essl_path = $hlsl_path -Replace "HLSL", "ESSL" -Replace "fx", "essl"
 
-..\..\..\..\Binaries\SPIRV-Cross.exe --msl VK\VertexShader.spirv --output MSL\VertexShader.msl
-..\..\..\..\Binaries\SPIRV-Cross.exe --msl VK\FragmentShader.spirv --output MSL\FragmentShader.msl
+	# Generate output path
+	New-Item -ItemType Directory -Force -Path (Split-Path -Path $vk_path) > $null
+	New-Item -ItemType Directory -Force -Path (Split-Path -Path $msl_path) > $null
+	New-Item -ItemType Directory -Force -Path (Split-Path -Path $glsl_path) > $null
+	New-Item -ItemType Directory -Force -Path (Split-Path -Path $essl_path) > $null
 
-Write-Host 'Metal Shaders generated'
+	$is_vs = $hlsl_path.Name -Match "VS"
 
-..\..\..\..\Binaries\SPIRV-Cross.exe VK\VertexShader.spirv --output GLSL\VertexShader.glsl
-..\..\..\..\Binaries\SPIRV-Cross.exe VK\FragmentShader.spirv --output GLSL\FragmentShader.glsl
+	& $binaries_path\dxc.exe -Zpr -fvk-u-shift 20 all -fvk-s-shift 40 all -fvk-t-shift 60 all -spirv $hlsl_path -T $(If ($is_vs) {"vs_5_0"} Else {"ps_5_0"}) -E main -Fo $vk_path #Vulkan
+	& $binaries_path\SPIRV-Cross.exe --msl $vk_path --output $msl_path #Metal
+	& $binaries_path\SPIRV-Cross.exe $vk_path --output $glsl_path #OpenGL
+	& $binaries_path\SPIRV-Cross.exe --es --version 300 $vk_path --output $essl_path #OpenGLES
+}
 
-Write-Host 'OpenGL Shaders generated'
-
-# These fail under WebGL
-#..\..\..\..\Binaries\SPIRV-Cross.exe --es --version 300 VK\VertexShader.spirv --output ESSL\VertexShader.essl
-#..\..\..\..\Binaries\SPIRV-Cross.exe --es --version 300 VK\FragmentShader.spirv --output ESSL\FragmentShader.essl
-
-#Write-Host 'OpenGLES Shaders generated'
-
-Write-Host -NoNewLine 'Press any key to continue...';
+#Write-Host -NoNewLine 'Press any key to continue...';

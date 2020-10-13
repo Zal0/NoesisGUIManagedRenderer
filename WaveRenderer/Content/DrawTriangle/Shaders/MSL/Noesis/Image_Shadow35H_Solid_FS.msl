@@ -1,0 +1,50 @@
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct type_Buffer1
+{
+    float4 textureSize;
+};
+
+struct type_Buffer2
+{
+    float4 shadowColor;
+    float blurSize;
+    packed_float2 shadowOffset;
+};
+
+constant float _67[9] = { 0.10854999721050262451171875, 0.13134999573230743408203125, 0.104060001671314239501953125, 0.072159998118877410888671875, 0.0438000001013278961181640625, 0.02328000031411647796630859375, 0.01083000004291534423828125, 0.0044100000523030757904052734375, 0.001569999963976442813873291015625 };
+constant float _68[9] = { 0.662930011749267578125, 2.4790399074554443359375, 4.462319850921630859375, 6.445680141448974609375, 8.42916965484619140625, 10.41281032562255859375, 12.39663982391357421875, 14.38070011138916015625, 16.365009307861328125 };
+
+struct main0_out
+{
+    float4 out_var_SV_Target0 [[color(0)]];
+};
+
+struct main0_in
+{
+    float4 in_var_COLOR [[user(locn0)]];
+    float2 in_var_TEXCOORD1 [[user(locn1)]];
+    float4 in_var_TEXCOORD2 [[user(locn2)]];
+};
+
+fragment main0_out main0(main0_in in [[stage_in]], constant type_Buffer1& Buffer1 [[buffer(0)]], constant type_Buffer2& Buffer2 [[buffer(1)]], texture2d<float> image [[texture(0)]], texture2d<float> shadow [[texture(1)]], sampler imageSampler [[sampler(0)]], sampler shadowSampler [[sampler(1)]])
+{
+    main0_out out = {};
+    float _89;
+    _89 = 0.0;
+    for (int _92 = 0; _92 < 9; )
+    {
+        float2 _98 = float2(Buffer2.blurSize * Buffer1.textureSize.z, 0.0) * _68[_92];
+        float2 _103 = in.in_var_TEXCOORD1 - float2(Buffer2.shadowOffset[0] * Buffer1.textureSize.z, Buffer2.shadowOffset[1] * Buffer1.textureSize.w);
+        _89 += (_67[_92] * (shadow.sample(shadowSampler, fast::clamp(_103 + _98, in.in_var_TEXCOORD2.xy, in.in_var_TEXCOORD2.zw)).w + shadow.sample(shadowSampler, fast::clamp(_103 - _98, in.in_var_TEXCOORD2.xy, in.in_var_TEXCOORD2.zw)).w));
+        _92++;
+        continue;
+    }
+    float4 _124 = image.sample(imageSampler, fast::clamp(in.in_var_TEXCOORD1, in.in_var_TEXCOORD2.xy, in.in_var_TEXCOORD2.zw));
+    out.out_var_SV_Target0 = (_124 + ((Buffer2.shadowColor * _89) * (1.0 - _124.w))) * in.in_var_COLOR.w;
+    return out;
+}
+

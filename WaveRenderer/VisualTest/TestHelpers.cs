@@ -16,12 +16,17 @@ namespace VisualTests.Runners.Common
             return backendType == GraphicsBackend.DirectX11 || backendType == GraphicsBackend.DirectX12;
         }
 
-        public static Task<ShaderDescription> ReadAndCompileShader(this AssetsDirectoryBase assetsDirectory, GraphicsContext graphicsContext, string hlslFileName, string translateFileName, ShaderStages stage, string entryPoint)
+        public static Task<ShaderDescription> ReadAndCompileShader(this AssetsDirectoryBase assetsDirectory, GraphicsContext graphicsContext, string filename, ShaderStages stage, string entryPoint)
         {
-            return ReadAndCompileShader(assetsDirectory, graphicsContext, hlslFileName, translateFileName, stage, entryPoint, CompilerParameters.Default);
+            var compilerParams = CompilerParameters.Default;
+#if DEBUG
+            compilerParams.CompilationMode = CompilationMode.Debug;
+#endif
+
+            return ReadAndCompileShader(assetsDirectory, graphicsContext, filename, stage, entryPoint, compilerParams);
         }
 
-        public static async Task<ShaderDescription> ReadAndCompileShader(this AssetsDirectoryBase assetsDirectory, GraphicsContext graphicsContext, string hlslFileName, string translateFileName, ShaderStages stage, string entryPoint, CompilerParameters compileParameters)
+        public static async Task<ShaderDescription> ReadAndCompileShader(this AssetsDirectoryBase assetsDirectory, GraphicsContext graphicsContext, string filename, ShaderStages stage, string entryPoint, CompilerParameters compileParameters)
         {
             GraphicsBackend backend = graphicsContext.BackendType;
 
@@ -33,13 +38,13 @@ namespace VisualTests.Runners.Common
                 case GraphicsBackend.DirectX11:
                 case GraphicsBackend.DirectX12:
 
-                    source = await assetsDirectory.ReadAsStringAsync($"Shaders/HLSL/{hlslFileName}.fx");
+                    source = await assetsDirectory.ReadAsStringAsync($"Shaders/HLSL/{filename}.fx");
                     bytecode = graphicsContext.ShaderCompile(source, entryPoint, stage, compileParameters).ByteCode;
 
                     break;
                 case GraphicsBackend.OpenGL:
 
-                    source = await assetsDirectory.ReadAsStringAsync($"Shaders/GLSL/{translateFileName}.glsl");
+                    source = await assetsDirectory.ReadAsStringAsync($"Shaders/GLSL/{filename}.glsl");
                     bytecode = graphicsContext.ShaderCompile(source, entryPoint, stage, compileParameters).ByteCode;
 
                     break;
@@ -47,19 +52,19 @@ namespace VisualTests.Runners.Common
                 case GraphicsBackend.WebGL1:
                 case GraphicsBackend.WebGL2:
 
-                    source = await assetsDirectory.ReadAsStringAsync($"Shaders/ESSL/{translateFileName}.essl");
+                    source = await assetsDirectory.ReadAsStringAsync($"Shaders/ESSL/{filename}.essl");
                     bytecode = graphicsContext.ShaderCompile(source, entryPoint, stage, compileParameters).ByteCode;
 
                     break;
                 case GraphicsBackend.Metal:
 
-                    source = await assetsDirectory.ReadAsStringAsync($"Shaders/MSL/{translateFileName}.msl");
+                    source = await assetsDirectory.ReadAsStringAsync($"Shaders/MSL/{filename}.msl");
                     bytecode = graphicsContext.ShaderCompile(source, entryPoint, stage, compileParameters).ByteCode;
 
                     break;
                 case GraphicsBackend.Vulkan:
 
-                    using (var stream = assetsDirectory.Open($"Shaders/VK/{translateFileName}.spirv"))
+                    using (var stream = assetsDirectory.Open($"Shaders/VK/{filename}.spirv"))
                     using (var memstream = new MemoryStream())
                     {
                         stream.CopyTo(memstream);

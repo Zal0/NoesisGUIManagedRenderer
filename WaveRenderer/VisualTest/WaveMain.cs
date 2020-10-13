@@ -52,8 +52,8 @@ namespace VisualTests.LowLevel.Tests
         protected override async void InternalLoad()
         {
             // Compile Vertex and Pixel shaders
-            var vertexShaderDescription = await this.assetsDirectory.ReadAndCompileShader(this.graphicsContext, "HLSL", "VertexShader", ShaderStages.Vertex, "VS");
-            var pixelShaderDescription = await this.assetsDirectory.ReadAndCompileShader(this.graphicsContext, "HLSL", "FragmentShader", ShaderStages.Pixel, "PS");
+            var vertexShaderDescription = await this.assetsDirectory.ReadAndCompileShader(this.graphicsContext, "VertexShader", ShaderStages.Vertex, "VS");
+            var pixelShaderDescription = await this.assetsDirectory.ReadAndCompileShader(this.graphicsContext, "FragmentShader", ShaderStages.Pixel, "PS");
 
             var vertexShader = this.graphicsContext.Factory.CreateShader(ref vertexShaderDescription);
             var pixelShader = this.graphicsContext.Factory.CreateShader(ref pixelShaderDescription);
