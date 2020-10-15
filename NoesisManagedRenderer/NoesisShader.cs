@@ -165,6 +165,10 @@ namespace NoesisManagedRenderer
             Count
         };
 
-        public byte v;
+        private byte v;
+
+        public int Index => this.v;
+
+        public string Name => ((Enum)this.v).ToString();
     }
 }

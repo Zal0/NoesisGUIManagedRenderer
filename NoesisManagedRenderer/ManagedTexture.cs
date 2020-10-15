@@ -10,10 +10,15 @@ namespace NoesisManagedRenderer
         internal static ManagedTexture GetTexture(IntPtr nativePointer) => nativePointer != IntPtr.Zero ? textures[nativePointer] : null;
 
         private IntPtr nativePointer;
+        public abstract string Label { get; }
 
         public abstract uint Width { get; }
 
         public abstract uint Height { get; }
+
+        public abstract uint LevelCount { get; }
+
+        public abstract NoesisTextureFormat Format { get; }
 
         internal void Register(IntPtr nativePointer)
         {
@@ -27,6 +32,9 @@ namespace NoesisManagedRenderer
         }
 
         public abstract void UpdateTexture(uint level, uint x, uint y, uint width, uint height, IntPtr data);
+
+        /// <inheritdoc />
+        public override string ToString() => this.Label;
 
         /// <inheritdoc />
         public void Dispose()

@@ -11,9 +11,13 @@ namespace NoesisManagedRenderer
 
         private IntPtr nativePointer;
 
-        public uint Width => this.Texture?.Width ?? 0;
+        public abstract string Label { get; }
 
-        public uint Height => this.Texture?.Height ?? 0;
+        public abstract uint Width { get; }
+
+        public abstract uint Height { get; }
+
+        public abstract uint SampleCount { get; }
 
         public abstract ManagedTexture Texture { get; }
 
@@ -34,6 +38,8 @@ namespace NoesisManagedRenderer
 
             this.Texture.Register(pSurfaceTexture);
         }
+
+        public override string ToString() => this.Label;
 
         /// <inheritdoc />
         public void Dispose()

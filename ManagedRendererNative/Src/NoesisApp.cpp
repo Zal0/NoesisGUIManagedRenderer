@@ -31,7 +31,7 @@ extern "C"
 {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-DLL_FUNC void NoesisInit()
+DLL_FUNC void NoesisInit(const char* licenseName, const char* licenseKey)
 {
     Noesis::SetLogHandler([](const char*, uint32_t, uint32_t level, const char*, const char* msg)
     {
@@ -41,7 +41,7 @@ DLL_FUNC void NoesisInit()
     });
 
     // Noesis initialization. This must be the first step before using any NoesisGUI functionality
-    Noesis::GUI::Init(NS_LICENSE_NAME, NS_LICENSE_KEY);
+    Noesis::GUI::Init(licenseName, licenseKey);
 
     // Setup theme
     NoesisApp::SetThemeProviders();

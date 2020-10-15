@@ -9,13 +9,13 @@ namespace NoesisManagedRenderer
 
         [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl, CharSet= CharSet.Ansi)]
         [System.Security.SuppressUnmanagedCodeSecurity()]
-        public static extern void NoesisInit();
+        public static extern void NoesisInit(string licenseName, string licenseKey);
 
         [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         [System.Security.SuppressUnmanagedCodeSecurity()]
         private static extern IntPtr CreateView(IntPtr pDevice, string xamlString);
 
-        [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        [DllImport(ManagedRenderDevice.LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
         [System.Security.SuppressUnmanagedCodeSecurity()]
         public static extern void DeleteView(IntPtr pView);
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace NoesisManagedRenderer
@@ -17,43 +16,61 @@ namespace NoesisManagedRenderer
         [DllImport(LIB_NOESIS, CallingConvention = CallingConvention.Cdecl)]
         private static extern void SetManagedRenderDeviceCallbacks(
             IntPtr pDevice,
-            DrawBatchCallbackDelegate drawBatchCallback,
-            MapVerticesCallbackDelegate mapVerticesCallback,
-            UnmapVerticesCallbackDelegate unmapVerticesCallback,
-            MapIndicesCallbackDelegate mapIndicesCallback,
-            UnmapIndicesCallbackDelegate unmapIndicesCallback,
-            BeginRenderCallbackDelegate beginRenderCallback,
-            EndRenderCallbackDelegate endRenderCallback,
-            CreateTextureDelegate createTextureCallback,
-            UpdateTextureDelegate updateTextureCallback,
-            CreateRenderTargetDelegate createRenderTargetCallback,
-            CloneRenderTargetDelegate cloneRenderTargetCallback,
-            SetRenderTargetDelegate setRenderTargetCallback,
-            BeginTileDelegate beginTileCallback,
-            EndTileDelegate endTileCallback,
-            ResolveRenderTargetDelegate resolveRenderTargetCallback);
+            DrawBatchCallback drawBatchCallback,
+            MapVerticesCallback mapVerticesCallback,
+            UnmapVerticesCallback unmapVerticesCallback,
+            MapIndicesCallback mapIndicesCallback,
+            UnmapIndicesCallback unmapIndicesCallback,
+            BeginRenderCallback beginRenderCallback,
+            EndRenderCallback endRenderCallback,
+            CreateTextureCallback createTextureCallback,
+            UpdateTextureCallback updateTextureCallback,
+            CreateRenderTargetCallback createRenderTargetCallback,
+            CloneRenderTargetCallback cloneRenderTargetCallback,
+            SetRenderTargetCallback setRenderTargetCallback,
+            BeginTileCallback beginTileCallback,
+            EndTileCallback endTileCallback,
+            ResolveRenderTargetCallback resolveRenderTargetCallback);
 
-        private delegate void DrawBatchCallbackDelegate(ref NoesisBatch batch);
-        private delegate IntPtr MapVerticesCallbackDelegate(uint size);
-        private delegate void UnmapVerticesCallbackDelegate();
-        private delegate IntPtr MapIndicesCallbackDelegate(uint size);
-        private delegate void UnmapIndicesCallbackDelegate();
-        private delegate void BeginRenderCallbackDelegate(bool offscreen);
-        private delegate void EndRenderCallbackDelegate();
-        private delegate void CreateTextureDelegate(IntPtr pTexture, ref CreateTextureParams args);
-        private delegate void UpdateTextureDelegate(IntPtr pTexture, uint level, uint x, uint y, uint width, uint height, IntPtr data);
-        private delegate void CreateRenderTargetDelegate(IntPtr pSurface, IntPtr pSurfaceTexture, ref CreateRenderTargetParams args);
-        private delegate void CloneRenderTargetDelegate(IntPtr pClonedSurface, IntPtr pClonedSurfaceTexture, IntPtr pSurface);
-        private delegate void SetRenderTargetDelegate(IntPtr pSurface);
-        private delegate void BeginTileDelegate(ref NoesisTile tile, uint surfaceWidth, uint surfaceHeight);
-        private delegate void EndTileDelegate();
-        private delegate void ResolveRenderTargetDelegate(IntPtr pSurface, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 2)] NoesisTile[] tiles, uint numTiles);
+        private delegate void DrawBatchCallback(ref NoesisBatch batch);
+        private delegate IntPtr MapVerticesCallback(uint size);
+        private delegate void UnmapVerticesCallback();
+        private delegate IntPtr MapIndicesCallback(uint size);
+        private delegate void UnmapIndicesCallback();
+        private delegate void BeginRenderCallback(bool offscreen);
+        private delegate void EndRenderCallback();
+        private delegate void CreateTextureCallback(IntPtr pTexture, string label, uint width, uint height, uint numLevels, NoesisTextureFormat format);
+        private delegate void UpdateTextureCallback(IntPtr pTexture, uint level, uint x, uint y, uint width, uint height, IntPtr data);
+        private delegate void CreateRenderTargetCallback(IntPtr pSurface, IntPtr pSurfaceTexture, string label, uint width, uint height, uint sampleCount);
+        private delegate void CloneRenderTargetCallback(IntPtr pClonedSurface, IntPtr pClonedSurfaceTexture, string label, IntPtr pSurface);
+        private delegate void SetRenderTargetCallback(IntPtr pSurface);
+        private delegate void BeginTileCallback(ref NoesisTile tile, uint surfaceWidth, uint surfaceHeight);
+        private delegate void EndTileCallback();
+        private delegate void ResolveRenderTargetCallback(IntPtr pSurface, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 2)] NoesisTile[] tiles, uint numTiles);
+
+        private static DrawBatchCallback drawBatchCallback;
+        private static MapVerticesCallback mapVerticesCallback;
+        private static UnmapVerticesCallback unmapVerticesCallback;
+        private static MapIndicesCallback mapIndicesCallback;
+        private static UnmapIndicesCallback unmapIndicesCallback;
+        private static BeginRenderCallback beginRenderCallback;
+        private static EndRenderCallback endRenderCallback;
+        private static CreateTextureCallback createTextureCallback;
+        private static UpdateTextureCallback updateTextureCallback;
+        private static CreateRenderTargetCallback createRenderTargetCallback;
+        private static CloneRenderTargetCallback cloneRenderTargetCallback;
+        private static SetRenderTargetCallback setRenderTargetCallback;
+        private static BeginTileCallback beginTileCallback;
+        private static EndTileCallback endTileCallback;
+        private static ResolveRenderTargetCallback resolveRenderTargetCallback;
 
         protected const uint DYNAMIC_VB_SIZE = 512 * 1024;
         protected const uint DYNAMIC_IB_SIZE = 128 * 1024;
         protected const uint DYNAMIC_TEX_SIZE = 128 * 1024;
 
         internal IntPtr NativePointer;
+
+        private static ManagedRenderDevice instance;
 
         static ManagedRenderDevice()
         {
@@ -75,24 +92,44 @@ namespace NoesisManagedRenderer
         public ManagedRenderDevice(NoesisDeviceCaps deviceCaps, bool flippedTextures)
         {
             this.NativePointer = CreateManagedRenderDevice(deviceCaps, flippedTextures);
+            RegisterCallbacks(this);
+        }
+
+        private static void RegisterCallbacks(ManagedRenderDevice renderDevice)
+        {
+            drawBatchCallback = renderDevice.DrawBatch;
+            mapVerticesCallback = renderDevice.MapVertices;
+            unmapVerticesCallback = renderDevice.UnmapVertices;
+            mapIndicesCallback = renderDevice.MapIndices;
+            unmapIndicesCallback = renderDevice.UnmapIndices;
+            beginRenderCallback = renderDevice.BeginRender;
+            endRenderCallback = renderDevice.EndRender;
+            createTextureCallback = renderDevice.CreateTexture;
+            updateTextureCallback = renderDevice.UpdateTexture;
+            createRenderTargetCallback = renderDevice.CreateRenderTarget;
+            cloneRenderTargetCallback = renderDevice.CloneRenderTarget;
+            setRenderTargetCallback = renderDevice.SetRenderTarget;
+            beginTileCallback = renderDevice.BeginTile;
+            endTileCallback = renderDevice.EndTile;
+            resolveRenderTargetCallback = renderDevice.ResolveRenderTarget;
 
             SetManagedRenderDeviceCallbacks(
-                this.NativePointer,
-                this.DrawBatch,
-                this.MapVertices,
-                this.UnmapVertices,
-                this.MapIndices,
-                this.UnmapIndices,
-                this.BeginRender,
-                this.EndRender,
-                this.CreateTexture,
-                this.UpdateTexture,
-                this.CreateRenderTarget,
-                this.CloneRenderTarget,
-                this.SetRenderTarget,
-                this.BeginTile,
-                this.EndTile,
-                this.ResolveRenderTarget);
+                renderDevice.NativePointer,
+                drawBatchCallback,
+                mapVerticesCallback,
+                unmapVerticesCallback,
+                mapIndicesCallback,
+                unmapIndicesCallback,
+                beginRenderCallback,
+                endRenderCallback,
+                createTextureCallback,
+                updateTextureCallback,
+                createRenderTargetCallback,
+                cloneRenderTargetCallback,
+                setRenderTargetCallback,
+                beginTileCallback,
+                endTileCallback,
+                resolveRenderTargetCallback);
         }
 
         protected abstract void DrawBatch(ref NoesisBatch batch);
@@ -109,11 +146,11 @@ namespace NoesisManagedRenderer
 
         protected abstract void EndRender();
 
-        protected abstract ManagedTexture CreateTexture(uint width, uint height, uint numLevels, ref NoesisTextureFormat format);
+        protected abstract ManagedTexture CreateTexture(string label, uint width, uint height, uint numLevels, NoesisTextureFormat format);
 
-        private void CreateTexture(IntPtr pTexture, ref CreateTextureParams args)
+        private void CreateTexture(IntPtr pTexture, string label, uint width, uint height, uint numLevels, NoesisTextureFormat format)
         {
-            var texture = this.CreateTexture(args.width, args.height, args.numLevels, ref args.format);
+            var texture = this.CreateTexture(label, width, height, numLevels, format);
             texture.Register(pTexture);
         }
 
@@ -123,20 +160,20 @@ namespace NoesisManagedRenderer
             texture.UpdateTexture(level, x, y, width, height, data);
         }
 
-        protected abstract ManagedRenderTarget CreateRenderTarget(uint width, uint height, uint sampleCount);
+        protected abstract ManagedRenderTarget CreateRenderTarget(string label, uint width, uint height, uint sampleCount);
 
-        private void CreateRenderTarget(IntPtr pSurface, IntPtr pSurfaceTexture, ref CreateRenderTargetParams args)
+        private void CreateRenderTarget(IntPtr pSurface, IntPtr pSurfaceTexture, string label, uint width, uint height, uint sampleCount)
         {
-            var renderTarget = this.CreateRenderTarget(args.width, args.height, args.sampleCount);
+            var renderTarget = this.CreateRenderTarget(label, width, height, sampleCount);
             renderTarget.Register(pSurface, pSurfaceTexture);
         }
 
-        protected abstract ManagedRenderTarget CloneRenderTarget(ManagedRenderTarget surface);
+        protected abstract ManagedRenderTarget CloneRenderTarget(string label, ManagedRenderTarget surface);
 
-        private void CloneRenderTarget(IntPtr pClonedSurface, IntPtr pClonedSurfaceTexture, IntPtr pSurface)
+        private void CloneRenderTarget(IntPtr pClonedSurface, IntPtr pClonedSurfaceTexture, string label, IntPtr pSurface)
         {
             var surface = ManagedRenderTarget.GetRenderTarget(pSurface);
-            var clonedRenderTarget = this.CloneRenderTarget(surface);
+            var clonedRenderTarget = this.CloneRenderTarget(label, surface);
             clonedRenderTarget.Register(pClonedSurface, pClonedSurfaceTexture);
         }
 

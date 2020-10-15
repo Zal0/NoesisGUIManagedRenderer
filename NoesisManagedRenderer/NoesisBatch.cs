@@ -9,7 +9,7 @@ namespace NoesisManagedRenderer
     {
         // Render state
         public NoesisShader shader;
-        public byte renderState;
+        public NoesisRenderState renderState;
         public byte stencilRef;
 
         // Draw parameters
@@ -20,19 +20,19 @@ namespace NoesisManagedRenderer
 
         // Textures (Unused textures are set to null)
         private IntPtr pPattern;
-        public byte patternSampler;
+        public NoesisSamplerState patternSampler;
 
         private IntPtr pRamps;
-        public byte rampsSampler;
+        public NoesisSamplerState rampsSampler;
 
         private IntPtr pImage;
-        public byte imageSampler;
+        public NoesisSamplerState imageSampler;
 
         private IntPtr pGlyphs;
-        public byte glyphsSampler;
+        public NoesisSamplerState glyphsSampler;
 
         private IntPtr pShadow;
-        public byte shadowSampler;
+        public NoesisSamplerState shadowSampler;
 
         public ManagedTexture Pattern => ManagedTexture.GetTexture(this.pPattern);
 

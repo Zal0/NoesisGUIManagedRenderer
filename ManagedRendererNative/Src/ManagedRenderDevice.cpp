@@ -52,7 +52,7 @@ Noesis::Ptr<Noesis::RenderTarget> ManagedRenderDevice::CreateRenderTarget(const 
 	if (createRenderTargetCallback)
 	{
 		Noesis::Ptr<ManagedRenderTarget> surface = *new ManagedRenderTarget(width, height, flippedTextures);
-		createRenderTargetCallback(surface, surface->texture, CreateRenderTargetParams{ width = width, height = height, sampleCount = sampleCount });
+		createRenderTargetCallback(surface, surface->texture, label,  width, height, sampleCount);
 		return surface;
 	}
 
@@ -65,7 +65,7 @@ Noesis::Ptr<Noesis::RenderTarget> ManagedRenderDevice::CloneRenderTarget(const c
 	{
 		auto managedTexture = (ManagedTexture*)surface->GetTexture();
 		Noesis::Ptr<ManagedRenderTarget> clonedSurface = *new ManagedRenderTarget(managedTexture->width, managedTexture->height, flippedTextures);
-		cloneRenderTargetCallback(clonedSurface, clonedSurface->texture, surface);
+		cloneRenderTargetCallback(clonedSurface, clonedSurface->texture, label, surface);
 		return clonedSurface;
 	}
 
@@ -77,7 +77,7 @@ Noesis::Ptr<Noesis::Texture> ManagedRenderDevice::CreateTexture(const char* labe
 	if (createTextureCallback)
 	{
 		Noesis::Ptr<ManagedTexture> texture = *new ManagedTexture(width, height, numLevels, flippedTextures);
-		createTextureCallback(texture, CreateTextureParams{ width = width, height = height, numLevels = numLevels, format = format });
+		createTextureCallback(texture, label, width, height, numLevels, format);
 		return texture;
 	}
 
