@@ -1,0 +1,338 @@
+<UserControl
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+  xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
+  xmlns:noesis="clr-namespace:NoesisGUIExtensions;assembly=Noesis.GUI.Extensions"
+  mc:Ignorable="d"
+  Background="#FF404040"
+  Focusable="True">
+    <UserControl.Resources>
+        <Storyboard x:Key="Start">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Shape.Fill).(Brush.Opacity)" Storyboard.TargetName="Bg">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="1">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <SineEase EasingMode="EaseInOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(TextElement.Foreground).(Brush.Opacity)" Storyboard.TargetName="Time">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.5" Value="1">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <SineEase EasingMode="EaseInOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[3].(TranslateTransform.X)" Storyboard.TargetName="Time">
+                <EasingDoubleKeyFrame KeyTime="0" Value="-20"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:1" Value="0">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <CircleEase EasingMode="EaseOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(TextElement.Foreground).(Brush.Opacity)" Storyboard.TargetName="Date">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.5" Value="1">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <SineEase EasingMode="EaseInOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[3].(TranslateTransform.X)" Storyboard.TargetName="Date">
+                <EasingDoubleKeyFrame KeyTime="0" Value="-15"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.1" Value="-15"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:1" Value="0">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <CircleEase EasingMode="EaseOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="Avatar">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(TextElement.Foreground).(Brush.Opacity)" Storyboard.TargetName="User">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="PassPanel">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+            <BooleanAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.IsEnabled)" Storyboard.TargetName="LoginPanel">
+                <DiscreteBooleanKeyFrame KeyTime="0" Value="False"/>
+            </BooleanAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(TextElement.Foreground).(Brush.Opacity)" Storyboard.TargetName="WelcomeText">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+        <Storyboard x:Key="Login">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Effect).(BlurEffect.Radius)" Storyboard.TargetName="Bg">
+                <EasingDoubleKeyFrame KeyTime="0:0:0.5" Value="80">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <SineEase EasingMode="EaseInOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(TextElement.Foreground).(Brush.Opacity)" Storyboard.TargetName="Time">
+                <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="0">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <SineEase EasingMode="EaseInOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(TextElement.Foreground).(Brush.Opacity)" Storyboard.TargetName="Date">
+                <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="0">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <SineEase EasingMode="EaseInOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="Avatar">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.6" Value="1">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <SineEase EasingMode="EaseInOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(TextElement.Foreground).(Brush.Opacity)" Storyboard.TargetName="User">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.6" Value="1">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <SineEase EasingMode="EaseInOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="PassPanel">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.7" Value="1"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[3].(TranslateTransform.Y)" Storyboard.TargetName="PassPanel">
+                <EasingDoubleKeyFrame KeyTime="0" Value="20"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:1" Value="0">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <CircleEase EasingMode="EaseOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <BooleanAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.IsEnabled)" Storyboard.TargetName="LoginPanel">
+                <DiscreteBooleanKeyFrame KeyTime="0:0:0.3" Value="True"/>
+            </BooleanAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(TextElement.Foreground).(Brush.Opacity)" Storyboard.TargetName="WelcomeText">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+        <Storyboard x:Key="Welcome">
+            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="SolidBg">
+                <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+            </ObjectAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(Shape.Fill).(Brush.Opacity)" Storyboard.TargetName="SolidBg">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.5" Value="1">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <SineEase EasingMode="EaseInOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Effect).(BlurEffect.Radius)" Storyboard.TargetName="Bg">
+                <EasingDoubleKeyFrame KeyTime="0" Value="80"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:1" Value="0">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <SineEase EasingMode="EaseInOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(TextElement.Foreground).(Brush.Opacity)" Storyboard.TargetName="WelcomeText">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.7" Value="1">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <SineEase EasingMode="EaseInOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="LoginPanel">
+                <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="0">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <SineEase EasingMode="EaseInOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(TextElement.Foreground).(Brush.Opacity)" Storyboard.TargetName="Time">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(TextElement.Foreground).(Brush.Opacity)" Storyboard.TargetName="Date">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+            <BooleanAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.IsEnabled)" Storyboard.TargetName="LoginPanel">
+                <DiscreteBooleanKeyFrame KeyTime="0" Value="False"/>
+            </BooleanAnimationUsingKeyFrames>
+        </Storyboard>
+        <ControlTemplate x:Key="PasswordScrollTemplate" TargetType="ScrollViewer">
+            <Border Background="White" Padding="4,2">
+                <ScrollContentPresenter/>
+            </Border>
+        </ControlTemplate>
+        <ControlTemplate x:Key="PasswordTemplate" TargetType="PasswordBox">
+            <Border x:Name="Bd" BorderBrush="#A0A0A0A0" BorderThickness="1" Padding="0,0,22,0">
+                <Grid>
+                    <ScrollViewer x:Name="PART_ContentHost" Template="{StaticResource PasswordScrollTemplate}" Foreground="{TemplateBinding Foreground}" Focusable="False"/>
+                    <TextBlock x:Name="Placeholder" Text="{Binding (noesis:Text.Placeholder), RelativeSource={RelativeSource TemplatedParent}}" Foreground="#909090" Margin="6,2" VerticalAlignment="Center" Visibility="Collapsed"/>
+                </Grid>
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="noesis:Text.PasswordLength" Value="0">
+                    <Setter Property="Visibility" Value="Visible" TargetName="Placeholder"/>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="White" TargetName="Bd"/>
+                </Trigger>
+                <DataTrigger Binding="{Binding IsMouseOver, ElementName=Submit}" Value="True">
+                    <Setter Property="BorderBrush" Value="White" TargetName="Bd"/>
+                </DataTrigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+        <ControlTemplate x:Key="PasswordButtonTemplate" TargetType="Button">
+            <Border Background="#60A0A0A0">
+                <Path Data="M0,5L10,5M6,0L10,5 6,10" Stroke="White" Stretch="None" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+        </ControlTemplate>
+    </UserControl.Resources>
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <noesis:SetFocusAction/>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+    <Grid>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="States">
+                <VisualState x:Name="Start" Storyboard="{StaticResource Start}"/>
+                <VisualState x:Name="Login" Storyboard="{StaticResource Login}"/>
+                <VisualState x:Name="Welcome" Storyboard="{StaticResource Welcome}"/>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <i:Interaction.Triggers>
+            <i:EventTrigger EventName="Loaded">
+                <ei:GoToStateAction StateName="Start"/>
+            </i:EventTrigger>
+            <ei:KeyTrigger Key="Space">
+                <ei:GoToStateAction StateName="Login"/>
+            </ei:KeyTrigger>
+            <ei:DataTrigger Binding="{Binding IsEnabled, ElementName=Pass}" Value="True">
+                <noesis:SetFocusAction TargetName="Pass"/>
+            </ei:DataTrigger>
+        </i:Interaction.Triggers>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="2*"/>
+                <RowDefinition Height="5*"/>
+                <RowDefinition Height="3*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="4*"/>
+                <ColumnDefinition Width="3*"/>
+            </Grid.ColumnDefinitions>
+            <Rectangle x:Name="Bg" Grid.ColumnSpan="3" Grid.RowSpan="3">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="MouseLeftButtonDown">
+                        <ei:GoToStateAction StateName="Login"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+                <Rectangle.Fill>
+                    <ImageBrush ImageSource="Background.jpg" Stretch="UniformToFill"/>
+                </Rectangle.Fill>
+                <Rectangle.Effect>
+                    <BlurEffect Radius="0"/>
+                </Rectangle.Effect>
+            </Rectangle>
+            <Rectangle x:Name="SolidBg" Grid.ColumnSpan="3" Grid.RowSpan="3" Fill="#202020" Visibility="Collapsed">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="MouseLeftButtonDown">
+                        <ei:GoToStateAction StateName="Start"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </Rectangle>
+            <Viewbox x:Name="TimeDatePanel" Grid.Row="2" VerticalAlignment="Top" IsHitTestVisible="False">
+                <StackPanel Margin="40,20,0,0">
+                    <TextBlock x:Name="Time" TextWrapping="Wrap" Text="12:47" Foreground="White" FontSize="37.333" Margin="0" Width="180" RenderTransformOrigin="0.5,0.5">
+                        <TextBlock.RenderTransform>
+                            <TransformGroup>
+                                <ScaleTransform/>
+                                <SkewTransform/>
+                                <RotateTransform/>
+                                <TranslateTransform/>
+                            </TransformGroup>
+                        </TextBlock.RenderTransform>
+                    </TextBlock>
+                    <TextBlock x:Name="Date" TextWrapping="Wrap" Text="Friday, June 5" Foreground="White" FontSize="16" Margin="0,-5,0,0" Width="175" RenderTransformOrigin="0.5,0.5">
+                        <TextBlock.RenderTransform>
+                            <TransformGroup>
+                                <ScaleTransform/>
+                                <SkewTransform/>
+                                <RotateTransform/>
+                                <TranslateTransform/>
+                            </TransformGroup>
+                        </TextBlock.RenderTransform>
+                    </TextBlock>
+                </StackPanel>
+            </Viewbox>
+            <Viewbox x:Name="LoginPanel" Grid.Row="1" VerticalAlignment="Center" Grid.Column="1">
+                <StackPanel Margin="100,70">
+                    <Grid x:Name="Avatar" Height="100" Width="100">
+                        <Ellipse x:Name="AvatarBg">
+                            <Ellipse.Fill>
+                                <SolidColorBrush Color="#3FFFFFFF"/>
+                            </Ellipse.Fill>
+                        </Ellipse>
+                        <Path x:Name="AvatarPic" Data="M437.02 330.98c-27.883-27.882-61.071-48.523-97.281-61.018C378.521 243.251 404 198.548 404 148    C404 66.393 337.607 0 256 0S108 66.393 108 148c0 50.548 25.479 95.251 64.262 121.962    c-36.21 12.495-69.398 33.136-97.281 61.018C26.629 379.333 0 443.62 0 512h40c0-119.103 96.897-216 216-216s216 96.897 216 216    h40C512 443.62 485.371 379.333 437.02 330.98z M256 256c-59.551 0-108-48.448-108-108S196.449 40 256 40    c59.551 0 108 48.448 108 108S315.551 256 256 256z" Fill="White" Stretch="Uniform" VerticalAlignment="Center" Width="60" Height="60" HorizontalAlignment="Center"/>
+                    </Grid>
+                    <TextBlock x:Name="User" Text="TheGuy" Foreground="White" FontSize="24" Margin="0,10,0,20" HorizontalAlignment="Center"/>
+                    <Grid x:Name="PassPanel" RenderTransformOrigin="0.5,0.5">
+                        <Grid.RenderTransform>
+                            <TransformGroup>
+                                <ScaleTransform/>
+                                <SkewTransform/>
+                                <RotateTransform/>
+                                <TranslateTransform/>
+                            </TransformGroup>
+                        </Grid.RenderTransform>
+                        <PasswordBox x:Name="Pass" Template="{DynamicResource PasswordTemplate}" Foreground="Black" CaretBrush="Black" SelectionBrush="Black" Width="180" noesis:Text.Placeholder="Password">
+                            <i:Interaction.Triggers>
+                                <ei:KeyTrigger ActiveOnFocus="True" Key="Return">
+                                    <ei:GoToStateAction StateName="Welcome"/>
+                                </ei:KeyTrigger>
+                            </i:Interaction.Triggers>
+                            <PasswordBox.RenderTransform>
+                                <TransformGroup>
+                                    <ScaleTransform/>
+                                    <SkewTransform/>
+                                    <RotateTransform/>
+                                    <TranslateTransform/>
+                                </TransformGroup>
+                            </PasswordBox.RenderTransform>
+                        </PasswordBox>
+                        <Button x:Name="Submit" Template="{StaticResource PasswordButtonTemplate}" Width="22" Margin="1" HorizontalAlignment="Right">
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="Click">
+                                    <ei:GoToStateAction StateName="Welcome"/>
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
+                        </Button>
+                    </Grid>
+                </StackPanel>
+            </Viewbox>
+            <Viewbox x:Name="WelcomePanel" Grid.Row="1" VerticalAlignment="Center" Grid.Column="1" IsHitTestVisible="False">
+                <TextBlock x:Name="WelcomeText" Foreground="White" FontSize="24" Margin="40,50,40,30" Text="Welcome"/>
+            </Viewbox>
+        </Grid>
+    </Grid>
+</UserControl>

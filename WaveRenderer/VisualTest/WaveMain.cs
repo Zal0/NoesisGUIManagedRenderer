@@ -24,12 +24,18 @@ namespace VisualTests.LowLevel.Tests
             new Vector4(-0.5f, -0.5f, 0.0f, 1.0f), new Vector4(0.0f, 0.0f, 1.0f, 1.0f),
         };
 
+        private Matrix4x4 view;
+        private Matrix4x4 proj;
+
+        private Buffer constantBuffer;
+
         private Viewport[] viewports;
         private Rectangle[] scissors;
         private CommandQueue commandQueue;
         private GraphicsPipelineState pipelineState;
+        private ResourceSet resourceSet;
         private Buffer[] vertexBuffers;
-        private float timeAccum = 0.0f;
+        private float time = 0.0f;
 
         private WaveRenderDevice waveRenderer;
         private List<IntPtr> noesisViews = new List<IntPtr>();
@@ -61,16 +67,32 @@ namespace VisualTests.LowLevel.Tests
             var vertexBufferDescription = new BufferDescription((uint)Unsafe.SizeOf<Vector4>() * (uint)this.vertexData.Length, BufferFlags.VertexBuffer, ResourceUsage.Default);
             var vertexBuffer = this.graphicsContext.Factory.CreateBuffer(this.vertexData, ref vertexBufferDescription);
 
+            this.view = Matrix4x4.CreateLookAt(new Vector3(0, 0, 5), new Vector3(0, 0, 0), Vector3.UnitY);
+            this.proj = Matrix4x4.CreatePerspectiveFieldOfView(MathHelper.PiOver4, (float)this.frameBuffer.Width / (float)this.frameBuffer.Height, 0.1f, 100f);
+
+            // Constant Buffer
+            var constantBufferDescription = new BufferDescription((uint)Unsafe.SizeOf<Matrix4x4>(), BufferFlags.ConstantBuffer, ResourceUsage.Default);
+            this.constantBuffer = this.graphicsContext.Factory.CreateBuffer(ref constantBufferDescription);
+
             // Prepare Pipeline
             var vertexLayouts = new InputLayouts()
                   .Add(new LayoutDescription()
                               .Add(new ElementDescription(ElementFormat.Float4, ElementSemanticType.Position))
                               .Add(new ElementDescription(ElementFormat.Float4, ElementSemanticType.Color)));
 
+            ResourceLayoutDescription layoutDescription = new ResourceLayoutDescription(
+                    new LayoutElementDescription(0, ResourceType.ConstantBuffer, ShaderStages.Vertex));
+
+            ResourceLayout resourcesLayout = this.graphicsContext.Factory.CreateResourceLayout(ref layoutDescription);
+
+            ResourceSetDescription resourceSetDescription = new ResourceSetDescription(resourcesLayout, this.constantBuffer);
+            this.resourceSet = this.graphicsContext.Factory.CreateResourceSet(ref resourceSetDescription);
+
             var pipelineDescription = new GraphicsPipelineDescription
             {
                 PrimitiveTopology = PrimitiveTopology.TriangleList,
                 InputLayouts = vertexLayouts,
+                ResourceLayouts = new[] { resourcesLayout },
                 Shaders = new GraphicsShaderStateDescription()
                 {
                     VertexShader = vertexShader,
@@ -78,7 +100,7 @@ namespace VisualTests.LowLevel.Tests
                 },
                 RenderStates = new RenderStateDescription()
                 {
-                    RasterizerState = RasterizerStates.CullBack,
+                    RasterizerState = RasterizerStates.None,
                     BlendState = BlendStates.Opaque,
                     DepthStencilState = DepthStencilStates.ReadWrite,
                 },
@@ -108,19 +130,21 @@ namespace VisualTests.LowLevel.Tests
         private async Task InitializeNoesis(uint width, uint height)
         {
             this.waveRenderer = new WaveRenderDevice(this.graphicsContext);
-            await this.waveRenderer.InitializeAsync(this.assetsDirectory, this.frameBuffer);
+            this.waveRenderer.SetSwapChainFrameBuffer(this.frameBuffer);
+            await this.waveRenderer.InitializeAsync(this.assetsDirectory);
 
-            NoesisApp.NoesisInit();
+            NoesisApp.NoesisInit(string.Empty, string.Empty);
 
-            string xamlString;
-            xamlString = await this.assetsDirectory.ReadAsStringAsync("xamls/test.xaml");
-            this.noesisViews.Add(NoesisApp.CreateView(this.waveRenderer, xamlString));
-
-            //xamlString = await this.assetsDirectory.ReadAsStringAsync("xamls/HelloWorld.xaml");
-            //this.noesisViews.Add(NoesisApp.CreateView(this.waveRenderer, xamlString));
-
-            ////xamlString = await this.assetsDirectory.ReadAsStringAsync("xamls/Sample3D.xaml");
-            ////this.noesisViews.Add(NoesisApp.CreateView(this.waveRenderer, xamlString));
+            //await this.AddViewAsync("xamls/test.xaml");
+            //await this.AddViewAsync("xamls/HelloWorld.xaml");
+            //await this.AddViewAsync("xamls/TextSample.xaml");
+            //await this.AddViewAsync("xamls/Shadow.xaml");
+            await this.AddViewAsync("xamls/Sample3D.xaml");
+            //await this.AddViewAsync("xamls/Sample3D_Ortho.xaml");
+            //await this.AddViewAsync("xamls/Login.xaml");
+            //await this.AddViewAsync("xamls/Brushes.xaml");
+            //await this.AddViewAsync("xamls/Detroit.xaml");
+            //await this.AddViewAsync("xamls/Win10Login.xaml");
 
             foreach (var view in this.noesisViews)
             {
@@ -153,6 +177,31 @@ namespace VisualTests.LowLevel.Tests
                     NoesisApp.ViewMouseWheel(view, e.Position.X, e.Position.Y, e.Delta.Y);
                 }
             };
+
+            var keyboardDispatcher = this.surface.KeyboardDispatcher;
+            keyboardDispatcher.KeyDown += (s, e) =>
+            {
+                this.SendKey(NoesisApp.ViewKeyDown, e);
+            };
+
+            keyboardDispatcher.KeyUp += (s, e) =>
+            {
+                this.SendKey(NoesisApp.ViewKeyUp, e);
+            };
+
+            keyboardDispatcher.KeyChar += (s, e) =>
+            {
+                foreach (var view in this.noesisViews)
+                {
+                    NoesisApp.ViewChar(view, e.Character);
+                }
+            };
+        }
+
+        private async Task AddViewAsync(string path)
+        {
+            var xamlString = await this.assetsDirectory.ReadAsStringAsync(path);
+            this.noesisViews.Add(NoesisApp.CreateView(this.waveRenderer, xamlString));
         }
 
         private void SendMouseButton(Func<IntPtr, int, int, int, bool> call, MouseButtonEventArgs args)
@@ -187,32 +236,68 @@ namespace VisualTests.LowLevel.Tests
             }
         }
 
-        protected override void InternalDrawCallback(TimeSpan gameTime)
+        private void SendKey(Func<IntPtr, int, bool> call, WaveEngine.Common.Input.Keyboard.KeyEventArgs args)
         {
-            var mouseDispatcher = this.surface.MouseDispatcher;
-            mouseDispatcher.DispatchEvents();
-
-            timeAccum += (float)gameTime.TotalSeconds;
+            var key = args.Key;
             foreach (var view in this.noesisViews)
             {
-                NoesisApp.UpdateView(view, timeAccum);
+                switch(key)
+                {
+                    case WaveEngine.Common.Input.Keyboard.Keys.Back:
+                        call(view, 2);
+                        break;
+                    case WaveEngine.Common.Input.Keyboard.Keys.Tab:
+                        call(view, 3);
+                        break;
+                    case WaveEngine.Common.Input.Keyboard.Keys.Enter:
+                        call(view, 6);
+                        break;
+                    case WaveEngine.Common.Input.Keyboard.Keys.Escape:
+                        call(view, 13);
+                        break;
+                    case WaveEngine.Common.Input.Keyboard.Keys.Delete:
+                        call(view, 32);
+                        break;
+                }
+            }
+        }
+
+        protected override void InternalDrawCallback(TimeSpan gameTime)
+        {
+            // Update
+            this.time += (float)gameTime.TotalSeconds;
+            //this.time += 1f / 60f;
+            this.view = Matrix4x4.CreateRotationY(this.time * 0.5f) * Matrix4x4.CreateLookAt(new Vector3(0, 0, 5), new Vector3(0, 0, 0), Vector3.Up);
+            var viewProj = Matrix4x4.Multiply(this.view, this.proj);
+
+            this.surface.MouseDispatcher.DispatchEvents();
+            this.surface.KeyboardDispatcher.DispatchEvents();
+
+            foreach (var view in this.noesisViews)
+            {
+                NoesisApp.UpdateView(view, time);
             }
 
+            // Draw
             var commandBuffer = this.commandQueue.CommandBuffer();
-            waveRenderer.commandBuffer = commandBuffer;
 
             commandBuffer.Begin();
 
-            RenderPassDescription renderPassDescription = new RenderPassDescription(this.frameBuffer, new ClearValue(ClearFlags.Target, Color.CornflowerBlue));
+            commandBuffer.UpdateBufferData(this.constantBuffer, ref viewProj);
+
+            RenderPassDescription renderPassDescription = new RenderPassDescription(this.frameBuffer, ClearValue.Default);
             commandBuffer.BeginRenderPass(ref renderPassDescription);
 
             commandBuffer.SetViewports(this.viewports);
             commandBuffer.SetScissorRectangles(this.scissors);
             commandBuffer.SetGraphicsPipelineState(this.pipelineState);
+            commandBuffer.SetResourceSet(this.resourceSet);
             commandBuffer.SetVertexBuffers(this.vertexBuffers);
 
             commandBuffer.Draw((uint)this.vertexData.Length / 2);
             commandBuffer.EndRenderPass();
+
+            waveRenderer.SetCommandBuffer(commandBuffer);
 
             foreach (var view in this.noesisViews)
             {

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -17,95 +17,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\ClearPS.hlsl" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\HLSL.fx" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\HLSLVertex.fx" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\PathAA_Linear_FS.fx" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\PathAA_Radial_FS.fx" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\PathAA_Solid_FS.fx" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\PosColorCoverage_VS.fx" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\PosColorTex1Tex2_VS.fx" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\PosColorTex1_SDF_VS.fx" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\PosColorTex1_VS.fx" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\PosColor_VS.fx" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\PosTex0Coverage_VS.fx" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\PosTex0Tex1Tex2_VS.fx" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\PosTex0Tex1_SDF_VS.fx" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\PosTex0Tex1_VS.fx" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\PosTex0_VS.fx" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\Pos_VS.fx" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\QuadVS.hlsl" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\ResolvePS.hlsl" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\SDF_Solid_FS.fx" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\ShaderPS.hlsl" />
-    <None Remove="Content\DrawTriangle\Shaders\HLSL\ShaderVS.hlsl" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\ClearPS.hlsl">
+    <Content Include="Content\DrawTriangle\Shaders\HLSL\VertexShader.fx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\HLSL.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\HLSLVertex.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\PathAA_Radial_FS.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\PathAA_Linear_FS.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\PathAA_Solid_FS.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\PosColorCoverage_VS.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\PosColorTex1Tex2_VS.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\PosColorTex1_SDF_VS.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\PosColorTex1_VS.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\PosColor_VS.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\PosTex0Coverage_VS.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\PosTex0Tex1Tex2_VS.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\PosTex0Tex1_SDF_VS.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\PosTex0Tex1_VS.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\PosTex0_VS.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\Pos_VS.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\QuadVS.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\ResolvePS.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\SDF_Solid_FS.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\ShaderPS.hlsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\DrawTriangle\Shaders\HLSL\ShaderVS.hlsl">
+    <Content Include="Content\DrawTriangle\Shaders\HLSL\FragmentShader.fx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -122,14 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Content\DrawTriangle\xamls\HelloWorld.xaml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <SubType>Designer</SubType>
-    </None>
-    <None Update="Content\DrawTriangle\xamls\Sample3D.xaml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\DrawTriangle\xamls\test.xaml">
+    <None Update="Content\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

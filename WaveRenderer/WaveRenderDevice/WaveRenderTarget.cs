@@ -6,10 +6,31 @@ namespace WaveRenderer.WaveRenderDevice
 {
     public class WaveRenderTarget : ManagedRenderTarget
     {
-        public override ManagedTexture Texture { get; }
+        private Texture depthTexture;
 
-        public WaveRenderTarget(GraphicsContext graphicsContext, uint width, uint height, uint sampleCount)
+        private FrameBuffer frameBuffer;
+
+        private Viewport[] viewports;
+
+        private WaveTexture color;
+
+        public override string Label { get; }
+
+        public override uint Width => this.frameBuffer?.Width ?? 0;
+
+        public override uint Height => this.frameBuffer?.Height ?? 0;
+
+        public override uint SampleCount { get; }
+
+        public override ManagedTexture Texture => color;
+
+        public FrameBuffer FrameBuffer => this.frameBuffer;
+
+        private WaveRenderTarget(GraphicsContext graphicsContext, string name, uint width, uint height, uint sampleCount, WaveTexture colorAA, Texture depthTexture)
         {
+            this.SampleCount = sampleCount;
+            this.Label = name;
+
             var desc = new TextureDescription()
             {
                 Type = TextureType.Texture2D,
@@ -19,13 +40,13 @@ namespace WaveRenderer.WaveRenderDevice
                 ArraySize = 1,
                 Faces = 1,
                 Usage = ResourceUsage.Default,
-                CpuAccess = ResourceCpuAccess.Write,
-                Flags = TextureFlags.ShaderResource | TextureFlags.RenderTarget,
+                CpuAccess = ResourceCpuAccess.None,
+                Flags = TextureFlags.RenderTarget | TextureFlags.ShaderResource,
                 Format = PixelFormat.R8G8B8A8_UNorm,
                 MipLevels = 1,
             };
 
-            switch (sampleCount)
+            switch (this.SampleCount)
             {
                 case 1:
                     desc.SampleCount = TextureSampleCount.None;
@@ -55,7 +76,41 @@ namespace WaveRenderer.WaveRenderDevice
                     throw new InvalidOperationException("Invalid sample count value");
             }
 
-            this.Texture = new WaveTexture(graphicsContext, ref desc, null);
+            this.color = colorAA ?? new WaveTexture(graphicsContext, $"{name}_Color", ref desc, null);
+
+            this.depthTexture = depthTexture;
+            if (this.depthTexture == null)
+            {
+                desc.Format = PixelFormat.D24_UNorm_S8_UInt;
+                desc.Flags = TextureFlags.DepthStencil;
+                desc.SampleCount = TextureSampleCount.None;
+                this.depthTexture = graphicsContext.Factory.CreateTexture(ref desc);
+                this.depthTexture.Name = $"{name}_Depth";
+            }
+
+            var depthAttachment = new FrameBufferAttachment(this.depthTexture, 0, 1);
+            var colorsAttachment = new[] { new FrameBufferAttachment(this.color.Texture, 0, 1) };
+            this.frameBuffer = graphicsContext.Factory.CreateFrameBuffer(depthAttachment, colorsAttachment);
+
+            this.viewports = new Viewport[1];
+            this.viewports[0] = new Viewport(0, 0, width, height);
+        }
+
+        public WaveRenderTarget(GraphicsContext graphicsContext, string name, uint width, uint height, uint sampleCount)
+            : this(graphicsContext, name, width, height, sampleCount, null, null)
+        {
+        }
+
+        public WaveRenderTarget Clone(GraphicsContext graphicsContext, string name)
+        {
+            var colorAA = this.SampleCount > 1 ? (WaveTexture)this.Texture : null;
+            var depth = this.depthTexture;
+            return new WaveRenderTarget(graphicsContext, name, this.Width, this.Height, this.SampleCount, colorAA, depth);
+        }
+
+        public void SetRenderTarget(CommandBuffer commandBuffer)
+        {
+            commandBuffer.SetViewports(this.viewports);
         }
     }
 }

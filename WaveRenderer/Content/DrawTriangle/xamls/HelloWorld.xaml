@@ -8,7 +8,7 @@
   TextElement.FontSize="24">
 
     <Grid.Resources>
-        <Storyboard x:Key="Intro">
+        <Storyboard x:Key="Intro" SpeedRatio="0.1">
             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="Word">
                 <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
                 <EasingDoubleKeyFrame KeyTime="0:0:0.5" Value="0"/>
