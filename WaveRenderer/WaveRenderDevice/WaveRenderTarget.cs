@@ -8,23 +8,21 @@ namespace WaveRenderer.WaveRenderDevice
     {
         private Texture depthTexture;
 
-        private FrameBuffer frameBuffer;
-
         private Viewport[] viewports;
 
         private WaveTexture color;
 
         public override string Label { get; }
 
-        public override uint Width => this.frameBuffer?.Width ?? 0;
+        public override uint Width => this.FrameBuffer?.Width ?? 0;
 
-        public override uint Height => this.frameBuffer?.Height ?? 0;
+        public override uint Height => this.FrameBuffer?.Height ?? 0;
 
         public override uint SampleCount { get; }
 
-        public override ManagedTexture Texture => color;
+        public override ManagedTexture Texture => this.color;
 
-        public FrameBuffer FrameBuffer => this.frameBuffer;
+        public FrameBuffer FrameBuffer { get; }
 
         private WaveRenderTarget(GraphicsContext graphicsContext, string name, uint width, uint height, uint sampleCount, WaveTexture colorAA, Texture depthTexture)
         {
@@ -90,7 +88,7 @@ namespace WaveRenderer.WaveRenderDevice
 
             var depthAttachment = new FrameBufferAttachment(this.depthTexture, 0, 1);
             var colorsAttachment = new[] { new FrameBufferAttachment(this.color.Texture, 0, 1) };
-            this.frameBuffer = graphicsContext.Factory.CreateFrameBuffer(depthAttachment, colorsAttachment);
+            this.FrameBuffer = graphicsContext.Factory.CreateFrameBuffer(depthAttachment, colorsAttachment);
 
             this.viewports = new Viewport[1];
             this.viewports[0] = new Viewport(0, 0, width, height);

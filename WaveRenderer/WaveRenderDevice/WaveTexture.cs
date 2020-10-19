@@ -66,7 +66,7 @@ namespace WaveRenderer.WaveRenderDevice
         unsafe public override void UpdateTexture(uint level, uint x, uint y, uint width, uint height, IntPtr data)
         {
 #if TRACE_RENDER_DEVICE
-            Trace.WriteLine($"{nameof(UpdateTexture)} -> {this.Label} Level:{level} Rect:[{x}, {y}, {width}, {height}]");
+            System.Diagnostics.Trace.WriteLine($"{nameof(UpdateTexture)} -> {this.Label} Level:{level} Rect:[{x}, {y}, {width}, {height}]");
 #endif
 
             if (level > 1)

@@ -28,8 +28,11 @@
   <ItemGroup>
     <PackageReference Include="WaveEngine.Common" Version="3.0.0.5947-preview4" />
     <PackageReference Include="WaveEngine.DirectX11" Version="3.0.0.5947-preview4" />
+    <PackageReference Include="WaveEngine.DirectX12" Version="3.0.0.5947-preview4" />
     <PackageReference Include="WaveEngine.Forms" Version="3.0.0.5947-preview4" />
     <PackageReference Include="WaveEngine.Mathematics" Version="3.0.0.5947-preview4" />
+    <PackageReference Include="WaveEngine.OpenGL" Version="3.0.0.5947-preview4" />
+    <PackageReference Include="WaveEngine.Vulkan" Version="3.0.0.5947-preview4" />
   </ItemGroup>
 
   <ItemGroup>

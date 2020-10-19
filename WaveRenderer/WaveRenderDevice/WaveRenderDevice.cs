@@ -8,7 +8,7 @@ using NoesisManagedRenderer;
 using System.Threading.Tasks;
 using System.Text;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace WaveRenderer.WaveRenderDevice
 {
@@ -16,44 +16,49 @@ namespace WaveRenderer.WaveRenderDevice
     {
         class DynamicBuffer
         {
-            private readonly uint size;
             private uint pos;
-            private uint drawPos;
-            private readonly Buffer internalBuffer;
 
-            public uint Size => this.size;
+            private IntPtr cpuBuffer;
 
-            public uint DrawPos => this.drawPos;
+            public Buffer InternalBuffer { get; }
 
-            public Buffer InternalBuffer => this.internalBuffer;
+            public uint DrawPos { get; private set; }
 
-            public DynamicBuffer(GraphicsContext graphicsContext, uint size, BufferFlags flags)
+            public uint Size { get; }
+
+            public DynamicBuffer(string name, GraphicsContext graphicsContext, uint size, BufferFlags flags)
             {
-                this.size = size;
+                this.Size = size;
                 var resourceUsage = flags == BufferFlags.ConstantBuffer ? ResourceUsage.Default : ResourceUsage.Dynamic;
                 var resourceCpuAccess = flags == BufferFlags.ConstantBuffer ? ResourceCpuAccess.None : ResourceCpuAccess.Write;
                 var bufferDescription = new BufferDescription(size, flags, resourceUsage, resourceCpuAccess);
-                this.internalBuffer = graphicsContext.Factory.CreateBuffer(ref bufferDescription);
+                this.InternalBuffer = graphicsContext.Factory.CreateBuffer(ref bufferDescription);
+                this.InternalBuffer.Name = name;
+
+                if (resourceCpuAccess == ResourceCpuAccess.Write)
+                {
+                    this.cpuBuffer = Marshal.AllocHGlobal((int)size);
+                }
             }
 
-            public IntPtr Map(GraphicsContext graphicsContext, uint size)
+            public IntPtr Map(uint size)
             {
-                if (this.pos + size > this.size)
+                if (this.pos + size > this.Size)
                 {
                     this.pos = 0;
                 }
 
-                this.drawPos = this.pos;
+                this.DrawPos = this.pos;
                 this.pos += size;
-                var mappedResource = graphicsContext.MapMemory(this.internalBuffer, MapMode.Write);
-                return IntPtr.Add(mappedResource.Data, (int)this.drawPos);
+
+                return IntPtr.Add(this.cpuBuffer, (int)this.DrawPos);
             }
 
-            public void Unmap(GraphicsContext graphicsContext)
+            public void Unmap(CommandBuffer commandBuffer)
             {
-                graphicsContext.UnmapMemory(this.internalBuffer);
+                commandBuffer.UpdateBufferData(this.InternalBuffer, this.cpuBuffer, this.Size);
             }
-        };
+        }
 
         private GraphicsPipelineDescription[] graphicPipelineDescsByShader = new GraphicsPipelineDescription[NoesisShader.Formats.Length];
         private BlendStateDescription[] blendDescs;
@@ -67,7 +72,6 @@ namespace WaveRenderer.WaveRenderDevice
         private ResourceLayout resourceLayout;
 
         private GraphicsPipelineState renderTargetPipelineState;
-        //private ResourceSet renderTargetResourceSet;
 
         private WaveRenderTarget currentSurface;
 
@@ -106,12 +110,12 @@ namespace WaveRenderer.WaveRenderDevice
             effectCBHash = 0;
             texDimensionsCBHash = 0;
 
-            this.vertexBuffer = new DynamicBuffer(this.graphicsContext, DYNAMIC_VB_SIZE, BufferFlags.VertexBuffer);
-            this.indexBuffer = new DynamicBuffer(this.graphicsContext, DYNAMIC_IB_SIZE, BufferFlags.IndexBuffer);
-            this.vertexCB = new DynamicBuffer(this.graphicsContext, 16 * sizeof(float), BufferFlags.ConstantBuffer);
-            this.pixelCB = new DynamicBuffer(this.graphicsContext, 12 * sizeof(float), BufferFlags.ConstantBuffer);
-            this.effectCB = new DynamicBuffer(this.graphicsContext, 16 * sizeof(float), BufferFlags.ConstantBuffer);
-            this.texDimensionsCB = new DynamicBuffer(this.graphicsContext, 4 * sizeof(float), BufferFlags.ConstantBuffer);
+            this.vertexBuffer = new DynamicBuffer("Noesis_VertexBuffer", this.graphicsContext, DYNAMIC_VB_SIZE, BufferFlags.VertexBuffer);
+            this.indexBuffer = new DynamicBuffer("Noesis_IndexBuffer", this.graphicsContext, DYNAMIC_IB_SIZE, BufferFlags.IndexBuffer);
+            this.vertexCB = new DynamicBuffer("Noesis_VertexCB", this.graphicsContext, 16 * sizeof(float), BufferFlags.ConstantBuffer);
+            this.pixelCB = new DynamicBuffer("Noesis_PixelCB", this.graphicsContext, 12 * sizeof(float), BufferFlags.ConstantBuffer);
+            this.effectCB = new DynamicBuffer("Noesis_EffectCB", this.graphicsContext, 16 * sizeof(float), BufferFlags.ConstantBuffer);
+            this.texDimensionsCB = new DynamicBuffer("Noesis_TexDimensionsCB", this.graphicsContext, 4 * sizeof(float), BufferFlags.ConstantBuffer);
         }
 
         public async Task InitializeAsync(AssetsDirectory assetsDirectory)
@@ -232,8 +236,8 @@ namespace WaveRenderer.WaveRenderDevice
             var pixelShader = this.graphicsContext.Factory.CreateShader(ref pixelShaderDescription);
 
 #if DEBUG
-            vertexShader.Name = vertexFilename;
-            pixelShader.Name = pixelFilename;
+            vertexShader.Name = $"Noesis_{vertexFilename}";
+            pixelShader.Name = $"Noesis_{pixelFilename}";
 #endif
 
             var pipelineDescription = new GraphicsPipelineDescription()
@@ -270,13 +274,6 @@ namespace WaveRenderer.WaveRenderDevice
             vertexShader.Name = vertexFilename;
             pixelShader.Name = pixelFilename;
 #endif
-
-            //var resourceLayoutDescription = new ResourceLayoutDescription();
-            //resourceLayoutDescription.Elements = new LayoutElementDescription[0];
-            //var resourceLayout = this.graphicsContext.Factory.CreateResourceLayout(ref resourceLayoutDescription);
-            //var resourceSetDescription = new ResourceSetDescription(resourceLayout);
-
-            //this.renderTargetResourceSet = this.graphicsContext.Factory.CreateResourceSet(ref resourceSetDescription);
 
             var pipelineDescription = new GraphicsPipelineDescription()
             {
@@ -452,7 +449,7 @@ namespace WaveRenderer.WaveRenderDevice
 #endif
 
 #if TRACE_RENDER_DEVICE
-                Trace.WriteLine($"New Pipeline state -> {result.Name}");
+                System.Diagnostics.Trace.WriteLine($"New Pipeline state -> {result.Name}");
 #endif
             }
 
@@ -506,7 +503,7 @@ namespace WaveRenderer.WaveRenderDevice
 #endif
 
 #if TRACE_RENDER_DEVICE
-                Trace.WriteLine($"New Resource Set -> {result.Name}");
+                System.Diagnostics.Trace.WriteLine($"New Resource Set -> {result.Name}");
 #endif
             }
 
@@ -600,7 +597,7 @@ namespace WaveRenderer.WaveRenderDevice
 #endif
 
 #if TRACE_RENDER_DEVICE
-                Trace.WriteLine($"New Sampler State -> {result.Name}");
+                System.Diagnostics.Trace.WriteLine($"New Sampler State -> {result.Name}");
 #endif
             }
 
@@ -620,8 +617,9 @@ namespace WaveRenderer.WaveRenderDevice
         unsafe protected override void DrawBatch(ref NoesisBatch batch)
         {
 #if TRACE_RENDER_DEVICE
-            Trace.WriteLine($"{nameof(DrawBatch)} Shader: {batch.shader.Name}");
+            System.Diagnostics.Trace.WriteLine($"{nameof(DrawBatch)} Shader: {batch.shader.Name}");
 #endif
+
             var frameBuffer = this.currentSurface?.FrameBuffer ?? this.swapChainFrameBuffer;
             this.SetBuffers(ref batch);
 
@@ -740,49 +738,49 @@ namespace WaveRenderer.WaveRenderDevice
         unsafe protected override IntPtr MapVertices(uint bytes)
         {
 #if TRACE_RENDER_DEVICE
-            Trace.WriteLine(nameof(MapVertices));
+            System.Diagnostics.Trace.WriteLine(nameof(MapVertices));
 #endif
-            return this.vertexBuffer.Map(this.graphicsContext, bytes);
+            return this.vertexBuffer.Map(bytes);
         }
 
         unsafe protected override void UnmapVertices()
         {
 #if TRACE_RENDER_DEVICE
-            Trace.WriteLine(nameof(UnmapVertices));
+            System.Diagnostics.Trace.WriteLine(nameof(UnmapVertices));
 #endif
 
-            this.vertexBuffer.Unmap(this.graphicsContext);
+            this.vertexBuffer.Unmap(this.commandBuffer);
         }
 
         unsafe protected override IntPtr MapIndices(uint bytes)
         {
 #if TRACE_RENDER_DEVICE
-            Trace.WriteLine(nameof(MapIndices));
+            System.Diagnostics.Trace.WriteLine(nameof(MapIndices));
 #endif
 
-            return this.indexBuffer.Map(this.graphicsContext, bytes);
+            return this.indexBuffer.Map(bytes);
         }
 
         unsafe protected override void UnmapIndices()
         {
 #if TRACE_RENDER_DEVICE
-            Trace.WriteLine(nameof(UnmapIndices));
+            System.Diagnostics.Trace.WriteLine(nameof(UnmapIndices));
 #endif
 
-            this.indexBuffer.Unmap(this.graphicsContext);
+            this.indexBuffer.Unmap(this.commandBuffer);
         }
 
         protected override void BeginRender(bool offscreen)
         {
 #if TRACE_RENDER_DEVICE
-            Trace.WriteLine($"{nameof(BeginRender)} Offscreen: {offscreen}");
+            System.Diagnostics.Trace.WriteLine($"{nameof(BeginRender)} Offscreen: {offscreen}");
 #endif
         }
 
         protected override void EndRender()
         {
 #if TRACE_RENDER_DEVICE
-            Trace.WriteLine(nameof(EndRender));
+            System.Diagnostics.Trace.WriteLine(nameof(EndRender));
 #endif
             this.currentSurface = null;
         }
@@ -790,7 +788,7 @@ namespace WaveRenderer.WaveRenderDevice
         protected override ManagedTexture CreateTexture(string label, uint width, uint height, uint numLevels, NoesisTextureFormat format)
         {
 #if TRACE_RENDER_DEVICE
-            Trace.WriteLine($"{nameof(CreateTexture)}: {label} -> {width} {height} {numLevels} {format}");
+            System.Diagnostics.Trace.WriteLine($"{nameof(CreateTexture)}: {label} -> {width} {height} {numLevels} {format}");
 #endif
 
             return WaveTexture.Create(this.graphicsContext, label, width, height, numLevels, ref format, null);
@@ -799,7 +797,7 @@ namespace WaveRenderer.WaveRenderDevice
         protected override ManagedRenderTarget CreateRenderTarget(string label, uint width, uint height, uint sampleCount)
         {
 #if TRACE_RENDER_DEVICE
-            Trace.WriteLine($"{nameof(CreateRenderTarget)}: {label} -> {width} {height} {sampleCount}");
+            System.Diagnostics.Trace.WriteLine($"{nameof(CreateRenderTarget)}: {label} -> {width} {height} {sampleCount}");
 #endif
 
             return new WaveRenderTarget(this.graphicsContext, label, width, height, sampleCount);
@@ -808,7 +806,7 @@ namespace WaveRenderer.WaveRenderDevice
         protected override ManagedRenderTarget CloneRenderTarget(string label, ManagedRenderTarget surface)
         {
 #if TRACE_RENDER_DEVICE
-            Trace.WriteLine(nameof(CloneRenderTarget));
+            System.Diagnostics.Trace.WriteLine(nameof(CloneRenderTarget));
 #endif
 
             var waveSurface = (WaveRenderTarget)surface;
@@ -818,7 +816,7 @@ namespace WaveRenderer.WaveRenderDevice
         protected override void SetRenderTarget(ManagedRenderTarget surface)
         {
 #if TRACE_RENDER_DEVICE
-            Trace.WriteLine(nameof(SetRenderTarget));
+            System.Diagnostics.Trace.WriteLine(nameof(SetRenderTarget));
 #endif
 
             this.currentSurface = (WaveRenderTarget)surface;
@@ -829,7 +827,7 @@ namespace WaveRenderer.WaveRenderDevice
         protected override void BeginTile(ref NoesisTile tile, uint surfaceWidth, uint surfaceHeight)
         {
 #if TRACE_RENDER_DEVICE
-            Trace.WriteLine(nameof(BeginTile));
+            System.Diagnostics.Trace.WriteLine(nameof(BeginTile));
 #endif
 
             int x = (int)tile.X;
@@ -854,14 +852,14 @@ namespace WaveRenderer.WaveRenderDevice
         protected override void EndTile()
         {
 #if TRACE_RENDER_DEVICE
-            Trace.WriteLine(nameof(EndTile));
+            System.Diagnostics.Trace.WriteLine(nameof(EndTile));
 #endif
         }
 
         protected override void ResolveRenderTarget(ManagedRenderTarget surface, NoesisTile[] tiles)
         {
 #if TRACE_RENDER_DEVICE
-            Trace.WriteLine(nameof(ResolveRenderTarget));
+            System.Diagnostics.Trace.WriteLine(nameof(ResolveRenderTarget));
 #endif
 
             var waveSurface = (WaveRenderTarget)surface;
