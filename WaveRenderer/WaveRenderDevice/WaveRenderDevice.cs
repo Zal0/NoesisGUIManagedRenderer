@@ -222,7 +222,8 @@ namespace WaveRenderer.WaveRenderDevice
             pixelSB.Append(source
                 //.Replace("o.color = (img + (1.0f - img.a) * (shadowColor * alpha)) * (opacity_ * paint.a);", "o.color = (img + (1.0f - img.a)) * (opacity_ * paint.a);")
                 .Replace("register(b2)", "register(b3)")
-                .Replace("register(b0)", "register(b2)"));
+                .Replace("register(b0)", "register(b2)"))
+                .Replace("float1 blurSize;\r\n    float2 shadowOffset;", "float2 shadowOffset;\r\n    float1 blurSize;"); // Workaround for buffer block pack bug on OpenGL and ESSL
 
             var outputBasePath = "../../../../" + assetsDirectory.RootPath + "/" + noesisShadersPath;
             System.IO.File.WriteAllText(outputBasePath + vertexFilename + ".fx", vertexSB.ToString());
@@ -725,10 +726,20 @@ namespace WaveRenderer.WaveRenderDevice
                 if (this.effectCBHash != batch.effectParamsHash)
                 {
                     float[] effectData = new float[16];
-                    for (int i = 0; i < batch.effectParamsSize; ++i)
+                    for (int i = 0; i < batch.effectParamsSize; i++)
                     {
                         effectData[i] = ((float*)batch.effectParams)[i];
                     }
+
+                    if (batch.effectParamsSize > 4)
+                    {
+                        // Workaround for buffer block pack bug on OpenGL and ESSL. Swap blurSize (4) and ShadowOffset (5, 6)
+                        var blurSize = effectData[4];
+                        effectData[4] = effectData[5];
+                        effectData[5] = effectData[6];
+                        effectData[6] = blurSize;
+                    }
+
                     this.commandBuffer.UpdateBufferData(this.effectCB.InternalBuffer, effectData);
                     this.effectCBHash = batch.effectParamsHash;
                 }

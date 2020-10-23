@@ -11,8 +11,8 @@ struct type_Buffer1
 struct type_Buffer2
 {
     float4 shadowColor;
+    float2 shadowOffset;
     float blurSize;
-    packed_float2 shadowOffset;
 };
 
 constant float _81[16] = { 0.059909999370574951171875, 0.077579997479915618896484375, 0.07231999933719635009765625, 0.0647599995136260986328125, 0.0557099990546703338623046875, 0.046039998531341552734375, 0.03655000030994415283203125, 0.02787999995052814483642578125, 0.02041999995708465576171875, 0.014379999600350856781005859375, 0.009720000438392162322998046875, 0.006310000084340572357177734375, 0.003940000198781490325927734375, 0.00236000004224479198455810546875, 0.001359999994747340679168701171875, 0.000750000006519258022308349609375 };
@@ -38,7 +38,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant type_Buffer1& Buffer
     for (int _106 = 0; _106 < 16; )
     {
         float2 _112 = float2(Buffer2.blurSize * Buffer1.textureSize.z, 0.0) * _82[_106];
-        float2 _117 = in.in_var_TEXCOORD1 - float2(Buffer2.shadowOffset[0] * Buffer1.textureSize.z, Buffer2.shadowOffset[1] * Buffer1.textureSize.w);
+        float2 _117 = in.in_var_TEXCOORD1 - float2(Buffer2.shadowOffset.x * Buffer1.textureSize.z, Buffer2.shadowOffset.y * Buffer1.textureSize.w);
         _103 += (_81[_106] * (shadow.sample(shadowSampler, fast::clamp(_117 + _112, in.in_var_TEXCOORD2.xy, in.in_var_TEXCOORD2.zw)).w + shadow.sample(shadowSampler, fast::clamp(_117 - _112, in.in_var_TEXCOORD2.xy, in.in_var_TEXCOORD2.zw)).w));
         _106++;
         continue;

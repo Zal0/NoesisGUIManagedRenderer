@@ -16,8 +16,8 @@ struct type_Buffer1
 struct type_Buffer2
 {
     float4 shadowColor;
+    float2 shadowOffset;
     float blurSize;
-    packed_float2 shadowOffset;
 };
 
 constant float _72[9] = { 0.10854999721050262451171875, 0.13134999573230743408203125, 0.104060001671314239501953125, 0.072159998118877410888671875, 0.0438000001013278961181640625, 0.02328000031411647796630859375, 0.01083000004291534423828125, 0.0044100000523030757904052734375, 0.001569999963976442813873291015625 };
@@ -43,7 +43,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant type_Buffer0& Buffer
     for (int _103 = 0; _103 < 9; )
     {
         float2 _109 = float2(Buffer2.blurSize * Buffer1.textureSize.z, 0.0) * _73[_103];
-        float2 _114 = in.in_var_TEXCOORD1 - float2(Buffer2.shadowOffset[0] * Buffer1.textureSize.z, Buffer2.shadowOffset[1] * Buffer1.textureSize.w);
+        float2 _114 = in.in_var_TEXCOORD1 - float2(Buffer2.shadowOffset.x * Buffer1.textureSize.z, Buffer2.shadowOffset.y * Buffer1.textureSize.w);
         _100 += (_72[_103] * (shadow.sample(shadowSampler, fast::clamp(_114 + _109, in.in_var_TEXCOORD2.xy, in.in_var_TEXCOORD2.zw)).w + shadow.sample(shadowSampler, fast::clamp(_114 - _109, in.in_var_TEXCOORD2.xy, in.in_var_TEXCOORD2.zw)).w));
         _103++;
         continue;

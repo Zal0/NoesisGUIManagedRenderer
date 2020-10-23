@@ -416,8 +416,8 @@ cbuffer Buffer2: register(b3)
 
 #if EFFECT_IMAGE_SHADOW_H
     float4 shadowColor;
-    float1 blurSize;
     float2 shadowOffset;
+    float1 blurSize;
 #endif
 }
 

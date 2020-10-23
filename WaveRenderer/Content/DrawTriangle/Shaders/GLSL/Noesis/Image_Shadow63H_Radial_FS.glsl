@@ -1,12 +1,28 @@
 #version 450
 
+const float _88[16] = float[](0.059909999370574951171875, 0.077579997479915618896484375, 0.07231999933719635009765625, 0.0647599995136260986328125, 0.0557099990546703338623046875, 0.046039998531341552734375, 0.03655000030994415283203125, 0.02787999995052814483642578125, 0.02041999995708465576171875, 0.014379999600350856781005859375, 0.009720000438392162322998046875, 0.006310000084340572357177734375, 0.003940000198781490325927734375, 0.00236000004224479198455810546875, 0.001359999994747340679168701171875, 0.000750000006519258022308349609375);
+const float _89[16] = float[](0.6655499935150146484375, 2.493710041046142578125, 4.4886798858642578125, 6.483660221099853515625, 8.4786396026611328125, 10.47362041473388671875, 12.46860027313232421875, 14.46360015869140625, 16.458599090576171875, 18.453609466552734375, 20.4486293792724609375, 22.4436492919921875, 24.438690185546875, 26.433750152587890625, 28.42881011962890625, 30.42388916015625);
+
 layout(binding = 2, std140) uniform type_Buffer0
 {
     vec4 radialGrad[2];
     float opacity;
 } Buffer0;
 
+layout(binding = 1, std140) uniform type_Buffer1
+{
+    vec4 textureSize;
+} Buffer1;
+
+layout(binding = 3, std140) uniform type_Buffer2
+{
+    vec4 shadowColor;
+    vec2 shadowOffset;
+    float blurSize;
+} Buffer2;
+
 uniform sampler2D SPIRV_Cross_CombinedrampsrampsSampler;
+uniform sampler2D SPIRV_Cross_CombinedshadowshadowSampler;
 uniform sampler2D SPIRV_Cross_CombinedimageimageSampler;
 
 layout(location = 0) in vec2 in_var_TEXCOORD0;
@@ -16,8 +32,18 @@ layout(location = 0) out vec4 out_var_SV_Target0;
 
 void main()
 {
-    float _50 = (Buffer0.radialGrad[1].y * in_var_TEXCOORD0.x) - (Buffer0.radialGrad[1].z * in_var_TEXCOORD0.y);
-    vec4 _89 = texture(SPIRV_Cross_CombinedimageimageSampler, clamp(in_var_TEXCOORD1, in_var_TEXCOORD2.xy, in_var_TEXCOORD2.zw));
-    out_var_SV_Target0 = (_89 + vec4(1.0 - _89.w)) * (Buffer0.opacity * texture(SPIRV_Cross_CombinedrampsrampsSampler, vec2(((Buffer0.radialGrad[0].x * in_var_TEXCOORD0.x) + (Buffer0.radialGrad[0].y * in_var_TEXCOORD0.y)) + (Buffer0.radialGrad[0].z * sqrt((((Buffer0.radialGrad[0].w * in_var_TEXCOORD0.x) * in_var_TEXCOORD0.x) + ((Buffer0.radialGrad[1].x * in_var_TEXCOORD0.y) * in_var_TEXCOORD0.y)) - (_50 * _50))), Buffer0.radialGrad[1].w)).w);
+    float _102 = (Buffer0.radialGrad[1].y * in_var_TEXCOORD0.x) - (Buffer0.radialGrad[1].z * in_var_TEXCOORD0.y);
+    float _151;
+    _151 = 0.0;
+    for (int _154 = 0; _154 < 16; )
+    {
+        vec2 _160 = vec2(Buffer2.blurSize * Buffer1.textureSize.z, 0.0) * _89[_154];
+        vec2 _165 = in_var_TEXCOORD1 - vec2(Buffer2.shadowOffset.x * Buffer1.textureSize.z, Buffer2.shadowOffset.y * Buffer1.textureSize.w);
+        _151 += (_88[_154] * (texture(SPIRV_Cross_CombinedshadowshadowSampler, clamp(_165 + _160, in_var_TEXCOORD2.xy, in_var_TEXCOORD2.zw)).w + texture(SPIRV_Cross_CombinedshadowshadowSampler, clamp(_165 - _160, in_var_TEXCOORD2.xy, in_var_TEXCOORD2.zw)).w));
+        _154++;
+        continue;
+    }
+    vec4 _186 = texture(SPIRV_Cross_CombinedimageimageSampler, clamp(in_var_TEXCOORD1, in_var_TEXCOORD2.xy, in_var_TEXCOORD2.zw));
+    out_var_SV_Target0 = (_186 + ((Buffer2.shadowColor * _151) * (1.0 - _186.w))) * (Buffer0.opacity * texture(SPIRV_Cross_CombinedrampsrampsSampler, vec2(((Buffer0.radialGrad[0].x * in_var_TEXCOORD0.x) + (Buffer0.radialGrad[0].y * in_var_TEXCOORD0.y)) + (Buffer0.radialGrad[0].z * sqrt((((Buffer0.radialGrad[0].w * in_var_TEXCOORD0.x) * in_var_TEXCOORD0.x) + ((Buffer0.radialGrad[1].x * in_var_TEXCOORD0.y) * in_var_TEXCOORD0.y)) - (_102 * _102))), Buffer0.radialGrad[1].w)).w);
 }
 
