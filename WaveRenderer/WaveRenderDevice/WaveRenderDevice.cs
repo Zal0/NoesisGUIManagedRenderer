@@ -796,13 +796,13 @@ namespace WaveRenderer.WaveRenderDevice
             this.currentSurface = null;
         }
 
-        protected override ManagedTexture CreateTexture(string label, uint width, uint height, uint numLevels, NoesisTextureFormat format)
+        protected override ManagedTexture CreateTexture(string label, uint width, uint height, uint numLevels, NoesisTextureFormat format, IntPtr[] data)
         {
 #if TRACE_RENDER_DEVICE
             System.Diagnostics.Trace.WriteLine($"{nameof(CreateTexture)}: {label} -> {width} {height} {numLevels} {format}");
 #endif
 
-            return WaveTexture.Create(this.graphicsContext, label, width, height, numLevels, ref format, null);
+            return WaveTexture.Create(this.graphicsContext, label, width, height, numLevels, ref format, data);
         }
 
         protected override ManagedRenderTarget CreateRenderTarget(string label, uint width, uint height, uint sampleCount)

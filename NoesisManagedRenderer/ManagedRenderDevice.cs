@@ -32,20 +32,49 @@ namespace NoesisManagedRenderer
             EndTileCallback endTileCallback,
             ResolveRenderTargetCallback resolveRenderTargetCallback);
 
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void DrawBatchCallback(ref NoesisBatch batch);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate IntPtr MapVerticesCallback(uint size);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void UnmapVerticesCallback();
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate IntPtr MapIndicesCallback(uint size);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void UnmapIndicesCallback();
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void BeginRenderCallback(bool offscreen);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void EndRenderCallback();
-        private delegate void CreateTextureCallback(IntPtr pTexture, string label, uint width, uint height, uint numLevels, NoesisTextureFormat format);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void CreateTextureCallback(IntPtr pTexture, string label, uint width, uint height, uint numLevels, NoesisTextureFormat format, IntPtr[] data);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void UpdateTextureCallback(IntPtr pTexture, uint level, uint x, uint y, uint width, uint height, IntPtr data);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void CreateRenderTargetCallback(IntPtr pSurface, IntPtr pSurfaceTexture, string label, uint width, uint height, uint sampleCount);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void CloneRenderTargetCallback(IntPtr pClonedSurface, IntPtr pClonedSurfaceTexture, string label, IntPtr pSurface);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void SetRenderTargetCallback(IntPtr pSurface);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void BeginTileCallback(ref NoesisTile tile, uint surfaceWidth, uint surfaceHeight);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void EndTileCallback();
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void ResolveRenderTargetCallback(IntPtr pSurface, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 2)] NoesisTile[] tiles, uint numTiles);
 
         private static DrawBatchCallback drawBatchCallback;
@@ -146,11 +175,11 @@ namespace NoesisManagedRenderer
 
         protected abstract void EndRender();
 
-        protected abstract ManagedTexture CreateTexture(string label, uint width, uint height, uint numLevels, NoesisTextureFormat format);
+        protected abstract ManagedTexture CreateTexture(string label, uint width, uint height, uint numLevels, NoesisTextureFormat format, IntPtr[] data);
 
-        private void CreateTexture(IntPtr pTexture, string label, uint width, uint height, uint numLevels, NoesisTextureFormat format)
+        private void CreateTexture(IntPtr pTexture, string label, uint width, uint height, uint numLevels, NoesisTextureFormat format, IntPtr[] data)
         {
-            var texture = this.CreateTexture(label, width, height, numLevels, format);
+            var texture = this.CreateTexture(label, width, height, numLevels, format, data);
             texture.Register(pTexture);
         }
 

@@ -53,7 +53,7 @@ namespace WaveRenderer.WaveRenderDevice
                 ArraySize = 1,
                 Faces = 1,
                 Usage = ResourceUsage.Default,
-                CpuAccess = ResourceCpuAccess.Write,
+                CpuAccess = data != null ? ResourceCpuAccess.None : ResourceCpuAccess.Write,
                 Flags = TextureFlags.ShaderResource,
                 Format = (format == NoesisTextureFormat.RGBA8) ? PixelFormat.R8G8B8A8_UNorm : PixelFormat.R8_UNorm,
                 MipLevels = numLevels,
@@ -68,9 +68,6 @@ namespace WaveRenderer.WaveRenderDevice
 #if TRACE_RENDER_DEVICE
             System.Diagnostics.Trace.WriteLine($"{nameof(UpdateTexture)} -> {this.Label} Level:{level} Rect:[{x}, {y}, {width}, {height}]");
 #endif
-
-            if (level > 1)
-                throw new NotImplementedException();
 
             byte* dataByte = (byte*)data;
 
