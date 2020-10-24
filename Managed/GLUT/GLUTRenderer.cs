@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using NoesisManagedRenderer;
+using System;
 
 
 public unsafe class GLUTRenderer : ManagedRenderDevice
@@ -165,11 +161,16 @@ public unsafe class GLUTRenderer : ManagedRenderDevice
     };
 
     private byte[] vertices;
-    private UInt16[] indices;
+    private ushort[] indices;
 
-    int GetStride(ref Batch batch)
+    public GLUTRenderer()
+        :base(new NoesisDeviceCaps(), true)
     {
-        int format = formats[batch.shader];
+    }
+
+    int GetStride(ref NoesisBatch batch)
+    {
+        int format = formats[batch.shader.Index];
         int ret = 0;
 
         if ((format & Pos) != 0)
@@ -188,12 +189,12 @@ public unsafe class GLUTRenderer : ManagedRenderDevice
         return ret;
     }
 
-    public override void DrawBatch(ref Batch batch)
+    protected override void DrawBatch(ref NoesisBatch batch)
     {
-        ShaderName shader = (ShaderName)batch.shader;
+        ShaderName shader = (ShaderName)batch.shader.Index;
         int stride = GetStride(ref batch);
 
-        int format = formats[batch.shader];
+        int format = formats[batch.shader.Index];
         
         bool hasColor = (format & Color) != 0;
         if (hasColor)
@@ -208,10 +209,7 @@ public unsafe class GLUTRenderer : ManagedRenderDevice
         bool hasTexture = ((format & Tex0) | (format & Tex1) | (format & Tex2)) != 0;
         if (hasTexture)
         {
-            IntPtr txtPtr = batch.ramps;
-            if (batch.ramps == IntPtr.Zero) 
-                txtPtr = batch.glyphs;
-            GLUTTexture texture = (GLUTTexture)textures[txtPtr];
+            var texture = (GLUTTexture)(batch.Ramps ?? batch.Glyphs);
             GL.Enable(GL.GL_TEXTURE_2D);
             GL.BindTexture(GL.GL_TEXTURE_2D, texture.gl_id);
             GL.TexEnvi(GL.GL_TEXTURE_ENV, GL.GL_TEXTURE_ENV_MODE, GL.GL_MODULATE);
@@ -259,9 +257,9 @@ public unsafe class GLUTRenderer : ManagedRenderDevice
     }
 
     
-    unsafe public override IntPtr MapVertices(UInt32 bytes)
+    unsafe protected override IntPtr MapVertices(uint bytes)
     {
-        UInt32 size = bytes;
+        uint size = bytes;
         if(vertices == null || size > vertices.Length)
             vertices = new byte[size];
 
@@ -271,41 +269,71 @@ public unsafe class GLUTRenderer : ManagedRenderDevice
         }
     }
 
-    public override void UnmapVertices()
+    protected override void UnmapVertices()
     {
         //vertices = null;
     }
 
-    unsafe public override IntPtr MapIndices(uint bytes)
+    unsafe protected override IntPtr MapIndices(uint bytes)
     {
-        UInt32 size = bytes / sizeof(UInt16);
+        uint size = bytes / sizeof(ushort);
         if (indices == null || size > indices.Length)
-            indices = new UInt16[size];
+            indices = new ushort[size];
 
-        fixed (UInt16* pRetUpper = indices)
+        fixed (ushort* pRetUpper = indices)
         {
             return new IntPtr(pRetUpper);
         }
     }
 
-    public override void UnmapIndices()
+    protected override void UnmapIndices()
     {
         //indices = null;
     }
 
-    public override ManagedTexture CreateTexture()
+    protected override ManagedTexture CreateTexture(string label, uint width, uint height, uint numLevels, NoesisTextureFormat format, IntPtr[] data)
     {
-        return new GLUTTexture();
+        return new GLUTTexture(label, width, height, numLevels, format, data);
     }
 
-    public override void BeginRender()
+    protected override void BeginRender(bool offScreen)
     {
         
     }
 
-    public override void EndRender()
+    protected override void EndRender()
     {
         
+    }
+
+    protected override ManagedRenderTarget CreateRenderTarget(string label, uint width, uint height, uint sampleCount)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected override ManagedRenderTarget CloneRenderTarget(string label, ManagedRenderTarget surface)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected override void SetRenderTarget(ManagedRenderTarget surface)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected override void BeginTile(ref NoesisTile tile, uint surfaceWidth, uint surfaceHeight)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected override void EndTile()
+    {
+        throw new NotImplementedException();
+    }
+
+    protected override void ResolveRenderTarget(ManagedRenderTarget surface, NoesisTile[] tiles)
+    {
+        throw new NotImplementedException();
     }
 }
 

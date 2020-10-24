@@ -1,25 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using NoesisManagedRenderer;
+using System;
 
 
 public class GLUTTexture : ManagedTexture
 {
-    int width;
-    int height;
-    int numLevels;
+    string label;
+    uint width;
+    uint height;
+    uint numLevels;
     public int format;
 
     public int gl_id;
 
-    unsafe public override void Init(ManagedRenderDevice managedRenderDevice, UInt32 width, UInt32 height, UInt32 numLevels, byte format, IntPtr[] data)
+    public override string Label => this.label;
+
+    public override uint Width => this.width;
+
+    public override uint Height => this.width;
+
+    public override uint LevelCount => this.numLevels;
+
+    public override NoesisTextureFormat Format => throw new NotImplementedException();
+
+    public unsafe GLUTTexture(string label, uint width, uint height, uint numLevels, NoesisTextureFormat format, IntPtr[] data)
     {
-        this.width = (int)width;
-        this.height = (int)height;
-        this.numLevels = (int)numLevels;
-        this.format = ((Format)format == Format.RGBA8) ? GL.GL_RGBA : GL.GL_ALPHA;
+        this.label = label;
+        this.width = width;
+        this.height = height;
+        this.numLevels = numLevels;
+        this.format = (format == NoesisTextureFormat.RGBA8) ? GL.GL_RGBA : GL.GL_ALPHA;
 
         fixed (int* f_id = &gl_id)
         {
@@ -29,7 +38,7 @@ public class GLUTTexture : ManagedTexture
 
         GL.BindTexture(GL.GL_TEXTURE_2D, gl_id);
 
-        GL.TexImage2D(GL.GL_TEXTURE_2D, 0, this.format, this.width, this.height, 0, this.format, GL.GL_UNSIGNED_BYTE, data == null ? new IntPtr() : data[0]);
+        GL.TexImage2D(GL.GL_TEXTURE_2D, 0, this.format, (int)this.width, (int)this.height, 0, this.format, GL.GL_UNSIGNED_BYTE, data == null ? new IntPtr() : data[0]);
 
         GL.TexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT);
         GL.TexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT);
@@ -38,29 +47,9 @@ public class GLUTTexture : ManagedTexture
         GL.PixelStorei(GL.GL_UNPACK_ALIGNMENT, 1);
     }
 
-    public override void UpdateTexture(UInt32 level, UInt32 x, UInt32 y, UInt32 width, UInt32 height, IntPtr data)
+    public override void UpdateTexture(uint level, uint x, uint y, uint width, uint height, IntPtr data)
     {
         GL.BindTexture(GL.GL_TEXTURE_2D, gl_id);
         GL.TexSubImage2D(GL.GL_TEXTURE_2D, (int)level, (int)x, (int)y, (int)width, (int)height, this.format, GL.GL_UNSIGNED_BYTE, data);
-    }
-
-    public override int GetHeight()
-    {
-        return height;
-    }
-
-    public override int GetWidth()
-    {
-        return width;
-    }
-
-    public override bool HasMipMaps()
-    {
-        return numLevels > 1;
-    }
-
-    public override bool IsInverted()
-    {
-        return false;
     }
 }

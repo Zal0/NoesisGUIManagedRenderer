@@ -4,7 +4,7 @@ using System.Text;
 
 public static class GLUT
 {
-    private const string LIB_GLUT = "../../../libs/glut32.dll"; // "/usr/lib64/libglut.so.3"
+    private const string LIB_GLUT = "libs/glut32.dll"; // "/usr/lib64/libglut.so.3"
 
     public const int GLUT_RGB = 0;
     public const int GLUT_DOUBLE = 2;
