@@ -1,10 +1,9 @@
-﻿using NoesisManagedRenderer;
-using System;
+﻿using System;
 using WaveEngine.Common.Graphics;
 
 namespace WaveRenderer.WaveRenderDevice
 {
-    public class WaveRenderTarget : ManagedRenderTarget
+    public class WaveRenderTarget : Noesis.RenderTarget
     {
         private Texture depthTexture;
 
@@ -12,15 +11,15 @@ namespace WaveRenderer.WaveRenderDevice
 
         private WaveTexture color;
 
-        public override string Label { get; }
+        public string Label { get; }
 
-        public override uint Width => this.FrameBuffer?.Width ?? 0;
+        public uint Width => this.FrameBuffer?.Width ?? 0;
 
-        public override uint Height => this.FrameBuffer?.Height ?? 0;
+        public uint Height => this.FrameBuffer?.Height ?? 0;
 
-        public override uint SampleCount { get; }
+        public uint SampleCount { get; }
 
-        public override ManagedTexture Texture => this.color;
+        public override Noesis.Texture Texture => this.color;
 
         public FrameBuffer FrameBuffer { get; }
 

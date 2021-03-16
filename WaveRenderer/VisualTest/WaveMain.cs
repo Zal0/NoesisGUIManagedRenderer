@@ -1,6 +1,6 @@
 ﻿// Copyright © Wave Engine S.L. All rights reserved. Use is subject to license terms.
 
-using NoesisManagedRenderer;
+using Noesis;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -9,8 +9,13 @@ using VisualTests.Runners.Common;
 using WaveEngine.Common.Graphics;
 using WaveEngine.Common.Input.Mouse;
 using WaveEngine.Mathematics;
+using WaveEngine.NoesisGUI;
+using WaveEngine.NoesisGUI.Helpers;
 using WaveRenderer.WaveRenderDevice;
 using Buffer = WaveEngine.Common.Graphics.Buffer;
+using MouseButtonEventArgs = WaveEngine.Common.Input.Mouse.MouseButtonEventArgs;
+using Rectangle = WaveEngine.Mathematics.Rectangle;
+using Vector4 = WaveEngine.Mathematics.Vector4;
 
 namespace VisualTests.LowLevel.Tests
 {
@@ -38,7 +43,7 @@ namespace VisualTests.LowLevel.Tests
         private float time = 0.0f;
 
         private WaveRenderDevice waveRenderer;
-        private List<IntPtr> noesisViews = new List<IntPtr>();
+        private List<View> noesisViews = new List<View>();
 
         public WaveMain()
             : base("DrawTriangle")
@@ -51,7 +56,7 @@ namespace VisualTests.LowLevel.Tests
 
             foreach (var view in this.noesisViews)
             {
-                NoesisApp.SetViewSize(view, (int)width, (int)height);
+                view.SetSize((int)width, (int)height);
             }
         }
 
@@ -129,11 +134,27 @@ namespace VisualTests.LowLevel.Tests
 
         private async Task InitializeNoesis(uint width, uint height)
         {
+            Log.SetLogCallback((level, channel, message) =>
+            {
+                if (channel == "")
+                {
+                    // [TRACE] [DEBUG] [INFO] [WARNING] [ERROR]
+                    string[] prefixes = new string[] { "T", "D", "I", "W", "E" };
+                    string prefix = (int)level < prefixes.Length ? prefixes[(int)level] : " ";
+                    Console.WriteLine("[NOESIS/" + prefix + "] " + message);
+                }
+            });
+
+            // Noesis initialization. This must be the first step before using any NoesisGUI functionality
+            GUI.Init(string.Empty, string.Empty);
+
+            // Setup theme
+            NoesisApp.Application.SetThemeProviders();
+            Noesis.GUI.LoadApplicationResources("Theme/NoesisTheme.DarkBlue.xaml");
+
             this.waveRenderer = new WaveRenderDevice(this.graphicsContext);
             this.waveRenderer.SetSwapChainFrameBuffer(this.frameBuffer);
             await this.waveRenderer.InitializeAsync(this.assetsDirectory);
-
-            NoesisApp.NoesisInit(string.Empty, string.Empty);
 
             //await this.AddViewAsync("xamls/test.xaml");
             //await this.AddViewAsync("xamls/HelloWorld.xaml");
@@ -148,25 +169,31 @@ namespace VisualTests.LowLevel.Tests
 
             foreach (var view in this.noesisViews)
             {
-                NoesisApp.SetViewSize(view, (int)width, (int)height);
+                view.SetSize((int)width, (int)height);
             }
 
             var mouseDispatcher = this.surface.MouseDispatcher;
             mouseDispatcher.MouseButtonUp += (s, e) =>
             {
-                this.SendMouseButton(NoesisApp.ViewMouseButtonUp, e);
+                foreach (var view in this.noesisViews)
+                {
+                    view.MouseButtonUp(e.Position.X, e.Position.Y, e.Button.ToNoesis());
+                }
             };
 
             mouseDispatcher.MouseButtonDown += (s, e) =>
             {
-                this.SendMouseButton(NoesisApp.ViewMouseButtonDown, e);
+                foreach (var view in this.noesisViews)
+                {
+                    view.MouseButtonDown(e.Position.X, e.Position.Y, e.Button.ToNoesis());
+                }
             };
 
             mouseDispatcher.MouseMove += (s, e) =>
             {
                 foreach (var view in this.noesisViews)
                 {
-                    NoesisApp.ViewMouseMove(view, e.Position.X, e.Position.Y);
+                    view.MouseMove(e.Position.X, e.Position.Y);
                 }
             };
 
@@ -174,26 +201,32 @@ namespace VisualTests.LowLevel.Tests
             {
                 foreach (var view in this.noesisViews)
                 {
-                    NoesisApp.ViewMouseWheel(view, e.Position.X, e.Position.Y, e.Delta.Y);
+                    view.MouseWheel(e.Position.X, e.Position.Y, e.Delta.Y);
                 }
             };
 
             var keyboardDispatcher = this.surface.KeyboardDispatcher;
             keyboardDispatcher.KeyDown += (s, e) =>
             {
-                this.SendKey(NoesisApp.ViewKeyDown, e);
+                foreach (var view in this.noesisViews)
+                {
+                    view.KeyDown(NoesisKeyCodes.Convert(e.Key));
+                }
             };
 
             keyboardDispatcher.KeyUp += (s, e) =>
             {
-                this.SendKey(NoesisApp.ViewKeyUp, e);
+                foreach (var view in this.noesisViews)
+                {
+                    view.KeyUp(NoesisKeyCodes.Convert(e.Key));
+                }
             };
 
             keyboardDispatcher.KeyChar += (s, e) =>
             {
                 foreach (var view in this.noesisViews)
                 {
-                    NoesisApp.ViewChar(view, e.Character);
+                    view.Char(e.Character);
                 }
             };
         }
@@ -201,65 +234,13 @@ namespace VisualTests.LowLevel.Tests
         private async Task AddViewAsync(string path)
         {
             var xamlString = await this.assetsDirectory.ReadAsStringAsync(path);
-            this.noesisViews.Add(NoesisApp.CreateView(this.waveRenderer, xamlString));
-        }
+            var xaml = (Grid)GUI.ParseXaml(xamlString);
+            var view = GUI.CreateView(xaml);
+            view.SetFlags(RenderFlags.PPAA | RenderFlags.LCD);
 
-        private void SendMouseButton(Func<IntPtr, int, int, int, bool> call, MouseButtonEventArgs args)
-        {
-            var buttons = args.Button;
-            foreach (var view in this.noesisViews)
-            {
-                if ((buttons & MouseButtons.Left) != 0)
-                {
-                    call(view, args.Position.X, args.Position.Y, 0);
-                }
-
-                if ((buttons & MouseButtons.Right) != 0)
-                {
-                    call(view, args.Position.X, args.Position.Y, 1);
-                }
-
-                if ((buttons & MouseButtons.Middle) != 0)
-                {
-                    call(view, args.Position.X, args.Position.Y, 2);
-                }
-
-                if ((buttons & MouseButtons.XButton1) != 0)
-                {
-                    call(view, args.Position.X, args.Position.Y, 3);
-                }
-
-                if ((buttons & MouseButtons.XButton2) != 0)
-                {
-                    call(view, args.Position.X, args.Position.Y, 4);
-                }
-            }
-        }
-
-        private void SendKey(Func<IntPtr, int, bool> call, WaveEngine.Common.Input.Keyboard.KeyEventArgs args)
-        {
-            var key = args.Key;
-            foreach (var view in this.noesisViews)
-            {
-                switch(key)
-                {
-                    case WaveEngine.Common.Input.Keyboard.Keys.Back:
-                        call(view, 2);
-                        break;
-                    case WaveEngine.Common.Input.Keyboard.Keys.Tab:
-                        call(view, 3);
-                        break;
-                    case WaveEngine.Common.Input.Keyboard.Keys.Enter:
-                        call(view, 6);
-                        break;
-                    case WaveEngine.Common.Input.Keyboard.Keys.Escape:
-                        call(view, 13);
-                        break;
-                    case WaveEngine.Common.Input.Keyboard.Keys.Delete:
-                        call(view, 32);
-                        break;
-                }
-            }
+            // Renderer initialization
+            view.Renderer.Init(this.waveRenderer);
+            this.noesisViews.Add(view);
         }
 
         protected override void InternalDrawCallback(TimeSpan gameTime)
@@ -275,7 +256,8 @@ namespace VisualTests.LowLevel.Tests
 
             foreach (var view in this.noesisViews)
             {
-                NoesisApp.UpdateView(view, time);
+                // Update view (layout, animations, ...)
+                view.Update(time);
             }
 
             // Draw
@@ -301,7 +283,10 @@ namespace VisualTests.LowLevel.Tests
 
             foreach (var view in this.noesisViews)
             {
-                NoesisApp.RenderView(view);
+                // Offscreen rendering phase populates textures needed by the on-screen rendering
+                view.Renderer.UpdateRenderTree();
+                view.Renderer.RenderOffscreen();
+                view.Renderer.Render();
             }
 
             commandBuffer.End();

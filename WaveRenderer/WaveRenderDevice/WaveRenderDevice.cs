@@ -1,19 +1,24 @@
-﻿using System;
-using WaveEngine.Common.Graphics;
+﻿using WaveEngine.Common.Graphics;
 using WaveEngine.Mathematics;
 using WaveEngine.Platform;
 using VisualTests.Runners.Common;
 using Buffer = WaveEngine.Common.Graphics.Buffer;
-using NoesisManagedRenderer;
 using System.Threading.Tasks;
 using System.Text;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
+using Noesis;
+using System;
+using Rectangle = WaveEngine.Mathematics.Rectangle;
+using Vector4 = WaveEngine.Mathematics.Vector4;
 
 namespace WaveRenderer.WaveRenderDevice
 {
-    public class WaveRenderDevice : ManagedRenderDevice
+    public class WaveRenderDevice : Noesis.RenderDevice
     {
+        protected const uint DYNAMIC_VB_SIZE = 512 * 1024;
+        protected const uint DYNAMIC_IB_SIZE = 128 * 1024;
+        protected const uint DYNAMIC_TEX_SIZE = 128 * 1024;
+
         class DynamicBuffer
         {
             private uint pos;
@@ -60,14 +65,14 @@ namespace WaveRenderer.WaveRenderDevice
             }
         }
 
-        private GraphicsPipelineDescription[] graphicPipelineDescsByShader = new GraphicsPipelineDescription[NoesisShader.Formats.Length];
+        private GraphicsPipelineDescription[] graphicPipelineDescsByShader = new GraphicsPipelineDescription[Noesis.Shader.Formats.Length];
         private BlendStateDescription[] blendDescs;
         private RasterizerStateDescription[] rasterDescs;
         private DepthStencilStateDescription[] depthDescs;
 
         private Dictionary<int, GraphicsPipelineState> pipelineStateCache = new Dictionary<int, GraphicsPipelineState>();
         private Dictionary<int, ResourceSet> resourceSetsCache = new Dictionary<int, ResourceSet>();
-        private Dictionary<NoesisSamplerState, SamplerState> samplerStateCache = new Dictionary<NoesisSamplerState, SamplerState>();
+        private Dictionary<Noesis.SamplerState, WaveEngine.Common.Graphics.SamplerState> samplerStateCache = new Dictionary<Noesis.SamplerState, WaveEngine.Common.Graphics.SamplerState>();
 
         private ResourceLayout resourceLayout;
 
@@ -93,11 +98,14 @@ namespace WaveRenderer.WaveRenderDevice
         private uint pixelCBHash;
         private uint effectCBHash;
         private uint texDimensionsCBHash;
+        private DeviceCaps caps;
+
+        public override DeviceCaps Caps => this.caps;
 
         public WaveRenderDevice(GraphicsContext graphicsContext)
-            : base(new NoesisDeviceCaps() { SubpixelRendering = true }, flippedTextures: false)
         {
             this.graphicsContext = graphicsContext;
+            this.caps = new DeviceCaps() { SubpixelRendering = true };
 
             this.CreateBuffers();
             this.CreateStatesObjects();
@@ -145,7 +153,7 @@ namespace WaveRenderer.WaveRenderDevice
 
             this.resourceLayout = this.graphicsContext.Factory.CreateResourceLayout(ref resourceLayoutDescription);
 
-            for (int shaderIndex = 0; shaderIndex < NoesisShader.Formats.Length; ++shaderIndex)
+            for (int shaderIndex = 0; shaderIndex < Noesis.Shader.Formats.Length; ++shaderIndex)
             {
                 await this.InitShaderResources(shaderIndex, assetsDirectory);
             }
@@ -159,57 +167,57 @@ namespace WaveRenderer.WaveRenderDevice
             LayoutDescription layoutDescription = new LayoutDescription();
             vertexLayouts.Add(layoutDescription);
 
-            int format = NoesisShader.Formats[shaderIndex];
+            int format = Noesis.Shader.Formats[shaderIndex];
 
             string vertexFilename = "";
 
             var vertexSB = new StringBuilder();
-            if ((format & NoesisShader.Pos) != 0)
+            if ((format & Noesis.Shader.Pos) != 0)
             {
                 layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.Position));
                 vertexFilename += "Pos";
             }
-            if ((format & NoesisShader.Color) != 0)
+            if ((format & Noesis.Shader.Color) != 0)
             {
                 layoutDescription.Add(new ElementDescription(ElementFormat.UByte4Normalized, ElementSemanticType.Color));
                 vertexFilename += "Color";
                 vertexSB.AppendLine("#define HAS_COLOR 1");
             }
-            if ((format & NoesisShader.Tex0) != 0)
+            if ((format & Noesis.Shader.Tex0) != 0)
             {
                 layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.TexCoord, 0));
                 vertexFilename += "Tex0";
                 vertexSB.AppendLine("#define HAS_UV0 1");
             }
-            if ((format & NoesisShader.Tex1) != 0)
+            if ((format & Noesis.Shader.Tex1) != 0)
             {
                 layoutDescription.Add(new ElementDescription(ElementFormat.Float2, ElementSemanticType.TexCoord, 1));
                 vertexFilename += "Tex1";
                 vertexSB.AppendLine("#define HAS_UV1 1");
             }
-            if ((format & NoesisShader.Tex2) != 0)
+            if ((format & Noesis.Shader.Tex2) != 0)
             {
                 layoutDescription.Add(new ElementDescription(ElementFormat.UShort4Normalized, ElementSemanticType.TexCoord, 2));
                 vertexFilename += "Tex2";
                 vertexSB.AppendLine("#define HAS_UV2 1");
             }
-            if ((format & NoesisShader.Coverage) != 0)
+            if ((format & Noesis.Shader.Coverage) != 0)
             {
                 layoutDescription.Add(new ElementDescription(ElementFormat.Float, ElementSemanticType.TexCoord, 3));
                 vertexFilename += "Coverage";
                 vertexSB.AppendLine("#define HAS_COVERAGE 1");
             }
-            if ((format & NoesisShader.SDF) != 0)
+            if ((format & Noesis.Shader.SDF) != 0)
             {
                 vertexFilename += "_SDF";
                 vertexSB.AppendLine("#define GEN_ST1 1");
             }
             vertexFilename += "_VS";
 
-            string pixelFilename = ((NoesisShader.Enum)shaderIndex).ToString() + "_FS";
+            string pixelFilename = ((Noesis.Shader.Enum)shaderIndex).ToString() + "_FS";
 
             /*var pixelSB = new StringBuilder();
-            var effectName = ((NoesisShader.Enum)shaderIndex).ToString().ToUpper()
+            var effectName = ((Noesis.Shader.Enum)shaderIndex).ToString().ToUpper()
                                                              .Replace("PATHAA", "PATH_AA")
                                                              .Replace("SHADOW", "SHADOW_")
                                                              .Replace("BLUR", "BLUR_");
@@ -418,11 +426,11 @@ namespace WaveRenderer.WaveRenderDevice
             }
         }
 
-        private GraphicsPipelineState GetPipelineState(ref NoesisBatch batch, OutputDescription outputDescription)
+        private GraphicsPipelineState GetPipelineState(ref Batch batch, OutputDescription outputDescription)
         {
-            var renderState = batch.renderState;
-            var shaderIndex = batch.shader.Index;
-            var stencilRef = batch.stencilRef;
+            var renderState = batch.RenderState;
+            var shaderIndex = batch.Shader.Index;
+            var stencilRef = batch.StencilRef;
 
             var hashCode = HashCode.Combine(
                 renderState,
@@ -446,7 +454,7 @@ namespace WaveRenderer.WaveRenderDevice
                 this.pipelineStateCache.Add(hashCode, result);
 
 #if DEBUG
-                result.Name = $"Noesis_{batch.shader.Name}_{rasterizerIndex}{blendIndex}{depthIndex}_{stencilRef}";
+                result.Name = $"Noesis_{batch.Shader.Name}_{rasterizerIndex}{blendIndex}{depthIndex}_{stencilRef}";
 #endif
 
 #if TRACE_RENDER_DEVICE
@@ -457,28 +465,33 @@ namespace WaveRenderer.WaveRenderDevice
             return result;
         }
 
-        private ResourceSet GetResourceSet(ref NoesisBatch batch)
+        private ResourceSet GetResourceSet(ref Batch batch)
         {
             var hash = new HashCode();
             hash.Add(batch.Pattern);
-            hash.Add(batch.patternSampler);
+            hash.Add(batch.PatternSampler);
             hash.Add(batch.Ramps);
-            hash.Add(batch.rampsSampler);
+            hash.Add(batch.RampsSampler);
             hash.Add(batch.Image);
-            hash.Add(batch.imageSampler);
+            hash.Add(batch.ImageSampler);
             hash.Add(batch.Glyphs);
-            hash.Add(batch.glyphsSampler);
+            hash.Add(batch.GlyphsSampler);
             hash.Add(batch.Shadow);
-            hash.Add(batch.shadowSampler);
+            hash.Add(batch.ShadowSampler);
 
             var hashCode = hash.ToHashCode();
             if (!this.resourceSetsCache.TryGetValue(hashCode, out var result))
             {
-                Texture patternTexture = ((WaveTexture)batch.Pattern)?.Texture;
-                Texture rampsTexture = ((WaveTexture)batch.Ramps)?.Texture;
-                Texture imageTexture = ((WaveTexture)batch.Image)?.Texture;
-                Texture glyphsTexture = ((WaveTexture)batch.Glyphs)?.Texture;
-                Texture shadowTexture = ((WaveTexture)batch.Shadow)?.Texture;
+                var patternTexture = ((WaveTexture)batch.Pattern)?.Texture;
+                var rampsTexture = ((WaveTexture)batch.Ramps)?.Texture;
+                var imageTexture = ((WaveTexture)batch.Image)?.Texture;
+                var glyphsTexture = ((WaveTexture)batch.Glyphs)?.Texture;
+                var shadowTexture = ((WaveTexture)batch.Shadow)?.Texture;
+                var patternSampler = batch.PatternSampler;
+                var rampsSampler = batch.RampsSampler;
+                var imageSampler = batch.ImageSampler;
+                var glyphsSampler = batch.GlyphsSampler;
+                var shadowSampler = batch.ShadowSampler;
 
                 var desc = new ResourceSetDescription(
                     this.resourceLayout,
@@ -487,15 +500,15 @@ namespace WaveRenderer.WaveRenderDevice
                     pixelCB.InternalBuffer,
                     effectCB.InternalBuffer,
                     patternTexture,
-                    this.GetSamplerState(ref batch.patternSampler),
+                    this.GetSamplerState(ref patternSampler),
                     rampsTexture,
-                    this.GetSamplerState(ref batch.rampsSampler),
+                    this.GetSamplerState(ref rampsSampler),
                     imageTexture,
-                    this.GetSamplerState(ref batch.imageSampler),
+                    this.GetSamplerState(ref imageSampler),
                     glyphsTexture,
-                    this.GetSamplerState(ref batch.glyphsSampler),
+                    this.GetSamplerState(ref glyphsSampler),
                     shadowTexture,
-                    this.GetSamplerState(ref batch.shadowSampler));
+                    this.GetSamplerState(ref shadowSampler));
 
                 result = this.graphicsContext.Factory.CreateResourceSet(ref desc);
                 this.resourceSetsCache.Add(hashCode, result);
@@ -511,35 +524,35 @@ namespace WaveRenderer.WaveRenderDevice
             return result;
         }
 
-        private SamplerState GetSamplerState(ref NoesisSamplerState sampler)
+        private WaveEngine.Common.Graphics.SamplerState GetSamplerState(ref Noesis.SamplerState sampler)
         {
             if (!this.samplerStateCache.TryGetValue(sampler, out var result))
             {
                 var desc = SamplerStateDescription.Default;
                 switch (sampler.WrapMode)
                 {
-                    case NoesisSamplerState.WrapModes.ClampToEdge:
+                    case WrapMode.ClampToEdge:
                         desc.AddressU = TextureAddressMode.Clamp;
                         desc.AddressV = TextureAddressMode.Clamp;
                         break;
-                    case NoesisSamplerState.WrapModes.ClampToZero:
+                    case WrapMode.ClampToZero:
                         desc.BorderColor = SamplerBorderColor.TransparentBlack;
                         desc.AddressU = TextureAddressMode.Border;
                         desc.AddressV = TextureAddressMode.Border;
                         break;
-                    case NoesisSamplerState.WrapModes.Repeat:
+                    case WrapMode.Repeat:
                         desc.AddressU = TextureAddressMode.Wrap;
                         desc.AddressV = TextureAddressMode.Wrap;
                         break;
-                    case NoesisSamplerState.WrapModes.MirrorU:
+                    case WrapMode.MirrorU:
                         desc.AddressU = TextureAddressMode.Mirror;
                         desc.AddressV = TextureAddressMode.Wrap;
                         break;
-                    case NoesisSamplerState.WrapModes.MirrorV:
+                    case WrapMode.MirrorV:
                         desc.AddressU = TextureAddressMode.Wrap;
                         desc.AddressV = TextureAddressMode.Mirror;
                         break;
-                    case NoesisSamplerState.WrapModes.Mirror:
+                    case WrapMode.Mirror:
                         desc.AddressU = TextureAddressMode.Mirror;
                         desc.AddressV = TextureAddressMode.Mirror;
                         break;
@@ -549,34 +562,34 @@ namespace WaveRenderer.WaveRenderDevice
 
                 switch (sampler.MinMagFilter)
                 {
-                    case NoesisSamplerState.MinMagFilters.Nearest:
+                    case MinMagFilter.Nearest:
                         switch (sampler.MipFilter)
                         {
-                            case NoesisSamplerState.MipFilters.Disabled:
+                            case MipFilter.Disabled:
                                 desc.MaxLOD = 0;
                                 desc.Filter = TextureFilter.MinPoint_MagPoint_MipPoint;
                                 break;
-                            case NoesisSamplerState.MipFilters.Nearest:
+                            case MipFilter.Nearest:
                                 desc.Filter = TextureFilter.MinPoint_MagPoint_MipPoint;
                                 break;
-                            case NoesisSamplerState.MipFilters.Linear:
+                            case MipFilter.Linear:
                                 desc.Filter = TextureFilter.MinPoint_MagPoint_MipLinear;
                                 break;
                             default:
                                 throw new InvalidOperationException($"Undefined {nameof(sampler.MipFilter)}: {sampler.MipFilter}");
                         }
                         break;
-                    case NoesisSamplerState.MinMagFilters.Linear:
+                    case MinMagFilter.Linear:
                         switch (sampler.MipFilter)
                         {
-                            case NoesisSamplerState.MipFilters.Disabled:
+                            case MipFilter.Disabled:
                                 desc.MaxLOD = 0;
                                 desc.Filter = TextureFilter.MinLinear_MagLinear_MipPoint;
                                 break;
-                            case NoesisSamplerState.MipFilters.Nearest:
+                            case MipFilter.Nearest:
                                 desc.Filter = TextureFilter.MinLinear_MagLinear_MipPoint;
                                 break;
-                            case NoesisSamplerState.MipFilters.Linear:
+                            case MipFilter.Linear:
                                 desc.Filter = TextureFilter.MinLinear_MagLinear_MipLinear;
                                 break;
                             default:
@@ -615,10 +628,10 @@ namespace WaveRenderer.WaveRenderDevice
             this.commandBuffer = commandBuffer;
         }
 
-        unsafe protected override void DrawBatch(ref NoesisBatch batch)
+        public unsafe override void DrawBatch(ref Batch batch)
         {
 #if TRACE_RENDER_DEVICE
-            System.Diagnostics.Trace.WriteLine($"{nameof(DrawBatch)} Shader: {batch.shader.Name}");
+            System.Diagnostics.Trace.WriteLine($"{nameof(DrawBatch)} Shader: {batch.Shader.Name}");
 #endif
 
             var frameBuffer = this.currentSurface?.FrameBuffer ?? this.swapChainFrameBuffer;
@@ -629,7 +642,7 @@ namespace WaveRenderer.WaveRenderDevice
             this.commandBuffer.SetViewports(new Viewport[] { new Viewport(0, 0, frameBuffer.Width, frameBuffer.Height) });
 
             // Workaround for DirectX12
-            if (!batch.renderState.ScissorEnable)
+            if (!batch.RenderState.ScissorEnable)
             {
                 this.commandBuffer.SetScissorRectangles(new Rectangle[] { new Rectangle(0, 0, int.MaxValue, int.MaxValue) });
             }
@@ -640,16 +653,16 @@ namespace WaveRenderer.WaveRenderDevice
             this.commandBuffer.SetIndexBuffer(this.indexBuffer.InternalBuffer);
 
             //Set Vertex Buffer
-            uint offset = this.vertexBuffer.DrawPos + batch.vertexOffset;
+            uint offset = this.vertexBuffer.DrawPos + batch.VertexOffset;
             this.commandBuffer.SetVertexBuffer(0, this.vertexBuffer.InternalBuffer, offset);
 
             //Draw
-            this.commandBuffer.DrawIndexed(batch.numIndices, batch.startIndex + this.indexBuffer.DrawPos / 2);
+            this.commandBuffer.DrawIndexed(batch.NumIndices, batch.StartIndex + this.indexBuffer.DrawPos / 2);
 
             this.commandBuffer.EndRenderPass();
         }
 
-        private void SetGraphicsPipelineAndResourceSet(ref NoesisBatch batch, FrameBuffer framebuffer)
+        private void SetGraphicsPipelineAndResourceSet(ref Batch batch, FrameBuffer framebuffer)
         {
             // Workaround for DirectX12
             var outputDescription = this.graphicsContext.IsDirectXBackend() ?
@@ -662,44 +675,44 @@ namespace WaveRenderer.WaveRenderDevice
             this.commandBuffer.SetResourceSet(resourceSet);
         }
 
-        private unsafe void SetBuffers(ref NoesisBatch batch)
+        private unsafe void SetBuffers(ref Batch batch)
         {
             // Vertex Constants
-            if (this.vertexCBHash != batch.projMtxHash)
+            if (this.vertexCBHash != batch.ProjMtxHash)
             {
-                var prjMtx = Matrix4x4.Transpose(*(Matrix4x4*)batch.projMtx);
+                var prjMtx = Matrix4x4.Transpose(*(Matrix4x4*)batch.ProjMtx);
                 this.commandBuffer.UpdateBufferData(this.vertexCB.InternalBuffer, ref prjMtx);
-                this.vertexCBHash = batch.projMtxHash;
+                this.vertexCBHash = batch.ProjMtxHash;
             }
 
             // Pixel Constants
-            if (batch.rgba != IntPtr.Zero || batch.radialGrad != IntPtr.Zero || batch.opacity != IntPtr.Zero)
+            if (batch.Rgba != IntPtr.Zero || batch.RadialGrad != IntPtr.Zero || batch.Opacity != IntPtr.Zero)
             {
-                uint hash = batch.rgbaHash ^ batch.radialGradHash ^ batch.opacityHash;
+                uint hash = batch.RgbaHash ^ batch.RadialGradHash ^ batch.OpacityHash;
                 if (this.pixelCBHash != hash)
                 {
                     var pixelData = new float[12];
                     int idx = 0;
 
-                    if (batch.rgba != IntPtr.Zero)
+                    if (batch.Rgba != IntPtr.Zero)
                     {
                         for (int i = 0; i < 4; ++i)
                         {
-                            pixelData[idx++] = ((float*)batch.rgba)[i];
+                            pixelData[idx++] = ((float*)batch.Rgba)[i];
                         }
                     }
 
-                    if (batch.radialGrad != IntPtr.Zero)
+                    if (batch.RadialGrad != IntPtr.Zero)
                     {
                         for (int i = 0; i < 8; ++i)
                         {
-                            pixelData[idx++] = ((float*)batch.radialGrad)[i];
+                            pixelData[idx++] = ((float*)batch.RadialGrad)[i];
                         }
                     }
 
-                    if (batch.opacity != IntPtr.Zero)
+                    if (batch.Opacity != IntPtr.Zero)
                     {
-                        pixelData[idx++] = ((float*)batch.opacity)[0];
+                        pixelData[idx++] = ((float*)batch.Opacity)[0];
                     }
 
                     this.commandBuffer.UpdateBufferData(this.pixelCB.InternalBuffer, pixelData);
@@ -714,24 +727,24 @@ namespace WaveRenderer.WaveRenderDevice
                 uint hash = texture.Width << 16 | texture.Height;
                 if (this.texDimensionsCBHash != hash)
                 {
-                    Vector4 data = new Vector4(texture.Width, texture.Height, 1f / texture.Width, 1f / texture.Height);
+                    var data = new Vector4(texture.Width, texture.Height, 1f / texture.Width, 1f / texture.Height);
                     this.commandBuffer.UpdateBufferData(this.texDimensionsCB.InternalBuffer, ref data);
                     this.texDimensionsCBHash = hash;
                 }
             }
 
             //Effects
-            if (batch.effectParamsSize != 0)
+            if (batch.EffectParamsSize != 0)
             {
-                if (this.effectCBHash != batch.effectParamsHash)
+                if (this.effectCBHash != batch.EffectParamsHash)
                 {
                     float[] effectData = new float[16];
-                    for (int i = 0; i < batch.effectParamsSize; i++)
+                    for (int i = 0; i < batch.EffectParamsSize; i++)
                     {
-                        effectData[i] = ((float*)batch.effectParams)[i];
+                        effectData[i] = ((float*)batch.EffectParams)[i];
                     }
 
-                    if (batch.effectParamsSize > 4)
+                    if (batch.EffectParamsSize > 4)
                     {
                         // Workaround for buffer block pack bug on OpenGL and ESSL. Swap blurSize (4) and ShadowOffset (5, 6)
                         var blurSize = effectData[4];
@@ -741,12 +754,12 @@ namespace WaveRenderer.WaveRenderDevice
                     }
 
                     this.commandBuffer.UpdateBufferData(this.effectCB.InternalBuffer, effectData);
-                    this.effectCBHash = batch.effectParamsHash;
+                    this.effectCBHash = batch.EffectParamsHash;
                 }
             }
         }
 
-        unsafe protected override IntPtr MapVertices(uint bytes)
+        public unsafe override IntPtr MapVertices(uint bytes)
         {
 #if TRACE_RENDER_DEVICE
             System.Diagnostics.Trace.WriteLine(nameof(MapVertices));
@@ -754,7 +767,7 @@ namespace WaveRenderer.WaveRenderDevice
             return this.vertexBuffer.Map(bytes);
         }
 
-        unsafe protected override void UnmapVertices()
+        public unsafe override void UnmapVertices()
         {
 #if TRACE_RENDER_DEVICE
             System.Diagnostics.Trace.WriteLine(nameof(UnmapVertices));
@@ -763,7 +776,7 @@ namespace WaveRenderer.WaveRenderDevice
             this.vertexBuffer.Unmap(this.commandBuffer);
         }
 
-        unsafe protected override IntPtr MapIndices(uint bytes)
+        public unsafe override IntPtr MapIndices(uint bytes)
         {
 #if TRACE_RENDER_DEVICE
             System.Diagnostics.Trace.WriteLine(nameof(MapIndices));
@@ -772,7 +785,7 @@ namespace WaveRenderer.WaveRenderDevice
             return this.indexBuffer.Map(bytes);
         }
 
-        unsafe protected override void UnmapIndices()
+        public unsafe override void UnmapIndices()
         {
 #if TRACE_RENDER_DEVICE
             System.Diagnostics.Trace.WriteLine(nameof(UnmapIndices));
@@ -781,14 +794,14 @@ namespace WaveRenderer.WaveRenderDevice
             this.indexBuffer.Unmap(this.commandBuffer);
         }
 
-        protected override void BeginRender(bool offscreen)
+        public override void BeginRender(bool offscreen)
         {
 #if TRACE_RENDER_DEVICE
             System.Diagnostics.Trace.WriteLine($"{nameof(BeginRender)} Offscreen: {offscreen}");
 #endif
         }
 
-        protected override void EndRender()
+        public override void EndRender()
         {
 #if TRACE_RENDER_DEVICE
             System.Diagnostics.Trace.WriteLine(nameof(EndRender));
@@ -796,7 +809,7 @@ namespace WaveRenderer.WaveRenderDevice
             this.currentSurface = null;
         }
 
-        protected override ManagedTexture CreateTexture(string label, uint width, uint height, uint numLevels, NoesisTextureFormat format, IntPtr[] data)
+        public override Noesis.Texture CreateTexture(string label, uint width, uint height, uint numLevels, TextureFormat format, IntPtr data)
         {
 #if TRACE_RENDER_DEVICE
             System.Diagnostics.Trace.WriteLine($"{nameof(CreateTexture)}: {label} -> {width} {height} {numLevels} {format}");
@@ -805,7 +818,12 @@ namespace WaveRenderer.WaveRenderDevice
             return WaveTexture.Create(this.graphicsContext, label, width, height, numLevels, ref format, data);
         }
 
-        protected override ManagedRenderTarget CreateRenderTarget(string label, uint width, uint height, uint sampleCount)
+        public override void UpdateTexture(Noesis.Texture texture, uint level, uint x, uint y, uint width, uint height, IntPtr data)
+        {
+            (texture as WaveTexture).UpdateTexture(level, x, y, width, height, data);
+        }
+
+        public override RenderTarget CreateRenderTarget(string label, uint width, uint height, uint sampleCount)
         {
 #if TRACE_RENDER_DEVICE
             System.Diagnostics.Trace.WriteLine($"{nameof(CreateRenderTarget)}: {label} -> {width} {height} {sampleCount}");
@@ -814,7 +832,7 @@ namespace WaveRenderer.WaveRenderDevice
             return new WaveRenderTarget(this.graphicsContext, label, width, height, sampleCount);
         }
 
-        protected override ManagedRenderTarget CloneRenderTarget(string label, ManagedRenderTarget surface)
+        public override RenderTarget CloneRenderTarget(string label, RenderTarget surface)
         {
 #if TRACE_RENDER_DEVICE
             System.Diagnostics.Trace.WriteLine(nameof(CloneRenderTarget));
@@ -824,7 +842,7 @@ namespace WaveRenderer.WaveRenderDevice
             return waveSurface.Clone(this.graphicsContext, label);
         }
 
-        protected override void SetRenderTarget(ManagedRenderTarget surface)
+        public override void SetRenderTarget(RenderTarget surface)
         {
 #if TRACE_RENDER_DEVICE
             System.Diagnostics.Trace.WriteLine(nameof(SetRenderTarget));
@@ -835,7 +853,7 @@ namespace WaveRenderer.WaveRenderDevice
             this.currentSurface.SetRenderTarget(this.commandBuffer);
         }
 
-        protected override void BeginTile(ref NoesisTile tile, uint surfaceWidth, uint surfaceHeight)
+        public override void BeginTile(ref Tile tile, uint surfaceWidth, uint surfaceHeight)
         {
 #if TRACE_RENDER_DEVICE
             System.Diagnostics.Trace.WriteLine(nameof(BeginTile));
@@ -860,14 +878,14 @@ namespace WaveRenderer.WaveRenderDevice
             this.commandBuffer.EndRenderPass();
         }
 
-        protected override void EndTile()
+        public override void EndTile()
         {
 #if TRACE_RENDER_DEVICE
             System.Diagnostics.Trace.WriteLine(nameof(EndTile));
 #endif
         }
 
-        protected override void ResolveRenderTarget(ManagedRenderTarget surface, NoesisTile[] tiles)
+        public override void ResolveRenderTarget(RenderTarget surface, Tile[] tiles)
         {
 #if TRACE_RENDER_DEVICE
             System.Diagnostics.Trace.WriteLine(nameof(ResolveRenderTarget));

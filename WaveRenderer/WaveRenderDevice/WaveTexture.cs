@@ -1,30 +1,30 @@
-﻿using NoesisManagedRenderer;
+﻿using Noesis;
 using System;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using WaveEngine.Common.Graphics;
 
 namespace WaveRenderer.WaveRenderDevice
 {
-    public class WaveTexture : ManagedTexture
+    public class WaveTexture : Noesis.Texture
     {
         private GraphicsContext graphicsContext;
 
         private byte[] textureData;
 
-        public Texture Texture { private set; get; }
+        public WaveEngine.Common.Graphics.Texture Texture { private set; get; }
 
         public ResourceSet ResourceSet { private set; get; }
 
-        public override string Label => this.Texture?.Name;
+        public string Label => this.Texture?.Name;
 
         public override uint Width => this.Texture?.Description.Width ?? 0;
 
         public override uint Height => this.Texture?.Description.Height ?? 0;
 
-        public override uint LevelCount => this.Texture?.Description.MipLevels ?? 1;
+        public override bool HasMipMaps => this.Texture?.Description.MipLevels > 1;
 
-        public override NoesisTextureFormat Format => this.Texture?.Description.Format == PixelFormat.R8_UNorm ? NoesisTextureFormat.R8 : NoesisTextureFormat.RGBA8;
+        public override bool IsInverted => false;
+
+        public TextureFormat Format => this.Texture?.Description.Format == PixelFormat.R8_UNorm ? TextureFormat.R8 : TextureFormat.RGBA8;
 
         internal WaveTexture(GraphicsContext graphicsContext, string name, ref TextureDescription desc, DataBox[] data)
         {
@@ -39,9 +39,9 @@ namespace WaveRenderer.WaveRenderDevice
             }
         }
 
-        public static WaveTexture Create(GraphicsContext graphicsContext, string name, uint width, uint height, uint numLevels, ref NoesisTextureFormat format, IntPtr[] data)
+        public static WaveTexture Create(GraphicsContext graphicsContext, string name, uint width, uint height, uint numLevels, ref TextureFormat format, IntPtr data)
         {
-            if (numLevels > 1 || data != null)
+            if (numLevels > 1 || data != IntPtr.Zero)
                 throw new NotImplementedException();
 
             var desc = new TextureDescription()
@@ -55,7 +55,7 @@ namespace WaveRenderer.WaveRenderDevice
                 Usage = ResourceUsage.Default,
                 CpuAccess = data != null ? ResourceCpuAccess.None : ResourceCpuAccess.Write,
                 Flags = TextureFlags.ShaderResource,
-                Format = (format == NoesisTextureFormat.RGBA8) ? PixelFormat.R8G8B8A8_UNorm : PixelFormat.R8_UNorm,
+                Format = (format == TextureFormat.RGBA8) ? PixelFormat.R8G8B8A8_UNorm : PixelFormat.R8_UNorm,
                 MipLevels = numLevels,
                 SampleCount = TextureSampleCount.None,
             };
@@ -63,7 +63,7 @@ namespace WaveRenderer.WaveRenderDevice
             return new WaveTexture(graphicsContext, name, ref desc, null);
         }
 
-        unsafe public override void UpdateTexture(uint level, uint x, uint y, uint width, uint height, IntPtr data)
+        unsafe internal void UpdateTexture(uint level, uint x, uint y, uint width, uint height, IntPtr data)
         {
 #if TRACE_RENDER_DEVICE
             System.Diagnostics.Trace.WriteLine($"{nameof(UpdateTexture)} -> {this.Label} Level:{level} Rect:[{x}, {y}, {width}, {height}]");
